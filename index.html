@@ -9,36 +9,68 @@
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
+        
         .ambient-glow { position: absolute; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, rgba(10,9,8,1) 60%); z-index: -1; top: 0; left: 0; }
-        header { padding: 50px 20px 40px 20px; text-align: center; position: relative; }
-        h1 { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; color: var(--text); margin-bottom: 10px; font-weight: 600; letter-spacing: 2px; }
+
+        header { padding: 80px 20px 40px 20px; text-align: center; position: relative; }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 4rem; color: var(--text); margin-bottom: 10px; font-weight: 600; letter-spacing: 2px; }
         .highlight { color: var(--primary); font-style: italic; }
         p.tagline { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 300; letter-spacing: 1px; }
+        
         .btn { display: inline-block; background: transparent; color: var(--primary); padding: 14px 40px; border: 1px solid var(--primary); text-decoration: none; font-weight: 400; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; transition: all 0.4s ease; }
         .btn:hover { background: var(--primary); color: var(--bg); }
+        
         .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px 20px 60px 20px; }
         .feature-card { background: transparent; padding: 30px 25px; width: 280px; text-align: center; border: 1px solid var(--border); transition: border-color 0.4s ease; position: relative; overflow: hidden; }
         .feature-card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px; background: var(--primary); transition: width 0.4s ease; }
         .feature-card:hover { border-color: rgba(212, 175, 55, 0.3); }
         .feature-card:hover::before { width: 100%; }
+        
         .feature-icon { font-size: 2rem; margin-bottom: 15px; color: var(--primary); }
         .feature-card h3 { font-family: 'Cormorant Garamond', serif; color: var(--text); margin-top: 0; font-size: 1.6rem; font-weight: 600; letter-spacing: 1px; }
-        footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); letter-spacing: 1px; text-transform: uppercase; }
+        
+        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); letter-spacing: 1px; text-transform: uppercase; }
+
+        /* 🔥 MOBILE PHONE FIX 🔥 */
+        @media (max-width: 600px) {
+            header { padding: 40px 15px 20px 15px; }
+            h1 { font-size: 2.8rem; }
+            p.tagline { font-size: 0.95rem; margin-bottom: 25px; }
+            .feature-card { width: 100%; padding: 20px; }
+        }
     </style>
 </head>
 <body>
     <div class="ambient-glow"></div>
+
     <header class="gsap-hero">
         <h1>Cafe <span class="highlight">Boss</span></h1>
         <p class="tagline">Elevate your dining experience. Bespoke digital menus and seamless table-side ordering.</p>
         <a href="auth.html" class="btn">Enter Dashboard</a>
     </header>
+    
     <section class="features">
-        <div class="feature-card gsap-card"><div class="feature-icon">✧</div><h3>Refined Menus</h3><p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Craft stunning digital menus accessible instantly via a graceful QR scan.</p></div>
-        <div class="feature-card gsap-card"><div class="feature-icon">🛎️</div><h3>Discreet Ordering</h3><p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Guests place requests directly from tables. Receive live chimes seamlessly.</p></div>
-        <div class="feature-card gsap-card"><div class="feature-icon">✒️</div><h3>AI Curation</h3><p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Scan printed menus to digitize items with sophisticated descriptions.</p></div>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">✧</div>
+            <h3>Refined Menus</h3>
+            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Craft stunning digital menus accessible instantly via a graceful QR scan.</p>
+        </div>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">🛎️</div>
+            <h3>Discreet Ordering</h3>
+            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Guests place requests directly from tables. Receive live chimes seamlessly.</p>
+        </div>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">✒️</div>
+            <h3>AI Curation</h3>
+            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Scan printed menus to digitize items with sophisticated descriptions.</p>
+        </div>
     </section>
-    <footer class="gsap-footer"><p>&copy; 2026 Cafe Boss &middot; Engineered by Zakir Rashid</p></footer>
+
+    <footer class="gsap-footer">
+        <p>&copy; 2026 Cafe Boss &middot; Engineered by Zakir Rashid</p>
+    </footer>
+
     <script>
         gsap.from(".gsap-hero h1", { y: 20, opacity: 0, duration: 1, ease: "power2.out" });
         gsap.from(".gsap-hero p", { y: 20, opacity: 0, duration: 1, delay: 0.2, ease: "power2.out" });
