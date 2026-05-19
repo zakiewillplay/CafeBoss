@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        :root { --gold: #E5C158; --gold-light: #F9EEC1; --dark: #0A0806; --glass: rgba(20,18,15,0.8); --text: #eee; --bg: #111; }
+        .light-mode { --dark: #f9f9f9; --glass: rgba(255,255,255,0.9); --text: #111; --bg: #fff; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; transition: background 0.3s; }
+        
+        /* Intro Animation */
+        #intro { position: fixed; inset: 0; background: var(--dark); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .cloche-container { position: relative; width: 100px; height: 100px; }
+        .plate { position: absolute; bottom: 0; width: 100%; height: 10px; background: #555; border-radius: 50%; }
+        .cloche { position: absolute; bottom: 5px; width: 100%; height: 60px; background: silver; border-top-left-radius: 50px; border-top-right-radius: 50px; animation: lift 2.5s forwards ease-in-out; }
+        @keyframes lift { 0%, 50% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        
+        header { padding: 40px 20px; text-align: center; font-family: 'Playfair Display', serif; }
+        h1 { color: var(--gold); margin: 0; font-size: 2.5rem; }
+        
+        .search-container { padding: 0 20px; position: sticky; top: 0; z-index: 100; background: var(--glass); backdrop-filter: blur(10px); padding-bottom: 10px; }
+        #search { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid var(--gold); background: transparent; color: var(--text); outline: none; box-sizing: border-box; }
+        
+        .categories { display: flex; overflow-x: auto; gap: 10px; padding: 15px 20px; scrollbar-width: none; }
+        .categories::-webkit-scrollbar { display: none; }
+        .cat-tab { padding: 8px 15px; border-radius: 20px; border: 1px solid var(--gold); white-space: nowrap; cursor: pointer; }
+        .cat-tab.active { background: var(--gold); color: #000; font-weight: bold; }
+        
+        .menu-section { padding: 20px; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 15px 0; opacity: 0; }
+        .item-info { flex: 1; }
+        .item-title { font-weight: bold; font-size: 1.1rem; }
+        .badge { background: red; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .variants { display: flex; gap: 5px; margin-top: 5px; }
+        .variant-pill { font-size: 0.8rem; padding: 4px 8px; border: 1px solid #555; border-radius: 12px; cursor: pointer; }
+        .variant-pill.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        
+        .qty-controls { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { background: var(--gold); color: #000; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
+        .qty-btn:active { transform: scale(0.8); }
+        
+        #cart-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 30px; padding: 15px 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; }
+        .pulse { animation: pulse 0.3s; }
+        @keyframes pulse { 50% { transform: scale(1.1); } }
+        
+        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--dark); border-top: 2px solid var(--gold); padding: 20px; border-top-left-radius: 20px; border-top-right-radius: 20px; transform: translateY(100%); transition: transform 0.3s; z-index: 1001; }
+        #cart-panel.open { transform: translateY(0); }
+        .cart-input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #555; background: transparent; color: var(--text); box-sizing: border-box; }
+        .place-order-btn { width: 100%; background: var(--gold); color: #000; padding: 15px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="intro">
+        <div class="cloche-container">
+            <div class="plate"></div>
+            <div class="cloche"></div>
+        </div>
+    </div>
+
+    <header>
+        <h1 id="cafe-name">Cafe</h1>
+        <p id="cafe-desc" style="font-size: 0.9em; color: #aaa;"></p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="search" placeholder="Search menu...">
+    </div>
+    
+    <div class="categories" id="categories-container"></div>
+    <div id="menu-container"></div>
+
+    <button id="cart-btn" style="display:none;" onclick="toggleCart()">🛒 <span id="cart-count">0</span> | ₹<span id="cart-total">0</span></button>
+
+    <div id="cart-panel">
+        <h3 style="margin-top:0; color:var(--gold);">Your Order</h3>
+        <div id="cart-items" style="max-height:150px; overflow-y:auto; margin-bottom:15px; font-size:0.9em;"></div>
+        <input type="text" id="table-number" class="cart-input" placeholder="Table Number *" required>
+        <input type="text" id="customer-name" class="cart-input" placeholder="Your Name (Optional)">
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+        <button style="width:100%; padding:10px; margin-top:5px; background:transparent; color:var(--text); border:none;" onclick="toggleCart()">Close</button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './config.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const cafeId = urlParams.get('id');
+        let allItems = [];
+        let cart = {};
+
+        setTimeout(() => { document.getElementById('intro').style.display = 'none'; animateItems(); }, 2500);
+
+        async function init() {
+            if(!cafeId) return document.body.innerHTML = '<h2 style="text-align:center;margin-top:50px;">Invalid Menu Link</h2>';
+            
+            // Log view
+            supabase.from('menu_views_log').insert([{ cafe_id: cafeId }]).then();
+
+            const { data: cafe } = await supabase.from('cafes').select('*').eq('id', cafeId).single();
+            if(cafe) {
+                document.getElementById('cafe-name').innerText = cafe.cafe_name;
+                document.getElementById('cafe-desc').innerText = cafe.description;
+                document.documentElement.style.setProperty('--gold', cafe.primary_color);
+            }
+
+            const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true);
+            allItems = data;
+            renderMenu(allItems);
+        }
+
+        function parseVariants(desc) {
+            const match = desc?.match(/VAR::(.*)/);
+            if(!match) return null;
+            return match[1].split('|').map(v => { const [name, price] = v.split('='); return { name, price: parseFloat(price) }; });
+        }
+
+        function renderMenu(items) {
+            const container = document.getElementById('menu-container');
+            const catContainer = document.getElementById('categories-container');
+            container.innerHTML = ''; catContainer.innerHTML = '';
+
+            const categories = [...new Set(items.map(i => i.category))];
+            categories.forEach((c, idx) => {
+                catContainer.innerHTML += `<div class="cat-tab ${idx===0?'active':''}" onclick="scrollToCat('${c}')">${c}</div>`;
+                
+                let html = `<div class="menu-section" id="cat-${c.replace(/\s+/g, '-')}">
+                    <h2 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:5px;">${c}</h2>`;
+                
+                items.filter(i => i.category === c).forEach(item => {
+                    const variants = parseVariants(item.description);
+                    const cleanDesc = item.description ? item.description.replace(/VAR::.*/, '') : '';
+                    let priceHtml = variants ? `₹${variants[0].price}` : `₹${item.price}`;
+                    
+                    let variantHtml = '';
+                    if(variants) {
+                        variantHtml = `<div class="variants">` + variants.map((v, i) => 
+                            `<div class="variant-pill ${i===0?'active':''}" onclick="selectVariant(this, '${item.id}', ${v.price}, '${v.name}')">${v.name}</div>`
+                        ).join('') + `</div>`;
+                    }
+
+                    html += `
+                    <div class="menu-item">
+                        <div class="item-info">
+                            <div class="item-title">${item.name} ${item.featured?'🔥':''} ${item.discount?`<span class="badge">${item.discount}</span>`:''}</div>
+                            <div style="font-size:0.8em; color:#aaa;">${cleanDesc}</div>
+                            <div style="font-weight:bold; margin-top:5px;" id="price-${item.id}" data-baseprice="${variants ? variants[0].price : item.price}">${priceHtml}</div>
+                            ${variantHtml}
+                        </div>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
+                            <span id="qty-${item.id}">0</span>
+                            <button class="qty-btn" onclick="updateQty('${item.id}', 1, '${item.name}')">+</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+            animateItems();
+        }
+
+        function animateItems() {
+            gsap.fromTo('.menu-item', { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.5 });
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allItems.filter(i => i.name.toLowerCase().includes(term) || i.description?.toLowerCase().includes(term));
+            renderMenu(filtered);
+        });
+
+        window.scrollToCat = (cat) => {
+            document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.selectVariant = (el, id, price, vName) => {
+            el.parentElement.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById(`price-${id}`).innerText = `₹${price}`;
+            document.getElementById(`price-${id}`).dataset.baseprice = price;
+            document.getElementById(`price-${id}`).dataset.vname = vName;
+            
+            // Reset qty when variant changes to avoid cart confusion
+            if(cart[id]) { updateQty(id, -cart[id].qty); }
+        };
+
+        window.updateQty = (id, delta, name) => {
+            let current = cart[id]?.qty || 0;
+            current += delta;
+            if(current < 0) current = 0;
+            
+            document.getElementById(`qty-${id}`).innerText = current;
+            
+            const priceEl = document.getElementById(`price-${id}`);
+            const price = parseFloat(priceEl.dataset.baseprice);
+            const vName = priceEl.dataset.vname || '';
+            const fullName = vName ? `${name} (${vName})` : name;
+
+            if(current > 0) cart[id] = { name: fullName, price, qty: current };
+            else delete cart[id];
+
+            updateCartUI();
+            
+            if(delta > 0) {
+                const btn = document.getElementById('cart-btn');
+                btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
+            }
+        };
+
+        function updateCartUI() {
+            let totalQty = 0, totalPrice = 0;
+            const itemsHtml = [];
+            for(let key in cart) {
+                totalQty += cart[key].qty;
+                totalPrice += cart[key].price * cart[key].qty;
+                itemsHtml.push(`<div>${cart[key].qty}x ${cart[key].name} - ₹${cart[key].price * cart[key].qty}</div>`);
+            }
+            document.getElementById('cart-count').innerText = totalQty;
+            document.getElementById('cart-total').innerText = totalPrice;
+            document.getElementById('cart-items').innerHTML = itemsHtml.join('');
+            document.getElementById('cart-btn').style.display = totalQty > 0 ? 'block' : 'none';
+            if(totalQty === 0) document.getElementById('cart-panel').classList.remove('open');
+        }
+
+        window.toggleCart = () => document.getElementById('cart-panel').classList.toggle('open');
+
+        window.placeOrder = async () => {
+            const table = document.getElementById('table-number').value;
+            const name = document.getElementById('customer-name').value || 'Guest';
+            if(!table) return alert('Please enter table number');
+            
+            const itemsArr = Object.values(cart);
+            const total = parseFloat(document.getElementById('cart-total').innerText);
+
+            const { data, error } = await supabase.from('orders').insert([{
+                cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total
+            }]).select().single();
+
+            if(!error) {
+                document.getElementById('cart-panel').innerHTML = `<h3 style="color:var(--gold); text-align:center;">Order Placed Successfully! 🎉</h3><p style="text-align:center;">Sit back and relax. Your food is being prepared.</p>`;
+                pollOrder(data.id);
+            }
+        };
+
+        function pollOrder(orderId) {
+            const interval = setInterval(async () => {
+                const { data } = await supabase.from('orders').select('status').eq('id', orderId).single();
+                if(data && data.status === 'accepted') {
+                    alert("The cafe has accepted your order! It's in the kitchen now.");
+                    if(Notification.permission === 'granted') new Notification('Order Accepted!');
+                    clearInterval(interval);
+                }
+            }, 5000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
