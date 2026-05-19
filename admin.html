@@ -3,35 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Platform Admin | Cafe Boss</title>
+    <title>Admin Overview | Cafe Boss</title>
     <style>
-        body { font-family: sans-serif; background: #1a1c1d; color: #f0f0f0; padding: 20px; }
-        .card { background: #2a2a2c; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        :root { --primary: #4F46E5; --bg: #F3F4F6; --surface: #FFFFFF; --text: #111827; --border: #E5E7EB; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        h1 { color: var(--primary); margin-top: 0; }
+        .card { background: var(--surface); padding: 30px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #3a3a3c; padding: 10px; text-align: left; }
-        th { background: #FF6B35; color: white; }
+        th, td { border-bottom: 1px solid var(--border); padding: 12px 10px; text-align: left; }
+        th { background: #F9FAFB; color: var(--text); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+        .stat { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
-    <h1>Cafe Boss System Admin</h1>
-    <div class="card">
-        <h2>Global Stats</h2>
-        <p>Total Cafes: <span id="total-cafes">0</span></p>
-        <p>Total Orders (All Time): <span id="total-orders">0</span></p>
+    <h1>Platform Admin</h1>
+    <div class="card" style="display:flex; gap: 50px;">
+        <div><p style="margin:0; color:#6B7280; font-size:0.9rem; font-weight:bold;">TOTAL CAFES</p><div class="stat" id="total-cafes">0</div></div>
+        <div><p style="margin:0; color:#6B7280; font-size:0.9rem; font-weight:bold;">TOTAL ORDERS</p><div class="stat" id="total-orders">0</div></div>
     </div>
     <div class="card">
-        <h2>20 Most Recent Global Orders</h2>
+        <h2 style="margin-top:0;">Recent System Activity</h2>
         <table>
-            <thead><tr><th>ID</th><th>Cafe ID</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+            <thead><tr><th>Order ID</th><th>Cafe ID</th><th>Status</th><th>Value</th><th>Time</th></tr></thead>
             <tbody id="admin-orders"></tbody>
         </table>
     </div>
 
     <script type="module">
-        import { supabase } from './config.js';
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
         async function initAdmin() {
-            // Note: This assumes the admin user has RLS bypass or is authenticated as a super admin.
             const { count: cafeCount } = await supabase.from('cafes').select('*', { count: 'exact', head: true });
             document.getElementById('total-cafes').innerText = cafeCount || 0;
 
@@ -44,11 +46,11 @@
             if(recentOrders) {
                 recentOrders.forEach(o => {
                     tbody.innerHTML += `<tr>
-                        <td>${o.id.split('-')[0]}...</td>
-                        <td>${o.cafe_id.split('-')[0]}...</td>
-                        <td>${o.status}</td>
-                        <td>₹${o.total}</td>
-                        <td>${new Date(o.created_at).toLocaleString()}</td>
+                        <td style="font-family:monospace; color:#6B7280;">${o.id.split('-')}</td>
+                        <td style="font-family:monospace; color:#6B7280;">${o.cafe_id.split('-')}</td>
+                        <td><span style="background:#EEF2FF; color:#4F46E5; padding:4px 8px; border-radius:6px; font-size:0.8rem; font-weight:bold;">${o.status}</span></td>
+                        <td style="font-weight:bold;">₹${o.total}</td>
+                        <td style="color:#6B7280; font-size:0.9rem;">${new Date(o.created_at).toLocaleString()}</td>
                     </tr>`;
                 });
             }
