@@ -3,186 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Cafe Boss</title>
+    <title>Management | Cafe Boss</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script>
         window.onerror = function(msg, url, line) {
-            document.body.innerHTML = "<div style='background:#FEE2E2; color:#991B1B; padding:20px; font-weight:bold; border-bottom:2px solid #EF4444;'>🚨 SYSTEM ERROR:<br>" + msg + "<br>Line: " + line + "</div>" + document.body.innerHTML;
+            document.body.innerHTML = "<div style='background:#2A0808; color:#D4AF37; padding:20px; font-family:serif; border-bottom:1px solid #D4AF37;'><i>Notice: A system anomaly occurred.</i><br>" + msg + " (Line " + line + ")</div>" + document.body.innerHTML;
         };
     </script>
 
     <style>
-        :root { 
-            --primary: #4F46E5; --accent: #10B981; 
-            /* Light Theme Defaults */
-            --bg: #F3F4F6; --surface: #FFFFFF; --text: #111827; --text-muted: #6B7280; --border: #E5E7EB; 
-            --radius: 12px; --shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
-        }
+        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; max-width: 1200px; margin: 0 auto; }
         
-        /* Dark Theme Override */
-        body.dark-mode {
-            --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --border: #334155;
-            --shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; max-width: 1200px; margin: 0 auto; transition: background 0.3s, color 0.3s; }
+        #audio-unlocker { position: fixed; inset: 0; background: rgba(10, 9, 8, 0.98); backdrop-filter: blur(10px); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); cursor: pointer; text-align: center; padding: 20px; transition: opacity 0.8s; }
+        #audio-unlocker h2 { font-family: 'Cormorant Garamond', serif; font-size: 3rem; margin-bottom: 10px; font-weight: 400; letter-spacing: 2px; }
+        .unlock-btn { margin-top: 30px; padding: 15px 40px; border: 1px solid var(--primary); color: var(--primary); background: transparent; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; transition: 0.4s; }
+        .unlock-btn:hover { background: var(--primary); color: var(--bg); }
         
-        /* Audio Unlocker Screen */
-        #audio-unlocker { position: fixed; inset: 0; background: rgba(79, 70, 229, 0.95); backdrop-filter: blur(10px); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; cursor: pointer; text-align: center; padding: 20px; transition: opacity 0.5s; }
-        #audio-unlocker h2 { font-size: 2.5rem; margin-bottom: 10px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 600; letter-spacing: 1px; color: var(--text); }
+        h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 600; letter-spacing: 1px; color: var(--primary); margin-top: 0; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; color: var(--primary); font-weight: 800; }
-        h2, h3 { color: var(--text); margin-top: 0; }
+        .controls { display: flex; gap: 15px; align-items: center; }
+        .controls button, .controls select { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .controls button:hover, .controls select:hover { color: var(--primary); border-color: var(--primary); }
         
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
-        .controls button, .controls select { padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-weight: 600; box-shadow: var(--shadow); transition: 0.2s; }
-        .controls button:hover { transform: translateY(-2px); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 30px; position: relative; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); transition: background 0.3s, border 0.3s; }
+        .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 25px; }
+        .stat-box span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--text); font-weight: 400; line-height: 1; margin-bottom: 8px; }
+        .stat-box small { color: var(--primary); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; }
         
-        .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 20px; }
-        .stat-box span { display: block; font-size: 2.5rem; color: var(--primary); font-weight: 800; line-height: 1; margin-bottom: 5px; }
-        .stat-box small { color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; }
+        input, textarea, select { width: 100%; padding: 15px 0; margin: 10px 0 20px 0; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; transition: 0.3s; }
+        input:focus, textarea:focus { border-bottom-color: var(--primary); }
         
-        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus, textarea:focus { border-color: var(--primary); }
+        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 15px 20px; cursor: pointer; width: 100%; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s; }
+        .btn:hover { background: var(--primary); color: var(--bg); }
         
-        .btn { background: var(--primary); color: #fff; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1rem; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        .btn-success { background: var(--accent); }
-        .btn-warning { background: #F59E0B; }
-        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--border); }
+        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .tab.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
         
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-        .tab { padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; }
-        .tab.active { background: var(--primary); color: white; }
+        .order-card { background: transparent; border: 1px solid var(--border); padding: 25px; margin-top: 15px; position: relative; }
+        .order-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 2px; background: var(--primary); }
         
-        .order-card { background: var(--bg); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius); margin-top: 15px; border-left: 5px solid var(--primary); }
-        
-        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; width: 100%; color: var(--primary); padding: 10px 0; }
+        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--text); padding: 10px 0; border-bottom: 1px solid transparent; transition: 0.3s; }
+        collapsible:hover { color: var(--primary); }
         .hidden { display: none; }
-        #qr-container { display: flex; flex-direction: column; align-items: center; margin-top: 20px; padding: 20px; background: white; border-radius: var(--radius); }
-        .item-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); align-items: center; }
+        
+        #qr-container { display: flex; flex-direction: column; align-items: center; margin-top: 25px; padding: 30px; background: #fff; border: 1px solid var(--primary); }
+        .item-row { display: flex; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--border); align-items: center; }
     </style>
 </head>
 <body>
 
     <div id="audio-unlocker">
-        <div style="font-size: 4rem; margin-bottom: 20px;">🔔</div>
-        <h2>Tap to Go Online</h2>
-        <p>We need your permission to play the order notification sound.</p>
-        <div style="margin-top: 30px; padding: 15px 40px; background: white; color: var(--primary); border-radius: 30px; font-weight: bold; font-size: 1.2rem;">Start Receiving Orders</div>
+        <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.8;">🛎️</div>
+        <h2>Awaiting Service</h2>
+        <p style="color: var(--text-muted); font-weight: 300; letter-spacing: 1px;">Grant acoustic clearance to receive live table chimes.</p>
+        <div class="unlock-btn">Initialize Service</div>
     </div>
 
     <header>
-        <h1 data-i18n="title">Cafe Boss</h1>
+        <h1 data-i18n="title">Management Bureau</h1>
         <div class="controls">
-            <button id="theme-btn">🌙 Dark Mode</button>
-            <button id="logout-btn" style="color: #DC2626;">Logout</button>
+            <select id="lang-select">
+                <option value="en">EN</option>
+                <option value="hi">HI</option>
+            </select>
+            <button id="unmute-btn" style="border-color:var(--primary); color:var(--primary);">Acoustics: Off</button>
+            <button id="logout-btn">Depart</button>
         </div>
     </header>
 
     <div class="grid">
         <div class="card">
-            <h3 data-i18n="stats">Performance Overview</h3>
+            <h3 data-i18n="stats">Executive Summary</h3>
             <div class="stats">
-                <div class="stat-box"><span id="stat-views">0</span><small>Menu Views</small></div>
-                <div class="stat-box"><span id="stat-items">0</span><small>Active Items</small></div>
-                <div class="stat-box"><span id="stat-orders">0</span><small>Total Orders</small></div>
+                <div class="stat-box"><span id="stat-views">0</span><small>Impressions</small></div>
+                <div class="stat-box"><span id="stat-items">0</span><small>Offerings</small></div>
+                <div class="stat-box"><span id="stat-orders">0</span><small>Fulfillments</small></div>
             </div>
         </div>
         <div class="card">
-            <h3>Order Analytics (7 Days)</h3>
+            <h3>7-Day Trajectory</h3>
             <canvas id="analyticsChart" height="90"></canvas>
         </div>
     </div>
 
-    <div class="card" style="margin-bottom: 20px;">
-        <h2 data-i18n="orders">Live Orders</h2>
+    <div class="card" style="margin-bottom: 30px;">
+        <h2 data-i18n="orders">Active Requisitions</h2>
         <div class="tabs">
-            <div class="tab active" onclick="filterOrders(this, 'new')">New Tickets</div>
-            <div class="tab" onclick="filterOrders(this, 'accepted')">In Kitchen</div>
-            <div class="tab" onclick="filterOrders(this, 'completed')">Completed</div>
+            <div class="tab active" onclick="filterOrders(this, 'new')">Pending</div>
+            <div class="tab" onclick="filterOrders(this, 'accepted')">Preparing</div>
+            <div class="tab" onclick="filterOrders(this, 'completed')">Archived</div>
         </div>
         <div id="orders-list"></div>
     </div>
 
     <div class="grid">
         <div class="card">
-            <collapsible onclick="toggleCard('settings-content')">⚙️ Cafe Profile Settings ▼</collapsible>
+            <collapsible onclick="toggleCard('settings-content')">Establishment Profile <span style="font-size:1rem;">▼</span></collapsible>
             <div id="settings-content" class="hidden">
-                <input type="text" id="cafe-name" placeholder="Cafe Name">
-                <input type="text" id="whatsapp" placeholder="WhatsApp Contact">
-                <textarea id="cafe-desc" placeholder="A short description of your cafe..."></textarea>
-                <div style="display: flex; gap:10px; align-items:center;">
-                    <label style="flex:1; font-weight:600; color:var(--text-muted);">Brand Color:</label>
-                    <input type="color" id="primary-color" style="width: 50px; height:40px; padding:0;">
-                </div>
-                <button class="btn" id="save-settings" style="margin-top:15px;">Save Profile</button>
+                <div style="margin-top:20px;"></div>
+                <input type="text" id="cafe-name" placeholder="Establishment Name">
+                <input type="text" id="whatsapp" placeholder="Concierge Number (WhatsApp)">
+                <textarea id="cafe-desc" placeholder="A refined description..."></textarea>
+                <button class="btn" id="save-settings" style="margin-top:15px;">Update Profile</button>
             </div>
         </div>
 
         <div class="card">
-            <collapsible onclick="toggleCard('qr-content')">📱 Share & QR Code ▼</collapsible>
+            <collapsible onclick="toggleCard('qr-content')">Digital Plaque & QR <span style="font-size:1rem;">▼</span></collapsible>
             <div id="qr-content" class="hidden">
-                <button class="btn" id="generate-qr">Generate Live QR</button>
+                <div style="margin-top:20px;"></div>
+                <button class="btn" id="generate-qr">Mint QR Code</button>
                 <div id="qr-container"></div>
-                <input type="text" id="qr-url" readonly style="text-align: center; margin-top:10px; font-weight:bold; color:var(--primary);">
-                <button class="btn btn-secondary" id="download-qr" style="margin-top:10px; display:none;">Download QR Image</button>
+                <input type="text" id="qr-url" readonly style="text-align: center; margin-top:20px; font-weight:600; color:var(--primary); font-family:monospace; border:none;">
+                <button class="btn" id="download-qr" style="margin-top:10px; display:none; border-color:var(--text-muted); color:var(--text-muted);">Acquire Image</button>
             </div>
         </div>
     </div>
 
     <div class="grid">
         <div class="card">
-            <collapsible onclick="toggleCard('smart-menu-content')">✨ AI Menu Scanner ▼</collapsible>
+            <collapsible onclick="toggleCard('smart-menu-content')">Optical Character Reader <span style="font-size:1rem;">▼</span></collapsible>
             <div id="smart-menu-content" class="hidden">
-                <p style="color:var(--text-muted); font-size:0.9rem;">Take a picture of your physical menu to auto-extract items.</p>
-                <label class="btn btn-secondary" style="display:block; text-align:center; margin-bottom:10px;">
-                    📸 Open Camera
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:20px;">Digitize physical parchment via optical recognition.</p>
+                <label class="btn" style="display:block; text-align:center; margin-bottom:15px;">
+                    Engage Lens
                     <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
                 </label>
-                <label class="btn btn-secondary" style="display:block; text-align:center;">
-                    🖼️ Upload from Gallery
+                <label class="btn" style="display:block; text-align:center; border-color:var(--text-muted); color:var(--text-muted);">
+                    Select Archive
                     <input type="file" id="gallery-input" accept="image/*" style="display:none;">
                 </label>
-                <div id="ocr-preview" style="margin-top: 15px; padding:10px; background:var(--bg); border-radius:8px; font-family:monospace; font-size:0.9em; white-space:pre-wrap;"></div>
+                <div id="ocr-preview" style="margin-top: 20px; padding:15px; border:1px solid var(--border); font-family:'Cormorant Garamond', serif; font-size:1.1rem; color:var(--primary); white-space:pre-wrap; min-height:50px;">Awaiting parchment...</div>
             </div>
         </div>
 
         <div class="card">
-            <collapsible onclick="toggleCard('add-item-content')">➕ Add Menu Item ▼</collapsible>
+            <collapsible onclick="toggleCard('add-item-content')">Curate Offering <span style="font-size:1rem;">▼</span></collapsible>
             <div id="add-item-content" class="hidden">
-                <input type="text" id="item-name" placeholder="Item Name *" required>
-                <div style="display:flex; gap:10px;">
-                    <textarea id="item-desc" placeholder="Delicious description..."></textarea>
-                    <button id="ai-desc-btn" class="btn-secondary" style="width:60px; border-radius:8px; font-size:1.5rem;" title="AI Generate">✨</button>
+                <div style="margin-top:20px;"></div>
+                <input type="text" id="item-name" placeholder="Dish Nomenclature *" required>
+                <div style="display:flex; gap:15px; align-items:flex-end;">
+                    <textarea id="item-desc" placeholder="Tasting Notes..." style="margin-bottom:0;"></textarea>
+                    <button id="ai-desc-btn" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:10px; cursor:pointer; margin-bottom:10px; font-family:serif; font-style:italic;" title="Invoke Muse">Muse</button>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <input type="number" id="item-price" placeholder="Price (₹) *" required>
-                    <input type="text" id="item-category" list="categories" placeholder="Category *" required>
+                <div style="display:flex; gap:20px;">
+                    <input type="number" id="item-price" placeholder="Valuation (₹) *" required>
+                    <input type="text" id="item-category" list="categories" placeholder="Classification *" required>
                 </div>
                 <datalist id="categories"></datalist>
-                <input type="text" id="item-discount" placeholder="Discount tag (e.g., 20% OFF)">
-                <input type="text" id="item-variants" placeholder="Variants (e.g. Small=150|Large=250)">
-                <label style="display:block; margin: 10px 0; font-weight:bold; color:var(--primary);"><input type="checkbox" id="item-featured"> 🔥 Mark as Chef's Special</label>
-                <button class="btn" id="save-item">Publish Item</button>
+                <input type="text" id="item-discount" placeholder="Complimentary Tag (e.g. 20% Honored)">
+                <input type="text" id="item-variants" placeholder="Portions (e.g. Petite=150|Grand=250)">
+                <label style="display:block; margin: 20px 0; font-family:'Cormorant Garamond', serif; font-size:1.2rem; color:var(--primary); cursor:pointer;"><input type="checkbox" id="item-featured" style="width:auto; margin:0 10px 0 0;"> Mark as Chef's Signature</label>
+                <button class="btn" id="save-item">Publish to Ledger</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <collapsible onclick="toggleCard('items-list-content')">📋 Manage Full Menu ▼</collapsible>
+        <collapsible onclick="toggleCard('items-list-content')">The Master Ledger <span style="font-size:1rem;">▼</span></collapsible>
         <div id="items-list-content" class="hidden">
-            <div id="items-container"></div>
+            <div id="items-container" style="margin-top:20px;"></div>
         </div>
     </div>
 
@@ -190,82 +183,54 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
-        let cafe = null;
-        let currentOrderFilter = 'new';
-        let audioCtx;
+        let cafe = null, currentOrderFilter = 'new', audioCtx;
         
-        // --- Dark Mode Toggle ---
-        document.getElementById('theme-btn').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            document.getElementById('theme-btn').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
-        });
-
-        // --- Bulletproof Audio Unlocker ---
         document.getElementById('audio-unlocker').addEventListener('click', () => {
             if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            gain.gain.value = 0; osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
             
-            // Play a silent note to force the browser to unlock the API
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-            
-            // Fade out the overlay
             const unlocker = document.getElementById('audio-unlocker');
             unlocker.style.opacity = '0';
-            setTimeout(() => unlocker.style.display = 'none', 500);
+            setTimeout(() => unlocker.style.display = 'none', 800);
             
-            // Ask for Notification Permissions
+            document.getElementById('unmute-btn').innerText = 'Acoustics: Live';
+            document.getElementById('unmute-btn').style.background = 'var(--primary)';
+            document.getElementById('unmute-btn').style.color = 'var(--bg)';
             if(Notification.permission !== 'granted') Notification.requestPermission();
         });
 
         const beep = () => {
             if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(850, audioCtx.currentTime);
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            osc.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
-            osc.stop(audioCtx.currentTime + 0.3);
+            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+            osc.type = 'triangle'; // Softer, bell-like tone
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+            osc.start(); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
+            osc.stop(audioCtx.currentTime + 0.6);
         };
 
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            window.location.href = 'auth.html';
-        });
+        document.getElementById('logout-btn').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'auth.html'; });
 
         window.toggleCard = (id) => {
             const el = document.getElementById(id);
             el.classList.toggle('hidden');
-            if(!el.classList.contains('hidden') && window.gsap) {
-                gsap.from(el, { opacity: 0, y: -10, duration: 0.3 });
-            }
+            if(!el.classList.contains('hidden') && window.gsap) gsap.from(el, { opacity: 0, y: -10, duration: 0.5, ease: "power2.out" });
         };
 
         async function init() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return window.location.href = 'auth.html';
-
                 let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
                 if (!cafeData) {
                     const { data: newCafe } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
-                    cafe = newCafe || { id: 'temp', cafe_name: 'My New Cafe', primary_color: '#4F46E5', accent_color: '#10B981', menu_views: 0 };
+                    cafe = newCafe || { id: 'temp', cafe_name: 'The Establishment', menu_views: 0 };
                 } else { cafe = cafeData; }
 
-                populateSettings();
-                await loadStats();
-                await loadOrders();
-                await loadItems();
-                setupRealtime();
+                populateSettings(); await loadStats(); await loadOrders(); await loadItems(); setupRealtime();
             } catch (err) { console.error(err); }
         }
 
@@ -274,36 +239,27 @@
             document.getElementById('cafe-name').value = cafe.cafe_name || '';
             document.getElementById('whatsapp').value = cafe.whatsapp || '';
             document.getElementById('cafe-desc').value = cafe.description || '';
-            document.getElementById('primary-color').value = cafe.primary_color || '#4F46E5';
         }
 
         document.getElementById('save-settings').addEventListener('click', async () => {
-            const updates = { cafe_name: document.getElementById('cafe-name').value, whatsapp: document.getElementById('whatsapp').value, description: document.getElementById('cafe-desc').value, primary_color: document.getElementById('primary-color').value };
+            const updates = { cafe_name: document.getElementById('cafe-name').value, whatsapp: document.getElementById('whatsapp').value, description: document.getElementById('cafe-desc').value };
             await supabase.from('cafes').update(updates).eq('id', cafe.id);
-            alert('Settings Saved Successfully!');
+            alert('Profile immortalized.');
         });
 
-        // --- QR Code Generator & Downloader ---
         document.getElementById('generate-qr').addEventListener('click', () => {
-            const container = document.getElementById('qr-container');
-            container.innerHTML = '';
+            const container = document.getElementById('qr-container'); container.innerHTML = '';
             const url = `https://zakiewillplay.github.io/CafeBoss/menu.html?id=${cafe.id}`;
-            new QRCode(container, { text: url, width: 250, height: 250, colorDark: "#111827", colorLight: "#ffffff" });
-            
-            const urlInput = document.getElementById('qr-url');
-            urlInput.value = url;
-            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Link Copied to Clipboard!'); };
-            
+            new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#141210", colorLight: "#ffffff" });
+            const urlInput = document.getElementById('qr-url'); urlInput.value = url;
+            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Address Copied.'); };
             document.getElementById('download-qr').style.display = 'block';
         });
 
         document.getElementById('download-qr').addEventListener('click', () => {
             const canvas = document.querySelector('#qr-container canvas');
             if(!canvas) return;
-            const link = document.createElement('a');
-            link.download = 'CafeBoss-QR.png';
-            link.href = canvas.toDataURL();
-            link.click();
+            const link = document.createElement('a'); link.download = 'Plaque.png'; link.href = canvas.toDataURL(); link.click();
         });
 
         async function loadStats() {
@@ -315,21 +271,21 @@
 
             if (window.Chart) {
                 const ctx = document.getElementById('analyticsChart').getContext('2d');
-                new Chart(ctx, { type: 'line', data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#4F46E5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+                Chart.defaults.color = '#A9A499';
+                Chart.defaults.font.family = 'Inter';
+                new Chart(ctx, { type: 'line', data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Requisitions', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4, borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, grid: { color: '#2A2520' } }, x: { grid: { color: '#2A2520' } } }, plugins: { legend: { display: false } } } });
             }
         }
 
         window.filterOrders = (element, status) => {
             currentOrderFilter = status;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            element.classList.add('active');
-            loadOrders();
+            element.classList.add('active'); loadOrders();
         };
 
         async function loadOrders() {
             const { data } = await supabase.from('orders').select('*').eq('cafe_id', cafe.id).order('created_at', { ascending: false });
-            const list = document.getElementById('orders-list');
-            list.innerHTML = '';
+            const list = document.getElementById('orders-list'); list.innerHTML = '';
             
             const filtered = (data || []).filter(o => {
                 if(currentOrderFilter === 'new') return o.status === 'new';
@@ -338,76 +294,66 @@
             });
 
             filtered.forEach(o => {
-                const card = document.createElement('div');
-                card.className = 'order-card';
-                let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-weight:800;">${i.qty}x</span> ${i.name} (₹${i.price})`).join('<br>');
+                const card = document.createElement('div'); card.className = 'order-card';
+                let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-family:serif;">${i.qty}x</span> <span style="font-weight:300;">${i.name}</span> <span style="color:var(--text-muted); font-size:0.85em;">(₹${i.price})</span>`).join('<br>');
                 let actionBtn = '';
                 
-                if(o.status === 'new') actionBtn = `<button class="btn btn-success" onclick="updateOrderStatus('${o.id}', 'accepted')">Accept Order</button>`;
-                else if(o.status === 'accepted') actionBtn = `<button class="btn btn-warning" onclick="updateOrderStatus('${o.id}', 'delivered')">Mark as Delivered</button><button class="btn btn-success" style="margin-top:10px;" onclick="updateOrderStatus('${o.id}', 'completed')">Close Ticket</button>`;
-                else if(o.status === 'completed') actionBtn = `<button class="btn btn-secondary" onclick="generatePDF('${o.id}')">Download Receipt</button>`;
+                if(o.status === 'new') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px;" onclick="updateOrderStatus('${o.id}', 'accepted')">Acknowledge</button>`;
+                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Dispatch</button><button class="btn" style="width:auto; padding:10px 30px; border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Conclude</button>`;
+                else if(o.status === 'completed') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px; border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Issue Ledger</button>`;
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
-                        <strong style="color:var(--primary); font-size:1.1rem;">Table: ${o.table_number || 'Takeaway'}</strong>
-                        <span style="color:var(--text-muted); font-size:0.9rem;">${new Date(o.created_at).toLocaleTimeString()}</span>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:flex-end;">
+                        <strong style="color:var(--primary); font-family:'Cormorant Garamond', serif; font-size:1.6rem; font-weight:400; letter-spacing:1px;">Table: ${o.table_number || 'Outbound'}</strong>
+                        <span style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">${new Date(o.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div style="line-height:1.8;">${itemsHtml}</div>
-                    <div style="margin-top:15px; font-weight:800; font-size:1.3em;">Total: ₹${o.total}</div>
-                    <div style="margin-top:15px;">${actionBtn}</div>
+                    <div style="line-height:2; font-size:1.05rem;">${itemsHtml}</div>
+                    <div style="margin-top:25px; font-family:'Cormorant Garamond', serif; font-size:1.5rem; color:var(--text);">Total <span style="color:var(--primary);">₹${o.total}</span></div>
+                    <div style="margin-top:20px;">${actionBtn}</div>
                 `;
                 list.appendChild(card);
             });
-            
-            if(window.gsap && list.children.length > 0) gsap.from('.order-card', { opacity: 0, x: -20, stagger: 0.1, duration: 0.3 });
+            if(window.gsap && list.children.length > 0) gsap.from('.order-card', { opacity: 0, y: 15, stagger: 0.1, duration: 0.6, ease: "power2.out" });
         }
 
         window.updateOrderStatus = async (id, status) => { await supabase.from('orders').update({ status }).eq('id', id); loadOrders(); };
-
-        window.generatePDF = (id) => {
-            if (window.jspdf) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text(`Cafe Boss Receipt\nOrder ID: ${id}`, 10, 10); doc.save(`Receipt_${id}.pdf`); }
-        };
+        window.generatePDF = (id) => { if (window.jspdf) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "serif"); doc.text(`Cafe Boss Ledger\nTransaction: ${id.split('-')}`, 10, 20); doc.save(`Ledger_${id.split('-')}.pdf`); } };
 
         function setupRealtime() {
             if (!cafe || cafe.id === 'temp') return;
             supabase.channel('custom-all-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `cafe_id=eq.${cafe.id}` }, payload => {
-                beep();
-                if(Notification.permission === 'granted') new Notification('New Table Order!');
+                beep(); if(Notification.permission === 'granted') new Notification('Requisition Arrived');
                 if(currentOrderFilter === 'new') loadOrders();
             }).subscribe();
         }
 
         document.getElementById('ai-desc-btn').addEventListener('click', (e) => {
             e.preventDefault();
-            const phrases = ["Locally sourced and freshly prepared.", "Our signature dish, cooked to perfection.", "A delightful culinary experience.", "Crispy on the outside, tender on the inside.", "A fan favorite, made with a secret blend of spices."];
+            const phrases = ["Sourced with integrity, presented with elegance.", "A symphony of textures and heritage flavors.", "An uncompromising classic, refined for the modern palate.", "Delicate aromatics giving way to profound richness.", "Crafted meticulously to awaken the senses."];
             document.getElementById('item-desc').value = phrases[Math.floor(Math.random() * phrases.length)];
         });
 
         document.getElementById('save-item').addEventListener('click', async () => {
             const isVariants = document.getElementById('item-variants').value;
             const payload = { cafe_id: cafe.id, name: document.getElementById('item-name').value, description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''), price: isVariants ? 0 : (document.getElementById('item-price').value || 0), category: document.getElementById('item-category').value || 'Uncategorized', discount: document.getElementById('item-discount').value, featured: document.getElementById('item-featured').checked };
-            await supabase.from('menu_items').insert([payload]);
-            loadItems();
+            await supabase.from('menu_items').insert([payload]); loadItems();
             document.getElementById('item-name').value = ''; document.getElementById('item-desc').value = ''; document.getElementById('item-price').value = '';
         });
 
         async function loadItems() {
             const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafe.id);
-            const container = document.getElementById('items-container');
-            container.innerHTML = '';
-            const datalist = document.getElementById('categories');
-            let cats = new Set();
+            const container = document.getElementById('items-container'); container.innerHTML = '';
+            const datalist = document.getElementById('categories'); let cats = new Set();
 
             (data || []).forEach(item => {
                 if (item.category) cats.add(item.category);
-                const div = document.createElement('div');
-                div.className = 'item-row';
+                const div = document.createElement('div'); div.className = 'item-row';
                 div.innerHTML = `
                     <div>
-                        <strong style="font-size:1.1rem; color:var(--text);">${item.name}</strong> ${item.featured ? '🔥' : ''} ${item.discount ? `<span style="background:#FEE2E2; color:#DC2626; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-left:5px;">${item.discount}</span>` : ''}<br>
-                        <small style="color:var(--text-muted); font-weight:600;">${item.category} &bull; ₹${item.price}</small>
+                        <strong style="font-family:'Cormorant Garamond', serif; font-size:1.4rem; font-weight:600; color:var(--text); letter-spacing:1px;">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">✦</span>' : ''} ${item.discount ? `<span style="border:1px solid var(--primary); color:var(--primary); padding:2px 8px; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-left:10px;">${item.discount}</span>` : ''}<br>
+                        <small style="color:var(--text-muted); font-weight:300; text-transform:uppercase; letter-spacing:2px; font-size:0.7rem;">${item.category} &nbsp;|&nbsp; <span style="color:var(--primary);">₹${item.price}</span></small>
                     </div>
-                    <div><button onclick="deleteItem('${item.id}')" style="background:#FEE2E2; border:none; padding:8px 12px; border-radius:6px; color:#DC2626; font-weight:bold; cursor:pointer;">Remove</button></div>
+                    <div><button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; cursor:pointer;">Expunge</button></div>
                 `;
                 container.appendChild(div);
             });
@@ -417,21 +363,18 @@
         window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
 
         const handleImage = (e) => {
-            const file = e.target.files;
-            if(!file) return;
-            document.getElementById('ocr-preview').innerText = "Image selected. Ready to process.";
-            document.getElementById('scan-btn').style.display = 'block';
+            const file = e.target.files; if(!file) return;
+            document.getElementById('ocr-preview').innerText = "Analyzing parchment...";
             
-            document.getElementById('scan-btn').onclick = async () => {
-                document.getElementById('ocr-preview').innerText = "Extracting text... Please wait.";
-                if (window.Tesseract) {
+            if (window.Tesseract) {
+                setTimeout(async () => {
                     const worker = await Tesseract.createWorker('eng');
                     const ret = await worker.recognize(file);
                     await worker.terminate();
                     const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
-                    document.getElementById('ocr-preview').innerText = lines.join('\n');
-                }
-            };
+                    document.getElementById('ocr-preview').innerText = lines.join('\n') || "No distinct offerings discerned.";
+                }, 500);
+            }
         };
         document.getElementById('camera-input').addEventListener('change', handleImage);
         document.getElementById('gallery-input').addEventListener('change', handleImage);
