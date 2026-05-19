@@ -6,114 +6,113 @@
     <title>Menu</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        :root { --gold: #E5C158; --gold-light: #F9EEC1; --dark: #0A0806; --glass: rgba(20,18,15,0.8); --text: #eee; --bg: #111; }
-        .light-mode { --dark: #f9f9f9; --glass: rgba(255,255,255,0.9); --text: #111; --bg: #fff; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; transition: background 0.3s; }
+        :root { --primary: #4F46E5; --bg: #F9FAFB; --surface: #FFFFFF; --text: #111827; --text-muted: #6B7280; --border: #E5E7EB; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 100px; }
         
-        /* Intro Animation */
-        #intro { position: fixed; inset: 0; background: var(--dark); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        .cloche-container { position: relative; width: 100px; height: 100px; }
-        .plate { position: absolute; bottom: 0; width: 100%; height: 10px; background: #555; border-radius: 50%; }
-        .cloche { position: absolute; bottom: 5px; width: 100%; height: 60px; background: silver; border-top-left-radius: 50px; border-top-right-radius: 50px; animation: lift 2.5s forwards ease-in-out; }
-        @keyframes lift { 0%, 50% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        header { padding: 40px 20px 20px 20px; background: var(--surface); text-align: center; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0; font-size: 2.2rem; font-weight: 800; color: var(--text); }
+        p#cafe-desc { color: var(--text-muted); margin-top: 5px; font-size: 0.95rem; }
         
-        header { padding: 40px 20px; text-align: center; font-family: 'Playfair Display', serif; }
-        h1 { color: var(--gold); margin: 0; font-size: 2.5rem; }
+        .search-container { padding: 15px 20px; position: sticky; top: 0; z-index: 100; background: rgba(249, 250, 251, 0.9); backdrop-filter: blur(10px); }
+        #search { width: 100%; padding: 14px 20px; border-radius: 30px; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; box-sizing: border-box; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        #search:focus { border-color: var(--primary); }
         
-        .search-container { padding: 0 20px; position: sticky; top: 0; z-index: 100; background: var(--glass); backdrop-filter: blur(10px); padding-bottom: 10px; }
-        #search { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid var(--gold); background: transparent; color: var(--text); outline: none; box-sizing: border-box; }
-        
-        .categories { display: flex; overflow-x: auto; gap: 10px; padding: 15px 20px; scrollbar-width: none; }
+        .categories { display: flex; overflow-x: auto; gap: 10px; padding: 5px 20px 15px 20px; scrollbar-width: none; }
         .categories::-webkit-scrollbar { display: none; }
-        .cat-tab { padding: 8px 15px; border-radius: 20px; border: 1px solid var(--gold); white-space: nowrap; cursor: pointer; }
-        .cat-tab.active { background: var(--gold); color: #000; font-weight: bold; }
+        .cat-tab { padding: 8px 18px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); white-space: nowrap; cursor: pointer; font-weight: 600; color: var(--text-muted); transition: 0.2s; }
+        .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         
-        .menu-section { padding: 20px; }
-        .menu-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 15px 0; opacity: 0; }
-        .item-info { flex: 1; }
-        .item-title { font-weight: bold; font-size: 1.1rem; }
-        .badge { background: red; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
-        .variants { display: flex; gap: 5px; margin-top: 5px; }
-        .variant-pill { font-size: 0.8rem; padding: 4px 8px; border: 1px solid #555; border-radius: 12px; cursor: pointer; }
-        .variant-pill.active { background: var(--gold); color: #000; border-color: var(--gold); }
+        .menu-section { padding: 0 20px 20px 20px; }
+        .menu-section h2 { font-size: 1.3rem; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 15px; color: var(--text); }
         
-        .qty-controls { display: flex; align-items: center; gap: 10px; }
-        .qty-btn { background: var(--gold); color: #000; border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; cursor: pointer; transition: transform 0.1s; }
-        .qty-btn:active { transform: scale(0.8); }
+        .menu-item { background: var(--surface); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid var(--border); opacity: 0; }
+        .item-info { flex: 1; padding-right: 15px; }
+        .item-title { font-weight: 700; font-size: 1.15rem; color: var(--text); margin-bottom: 4px; }
+        .badge { background: #FEE2E2; color: #DC2626; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; margin-left: 8px; vertical-align: middle; }
+        .item-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 8px; }
+        .item-price { font-weight: 800; color: var(--primary); font-size: 1.1rem; }
         
-        #cart-btn { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; border: none; border-radius: 30px; padding: 15px 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; z-index: 1000; }
-        .pulse { animation: pulse 0.3s; }
-        @keyframes pulse { 50% { transform: scale(1.1); } }
+        .variants { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .variant-pill { font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; color: var(--text-muted); }
+        .variant-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--dark); border-top: 2px solid var(--gold); padding: 20px; border-top-left-radius: 20px; border-top-right-radius: 20px; transform: translateY(100%); transition: transform 0.3s; z-index: 1001; }
+        .qty-controls { display: flex; align-items: center; gap: 12px; background: var(--bg); padding: 5px; border-radius: 30px; border: 1px solid var(--border); }
+        .qty-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .qty-btn:active { transform: scale(0.9); }
+        .qty-val { font-weight: 700; min-width: 15px; text-align: center; }
+        
+        #cart-btn { position: fixed; bottom: 25px; right: 20px; background: var(--primary); color: #fff; border: none; border-radius: 30px; padding: 16px 24px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); cursor: pointer; z-index: 1000; transition: transform 0.2s; display: flex; align-items: center; gap: 10px; }
+        #cart-btn:active { transform: scale(0.95); }
+        
+        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 25px; border-top-left-radius: 24px; border-top-right-radius: 24px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1001; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
         #cart-panel.open { transform: translateY(0); }
-        .cart-input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #555; background: transparent; color: var(--text); box-sizing: border-box; }
-        .place-order-btn { width: 100%; background: var(--gold); color: #000; padding: 15px; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        .cart-input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 1rem; outline: none; }
+        .cart-input:focus { border-color: var(--primary); background: #fff; }
+        .place-order-btn { width: 100%; background: var(--primary); color: #fff; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div id="intro">
-        <div class="cloche-container">
-            <div class="plate"></div>
-            <div class="cloche"></div>
-        </div>
-    </div>
 
     <header>
-        <h1 id="cafe-name">Cafe</h1>
-        <p id="cafe-desc" style="font-size: 0.9em; color: #aaa;"></p>
+        <h1 id="cafe-name">Welcome</h1>
+        <p id="cafe-desc">Browse our delicious menu.</p>
     </header>
 
     <div class="search-container">
-        <input type="text" id="search" placeholder="Search menu...">
+        <input type="text" id="search" placeholder="Search for dishes, drinks...">
     </div>
     
     <div class="categories" id="categories-container"></div>
     <div id="menu-container"></div>
 
-    <button id="cart-btn" style="display:none;" onclick="toggleCart()">🛒 <span id="cart-count">0</span> | ₹<span id="cart-total">0</span></button>
+    <button id="cart-btn" style="display:none;" onclick="toggleCart()">
+        <span style="background:white; color:var(--primary); border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.9rem;" id="cart-count">0</span>
+        View Order (₹<span id="cart-total">0</span>)
+    </button>
 
     <div id="cart-panel">
-        <h3 style="margin-top:0; color:var(--gold);">Your Order</h3>
-        <div id="cart-items" style="max-height:150px; overflow-y:auto; margin-bottom:15px; font-size:0.9em;"></div>
-        <input type="text" id="table-number" class="cart-input" placeholder="Table Number *" required>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:1.4rem;">Confirm Order</h3>
+            <button style="background:none; border:none; font-size:1.5rem; color:var(--text-muted); cursor:pointer;" onclick="toggleCart()">&times;</button>
+        </div>
+        <div id="cart-items" style="max-height:180px; overflow-y:auto; margin-bottom:20px; font-size:0.95rem; font-weight:500; color:var(--text-muted); line-height:1.6;"></div>
+        
+        <input type="text" id="table-number" class="cart-input" placeholder="Table Number (Required) *" required>
         <input type="text" id="customer-name" class="cart-input" placeholder="Your Name (Optional)">
-        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
-        <button style="width:100%; padding:10px; margin-top:5px; background:transparent; color:var(--text); border:none;" onclick="toggleCart()">Close</button>
+        
+        <button class="place-order-btn" onclick="placeOrder()">Send to Kitchen</button>
     </div>
 
     <script type="module">
-        import { supabase } from './config.js';
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
         const urlParams = new URLSearchParams(window.location.search);
         const cafeId = urlParams.get('id');
         let allItems = [];
         let cart = {};
 
-        setTimeout(() => { document.getElementById('intro').style.display = 'none'; animateItems(); }, 2500);
-
         async function init() {
-            if(!cafeId) return document.body.innerHTML = '<h2 style="text-align:center;margin-top:50px;">Invalid Menu Link</h2>';
+            if(!cafeId) return document.body.innerHTML = '<div style="padding:50px; text-align:center;"><h2>Invalid QR Code</h2><p>Please scan a valid Cafe Boss menu.</p></div>';
             
-            // Log view
             supabase.from('menu_views_log').insert([{ cafe_id: cafeId }]).then();
 
             const { data: cafe } = await supabase.from('cafes').select('*').eq('id', cafeId).single();
             if(cafe) {
                 document.getElementById('cafe-name').innerText = cafe.cafe_name;
                 document.getElementById('cafe-desc').innerText = cafe.description;
-                document.documentElement.style.setProperty('--gold', cafe.primary_color);
+                document.documentElement.style.setProperty('--primary', cafe.primary_color);
             }
 
             const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true);
-            allItems = data;
+            allItems = data || [];
             renderMenu(allItems);
         }
 
         function parseVariants(desc) {
             const match = desc?.match(/VAR::(.*)/);
             if(!match) return null;
-            return match[1].split('|').map(v => { const [name, price] = v.split('='); return { name, price: parseFloat(price) }; });
+            return match.split('|').map(v => { const [name, price] = v.split('='); return { name, price: parseFloat(price) }; });
         }
 
         function renderMenu(items) {
@@ -125,13 +124,12 @@
             categories.forEach((c, idx) => {
                 catContainer.innerHTML += `<div class="cat-tab ${idx===0?'active':''}" onclick="scrollToCat('${c}')">${c}</div>`;
                 
-                let html = `<div class="menu-section" id="cat-${c.replace(/\s+/g, '-')}">
-                    <h2 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:5px;">${c}</h2>`;
+                let html = `<div class="menu-section" id="cat-${c.replace(/\s+/g, '-')}"><h2>${c}</h2>`;
                 
                 items.filter(i => i.category === c).forEach(item => {
                     const variants = parseVariants(item.description);
                     const cleanDesc = item.description ? item.description.replace(/VAR::.*/, '') : '';
-                    let priceHtml = variants ? `₹${variants[0].price}` : `₹${item.price}`;
+                    let priceHtml = variants ? `₹${variants.price}` : `₹${item.price}`;
                     
                     let variantHtml = '';
                     if(variants) {
@@ -144,25 +142,23 @@
                     <div class="menu-item">
                         <div class="item-info">
                             <div class="item-title">${item.name} ${item.featured?'🔥':''} ${item.discount?`<span class="badge">${item.discount}</span>`:''}</div>
-                            <div style="font-size:0.8em; color:#aaa;">${cleanDesc}</div>
-                            <div style="font-weight:bold; margin-top:5px;" id="price-${item.id}" data-baseprice="${variants ? variants[0].price : item.price}">${priceHtml}</div>
+                            <div class="item-desc">${cleanDesc}</div>
+                            <div class="item-price" id="price-${item.id}" data-baseprice="${variants ? variants.price : item.price}">${priceHtml}</div>
                             ${variantHtml}
                         </div>
                         <div class="qty-controls">
                             <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
-                            <span id="qty-${item.id}">0</span>
-                            <button class="qty-btn" onclick="updateQty('${item.id}', 1, '${item.name}')">+</button>
+                            <span class="qty-val" id="qty-${item.id}">0</span>
+                            <button class="qty-btn" onclick="updateQty('${item.id}', 1, '${item.name.replace(/'/g, "\\'")}')">+</button>
                         </div>
                     </div>`;
                 });
                 html += `</div>`;
                 container.innerHTML += html;
             });
-            animateItems();
-        }
-
-        function animateItems() {
-            gsap.fromTo('.menu-item', { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.5 });
+            
+            if(window.gsap) gsap.fromTo('.menu-item', { opacity: 0, y: 15 }, { opacity: 1, y: 0, stagger: 0.05, duration: 0.4, ease: "power2.out" });
+            else document.querySelectorAll('.menu-item').forEach(el => el.style.opacity = 1);
         }
 
         document.getElementById('search').addEventListener('input', (e) => {
@@ -172,7 +168,11 @@
         });
 
         window.scrollToCat = (cat) => {
-            document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
+            const y = el.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({top: y, behavior: 'smooth'});
         };
 
         window.selectVariant = (el, id, price, vName) => {
@@ -181,8 +181,6 @@
             document.getElementById(`price-${id}`).innerText = `₹${price}`;
             document.getElementById(`price-${id}`).dataset.baseprice = price;
             document.getElementById(`price-${id}`).dataset.vname = vName;
-            
-            // Reset qty when variant changes to avoid cart confusion
             if(cart[id]) { updateQty(id, -cart[id].qty); }
         };
 
@@ -202,11 +200,6 @@
             else delete cart[id];
 
             updateCartUI();
-            
-            if(delta > 0) {
-                const btn = document.getElementById('cart-btn');
-                btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
-            }
         };
 
         function updateCartUI() {
@@ -215,12 +208,12 @@
             for(let key in cart) {
                 totalQty += cart[key].qty;
                 totalPrice += cart[key].price * cart[key].qty;
-                itemsHtml.push(`<div>${cart[key].qty}x ${cart[key].name} - ₹${cart[key].price * cart[key].qty}</div>`);
+                itemsHtml.push(`<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><span style="color:var(--text); font-weight:700;">${cart[key].qty}x</span> ${cart[key].name}</span> <span>₹${cart[key].price * cart[key].qty}</span></div>`);
             }
             document.getElementById('cart-count').innerText = totalQty;
             document.getElementById('cart-total').innerText = totalPrice;
             document.getElementById('cart-items').innerHTML = itemsHtml.join('');
-            document.getElementById('cart-btn').style.display = totalQty > 0 ? 'block' : 'none';
+            document.getElementById('cart-btn').style.display = totalQty > 0 ? 'flex' : 'none';
             if(totalQty === 0) document.getElementById('cart-panel').classList.remove('open');
         }
 
@@ -229,31 +222,18 @@
         window.placeOrder = async () => {
             const table = document.getElementById('table-number').value;
             const name = document.getElementById('customer-name').value || 'Guest';
-            if(!table) return alert('Please enter table number');
+            if(!table) return alert('Please enter your table number to order.');
             
+            document.querySelector('.place-order-btn').innerText = 'Sending...';
             const itemsArr = Object.values(cart);
             const total = parseFloat(document.getElementById('cart-total').innerText);
 
-            const { data, error } = await supabase.from('orders').insert([{
-                cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total
-            }]).select().single();
+            const { data, error } = await supabase.from('orders').insert([{ cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total }]).select().single();
 
             if(!error) {
-                document.getElementById('cart-panel').innerHTML = `<h3 style="color:var(--gold); text-align:center;">Order Placed Successfully! 🎉</h3><p style="text-align:center;">Sit back and relax. Your food is being prepared.</p>`;
-                pollOrder(data.id);
+                document.getElementById('cart-panel').innerHTML = `<div style="text-align:center; padding:20px;"><div style="font-size:3rem; margin-bottom:10px;">✅</div><h3 style="color:var(--text); margin:0 0 10px 0;">Order Received!</h3><p style="color:var(--text-muted); margin:0;">The kitchen is working on your food.</p><button onclick="window.location.reload()" style="margin-top:20px; background:var(--bg); border:1px solid var(--border); padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">Close</button></div>`;
             }
         };
-
-        function pollOrder(orderId) {
-            const interval = setInterval(async () => {
-                const { data } = await supabase.from('orders').select('status').eq('id', orderId).single();
-                if(data && data.status === 'accepted') {
-                    alert("The cafe has accepted your order! It's in the kitchen now.");
-                    if(Notification.permission === 'granted') new Notification('Order Accepted!');
-                    clearInterval(interval);
-                }
-            }, 5000);
-        }
 
         init();
     </script>
