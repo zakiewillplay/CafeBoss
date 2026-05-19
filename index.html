@@ -4,43 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cafe Boss | Modern Digital Menus</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        :root { --primary: #4F46E5; --primary-hover: #4338CA; --bg: #F3F4F6; --surface: #FFFFFF; --text: #111827; --text-muted: #6B7280; --border: #E5E7EB; --radius: 16px; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
-        header { padding: 60px 20px; text-align: center; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
-        h1 { font-size: 3.5rem; color: var(--primary); margin-bottom: 10px; font-weight: 800; letter-spacing: -1px; }
-        p.tagline { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; }
-        .btn { display: inline-block; background: var(--primary); color: #fff; padding: 15px 35px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); }
-        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
-        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 60px 20px; }
-        .feature-card { background: var(--surface); border-radius: var(--radius); padding: 30px; width: 320px; text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); transition: transform 0.2s; }
-        .feature-card:hover { transform: translateY(-5px); }
-        .feature-card h3 { color: var(--text); margin-top: 0; font-size: 1.5rem; }
-        footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.9rem; }
+        :root { --primary: #4F46E5; --primary-hover: #4338CA; --bg: #0f172a; --surface: rgba(255, 255, 255, 0.05); --text: #f8fafc; --text-muted: #94a3b8; --border: rgba(255,255,255,0.1); --radius: 20px; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
+        
+        /* Animated Glowing Background */
+        .glow-orb { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(79,70,229,0.3) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; animation: float 10s infinite ease-in-out alternate; }
+        .orb-1 { top: -100px; left: -100px; }
+        .orb-2 { bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); animation-delay: -5s; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(50px) scale(1.2); } }
+
+        header { padding: 100px 20px 60px 20px; text-align: center; position: relative; }
+        h1 { font-size: 4rem; color: #fff; margin-bottom: 15px; font-weight: 900; letter-spacing: -2px; text-shadow: 0 10px 30px rgba(79, 70, 229, 0.5); }
+        .highlight { background: linear-gradient(to right, #4F46E5, #10B981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.tagline { font-size: 1.3rem; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        
+        .btn { display: inline-block; background: var(--primary); color: #fff; padding: 18px 40px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 1.1rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); border: 1px solid rgba(255,255,255,0.1); }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 35px rgba(79, 70, 229, 0.6); }
+        
+        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 40px 20px 80px 20px; }
+        .feature-card { background: var(--surface); backdrop-filter: blur(12px); border-radius: var(--radius); padding: 40px 30px; width: 300px; text-align: center; border: 1px solid var(--border); transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.08); }
+        .feature-icon { font-size: 3rem; margin-bottom: 20px; }
+        .feature-card h3 { color: #fff; margin-top: 0; font-size: 1.5rem; }
+        
+        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Cafe Boss</h1>
-        <p class="tagline">The smartest way to manage your cafe. Create beautiful digital QR menus in seconds and receive orders instantly.</p>
-        <a href="auth.html" class="btn">Get Started Free</a>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <header class="gsap-hero">
+        <h1>Cafe <span class="highlight">Boss</span></h1>
+        <p class="tagline">The smartest way to manage your restaurant. Create beautiful digital QR menus and receive live table orders instantly.</p>
+        <a href="auth.html" class="btn">Launch Dashboard &rarr;</a>
     </header>
+    
     <section class="features">
-        <div class="feature-card">
-            <h3 style="color: #4F46E5;">🚀 Instant Setup</h3>
-            <p style="color: var(--text-muted);">Generate a beautiful digital menu accessible instantly via QR code. No downloads required for your customers.</p>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">🚀</div>
+            <h3>Instant Setup</h3>
+            <p style="color: var(--text-muted);">Generate a stunning digital menu accessible instantly via QR code. Zero apps to download.</p>
         </div>
-        <div class="feature-card">
-            <h3 style="color: #10B981;">📱 Live Orders</h3>
-            <p style="color: var(--text-muted);">Customers order directly from their tables. Hear the ping and manage tickets in real-time from your dashboard.</p>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">🔔</div>
+            <h3>Live Ping Orders</h3>
+            <p style="color: var(--text-muted);">Customers order directly from their tables. Hear the ping and manage tickets in real-time.</p>
         </div>
-        <div class="feature-card">
-            <h3 style="color: #F59E0B;">🎨 Fully Custom</h3>
-            <p style="color: var(--text-muted);">Upload your menu easily and customize the colors to match your brand's unique identity perfectly.</p>
+        <div class="feature-card gsap-card">
+            <div class="feature-icon">✨</div>
+            <h3>AI Powered</h3>
+            <p style="color: var(--text-muted);">Scan your physical menu with our AI to automatically extract items and generate delicious descriptions.</p>
         </div>
     </section>
-    <footer>
-        <p>&copy; 2026 Cafe Boss Platform. Built by Zakir Rashid.</p>
+
+    <footer class="gsap-footer">
+        <p>&copy; 2026 Cafe Boss Platform. Engineered by Zakir Rashid.</p>
     </footer>
+
+    <script>
+        // Smooth GSAP Entrance Animations
+        gsap.from(".gsap-hero h1", { y: 50, opacity: 0, duration: 1, ease: "back.out(1.7)" });
+        gsap.from(".gsap-hero p", { y: 30, opacity: 0, duration: 1, delay: 0.2, ease: "power3.out" });
+        gsap.from(".gsap-hero .btn", { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: "power3.out" });
+        gsap.from(".gsap-card", { y: 50, opacity: 0, duration: 0.8, stagger: 0.2, delay: 0.6, ease: "power3.out" });
+        gsap.from(".gsap-footer", { opacity: 0, duration: 1, delay: 1.2 });
+    </script>
 </body>
 </html>
