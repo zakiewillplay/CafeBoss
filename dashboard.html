@@ -10,8 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { --primary: #FF6B35; --accent: #2F3E46; --bg: #1a1c1d; --text: #f0f0f0; --card-bg: #2a2a2c; --border: #3a3a3c; --success: #27ae60; --warning: #f39c12; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; animation: slideUp 0.5s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
         h1, h2, h3 { margin: 0; }
         .controls button, .controls select { margin-left: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); cursor: pointer; }
@@ -28,7 +27,7 @@
         .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab { padding: 8px 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
         .tab.active { background: var(--primary); border-color: var(--primary); }
-        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; }
+        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 10px; width: 100%; }
         .hidden { display: none; }
         #qr-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
         .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center; }
@@ -65,9 +64,9 @@
     <div class="card" style="margin-bottom: 20px;">
         <h2 data-i18n="orders">Orders</h2>
         <div class="tabs">
-            <div class="tab active" onclick="filterOrders('new')">New</div>
-            <div class="tab" onclick="filterOrders('accepted')">Accepted</div>
-            <div class="tab" onclick="filterOrders('completed')">Completed</div>
+            <div class="tab active" onclick="filterOrders(this, 'new')">New</div>
+            <div class="tab" onclick="filterOrders(this, 'accepted')">Accepted</div>
+            <div class="tab" onclick="filterOrders(this, 'completed')">Completed</div>
         </div>
         <div id="orders-list"></div>
     </div>
@@ -145,7 +144,6 @@
         let currentOrderFilter = 'new';
         let audioCtx;
         
-        // i18n dictionary
         const t = {
             en: { title: "☕ Cafe Boss", stats: "Overview Stats", orders: "Orders" },
             hi: { title: "☕ कैफे बॉस", stats: "अवलोकन आंकड़े", orders: "आदेश" }
@@ -186,32 +184,37 @@
         window.toggleCard = (id) => document.getElementById(id).classList.toggle('hidden');
 
         async function init() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return window.location.href = 'auth.html';
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return window.location.href = 'auth.html';
 
-            // Auto-repair Cafe Row
-            let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).single();
-            if (!cafeData) {
-                const { data: newCafe, error } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().single();
-                if (error) {
-                    alert("Cafe profile not ready. Please re-login.");
-                    cafe = { id: 'temp', owner_id: user.id, cafe_name: 'Temp Cafe' };
-                } else { cafe = newCafe; }
-            } else { cafe = cafeData; }
+                let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
+                
+                if (!cafeData) {
+                    const { data: newCafe, error } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
+                    if (error) {
+                        console.error(error);
+                        cafe = { id: 'temp', owner_id: user.id, cafe_name: 'My Cafe', primary_color: '#FF6B35', accent_color: '#2F3E46', menu_views: 0 };
+                    } else { cafe = newCafe; }
+                } else { cafe = cafeData; }
 
-            populateSettings();
-            loadStats();
-            loadOrders();
-            loadItems();
-            setupRealtime();
+                populateSettings();
+                await loadStats();
+                await loadOrders();
+                await loadItems();
+                setupRealtime();
+            } catch (err) {
+                console.error("Initialization breakdown:", err);
+            }
         }
 
         function populateSettings() {
-            document.getElementById('cafe-name').value = cafe.cafe_name;
-            document.getElementById('whatsapp').value = cafe.whatsapp;
-            document.getElementById('cafe-desc').value = cafe.description;
-            document.getElementById('primary-color').value = cafe.primary_color;
-            document.getElementById('accent-color').value = cafe.accent_color;
+            if (!cafe) return;
+            document.getElementById('cafe-name').value = cafe.cafe_name || '';
+            document.getElementById('whatsapp').value = cafe.whatsapp || '';
+            document.getElementById('cafe-desc').value = cafe.description || '';
+            document.getElementById('primary-color').value = cafe.primary_color || '#FF6B35';
+            document.getElementById('accent-color').value = cafe.accent_color || '#2F3E46';
         }
 
         document.getElementById('save-settings').addEventListener('click', async () => {
@@ -226,39 +229,37 @@
             alert('Settings Saved');
         });
 
-        // QR Code
         document.getElementById('generate-qr').addEventListener('click', () => {
             const container = document.getElementById('qr-container');
             container.innerHTML = '';
-            const url = `https://zakiewillplay.github.io/CafeBoss.io/menu.html?id=${cafe.id}`;
+            const url = `https://zakiewillplay.github.io/CafeBoss/menu.html?id=${cafe.id}`;
             new QRCode(container, { text: url, width: 250, height: 250 });
             const urlInput = document.getElementById('qr-url');
             urlInput.value = url;
-            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Copied!'); };
+            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Copied Link!'); };
         });
 
-        // Stats & Chart
         async function loadStats() {
-            document.getElementById('stat-views').innerText = cafe.menu_views;
+            document.getElementById('stat-views').innerText = cafe.menu_views || 0;
+            
             const { count: itemCount } = await supabase.from('menu_items').select('*', { count: 'exact', head: true }).eq('cafe_id', cafe.id);
             document.getElementById('stat-items').innerText = itemCount || 0;
+            
             const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('cafe_id', cafe.id);
             document.getElementById('stat-orders').innerText = orderCount || 0;
 
-            // Chart
             const ctx = document.getElementById('analyticsChart').getContext('2d');
             new Chart(ctx, {
                 type: 'line',
-                data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [2,5,3,8,6,12,orderCount||0], borderColor: '#FF6B35', tension: 0.3 }] },
+                data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#FF6B35', tension: 0.3 }] },
                 options: { responsive: true, scales: { y: { beginAtZero: true } } }
             });
         }
 
-        // Orders Management
-        window.filterOrders = (status) => {
+        window.filterOrders = (element, status) => {
             currentOrderFilter = status;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            element.classList.add('active');
             loadOrders();
         };
 
@@ -267,7 +268,8 @@
             const list = document.getElementById('orders-list');
             list.innerHTML = '';
             
-            const filtered = data.filter(o => {
+            const orderData = data || [];
+            const filtered = orderData.filter(o => {
                 if(currentOrderFilter === 'new') return o.status === 'new';
                 if(currentOrderFilter === 'accepted') return o.status === 'accepted' || o.status === 'delivered';
                 return o.status === 'completed';
@@ -276,7 +278,7 @@
             filtered.forEach(o => {
                 const card = document.createElement('div');
                 card.className = 'order-card';
-                let itemsHtml = o.items.map(i => `${i.qty}x ${i.name} (₹${i.price})`).join('<br>');
+                let itemsHtml = (o.items || []).map(i => `${i.qty}x ${i.name} (₹${i.price})`).join('<br>');
                 let actionBtn = '';
                 
                 if(o.status === 'new') actionBtn = `<button class="btn btn-success" onclick="updateOrderStatus('${o.id}', 'accepted')">Accept</button>`;
@@ -285,7 +287,7 @@
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <strong>Table: ${o.table_number}</strong>
+                        <strong>Table: ${o.table_number || 'N/A'}</strong>
                         <span>${new Date(o.created_at).toLocaleTimeString()}</span>
                     </div>
                     <div>${itemsHtml}</div>
@@ -309,6 +311,7 @@
         };
 
         function setupRealtime() {
+            if (cafe.id === 'temp') return;
             supabase.channel('custom-all-channel')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `cafe_id=eq.${cafe.id}` }, payload => {
                     beep();
@@ -318,7 +321,6 @@
                 }).subscribe();
         }
 
-        // Add Items
         document.getElementById('ai-desc-btn').addEventListener('click', (e) => {
             e.preventDefault();
             const phrases = ["Mouth-watering perfection", "Freshly prepared with love", "A delightful chef's special", "Crispy, savory, and irresistible"];
@@ -331,8 +333,8 @@
                 cafe_id: cafe.id,
                 name: document.getElementById('item-name').value,
                 description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''),
-                price: isVariants ? 0 : document.getElementById('item-price').value,
-                category: document.getElementById('item-category').value,
+                price: isVariants ? 0 : (document.getElementById('item-price').value || 0),
+                category: document.getElementById('item-category').value || 'Uncategorized',
                 discount: document.getElementById('item-discount').value,
                 featured: document.getElementById('item-featured').checked
             };
@@ -348,8 +350,9 @@
             const datalist = document.getElementById('categories');
             let cats = new Set();
 
-            data.forEach(item => {
-                cats.add(item.category);
+            const itemData = data || [];
+            itemData.forEach(item => {
+                if (item.category) cats.add(item.category);
                 const div = document.createElement('div');
                 div.className = 'item-row';
                 div.innerHTML = `
@@ -371,9 +374,8 @@
             loadItems();
         }
 
-        // Tesseract OCR Logic
         const handleImage = (e) => {
-            const file = e.target.files[0];
+            const file = e.target.files;
             if(!file) return;
             document.getElementById('ocr-preview').innerText = "Image selected. Ready to scan.";
             document.getElementById('scan-btn').style.display = 'block';
@@ -383,12 +385,12 @@
         document.getElementById('gallery-input').addEventListener('change', handleImage);
 
         async function scanImage(file) {
-            document.getElementById('ocr-preview').innerText = "Scanning... Please wait (this takes a moment).";
+            document.getElementById('ocr-preview').innerText = "Scanning... Please wait.";
             const worker = await Tesseract.createWorker('eng');
             const ret = await worker.recognize(file);
             await worker.terminate();
             
-            const lines = ret.data.text.split('\n').filter(l => l.match(/\d/)); // basic filter for price
+            const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
             document.getElementById('ocr-preview').innerText = lines.join('\n');
         }
 
