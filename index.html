@@ -3,74 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafe Boss | Modern Digital Menus</title>
+    <title>Cafe Boss | Elegant Digital Menus</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4F46E5; --primary-hover: #4338CA; --bg: #0f172a; --surface: rgba(255, 255, 255, 0.05); --text: #f8fafc; --text-muted: #94a3b8; --border: rgba(255,255,255,0.1); --radius: 20px; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
+        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --primary-hover: #C5A059; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
         
-        /* Animated Glowing Background */
-        .glow-orb { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(79,70,229,0.3) 0%, rgba(0,0,0,0) 70%); border-radius: 50%; filter: blur(40px); z-index: -1; animation: float 10s infinite ease-in-out alternate; }
-        .orb-1 { top: -100px; left: -100px; }
-        .orb-2 { bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(0,0,0,0) 70%); animation-delay: -5s; }
-        @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(50px) scale(1.2); } }
+        /* Subtle Luxury Gradient */
+        .ambient-glow { position: absolute; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, rgba(10,9,8,1) 60%); z-index: -1; top: 0; left: 0; }
 
-        header { padding: 100px 20px 60px 20px; text-align: center; position: relative; }
-        h1 { font-size: 4rem; color: #fff; margin-bottom: 15px; font-weight: 900; letter-spacing: -2px; text-shadow: 0 10px 30px rgba(79, 70, 229, 0.5); }
-        .highlight { background: linear-gradient(to right, #4F46E5, #10B981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p.tagline { font-size: 1.3rem; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        header { padding: 120px 20px 80px 20px; text-align: center; position: relative; }
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: 4.5rem; color: var(--text); margin-bottom: 10px; font-weight: 600; letter-spacing: 2px; }
+        .highlight { color: var(--primary); font-style: italic; }
+        p.tagline { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 50px; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 300; letter-spacing: 1px; }
         
-        .btn { display: inline-block; background: var(--primary); color: #fff; padding: 18px 40px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 1.1rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); border: 1px solid rgba(255,255,255,0.1); }
-        .btn:hover { background: var(--primary-hover); transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 35px rgba(79, 70, 229, 0.6); }
+        .btn { display: inline-block; background: transparent; color: var(--primary); padding: 16px 45px; border: 1px solid var(--primary); text-decoration: none; font-weight: 400; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; transition: all 0.4s ease; }
+        .btn:hover { background: var(--primary); color: var(--bg); }
         
-        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 40px 20px 80px 20px; }
-        .feature-card { background: var(--surface); backdrop-filter: blur(12px); border-radius: var(--radius); padding: 40px 30px; width: 300px; text-align: center; border: 1px solid var(--border); transition: transform 0.3s; }
-        .feature-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.08); }
-        .feature-icon { font-size: 3rem; margin-bottom: 20px; }
-        .feature-card h3 { color: #fff; margin-top: 0; font-size: 1.5rem; }
+        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; padding: 40px 20px 100px 20px; }
+        .feature-card { background: transparent; padding: 40px 30px; width: 280px; text-align: center; border: 1px solid var(--border); transition: border-color 0.4s ease; position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px; background: var(--primary); transition: width 0.4s ease; }
+        .feature-card:hover { border-color: rgba(212, 175, 55, 0.3); }
+        .feature-card:hover::before { width: 100%; }
         
-        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 25px; color: var(--primary); }
+        .feature-card h3 { font-family: 'Cormorant Garamond', serif; color: var(--text); margin-top: 0; font-size: 1.8rem; font-weight: 600; letter-spacing: 1px; }
+        
+        footer { text-align: center; padding: 50px; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border); letter-spacing: 1px; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
+    <div class="ambient-glow"></div>
 
     <header class="gsap-hero">
         <h1>Cafe <span class="highlight">Boss</span></h1>
-        <p class="tagline">The smartest way to manage your restaurant. Create beautiful digital QR menus and receive live table orders instantly.</p>
-        <a href="auth.html" class="btn">Launch Dashboard &rarr;</a>
+        <p class="tagline">Elevate your dining experience. Bespoke digital menus and seamless table-side ordering for the modern establishment.</p>
+        <a href="auth.html" class="btn">Enter Dashboard</a>
     </header>
     
     <section class="features">
         <div class="feature-card gsap-card">
-            <div class="feature-icon">🚀</div>
-            <h3>Instant Setup</h3>
-            <p style="color: var(--text-muted);">Generate a stunning digital menu accessible instantly via QR code. Zero apps to download.</p>
+            <div class="feature-icon">✧</div>
+            <h3>Refined Menus</h3>
+            <p style="color: var(--text-muted); font-weight:300;">Craft stunning, typography-driven digital menus accessible instantly via a graceful QR scan.</p>
         </div>
         <div class="feature-card gsap-card">
-            <div class="feature-icon">🔔</div>
-            <h3>Live Ping Orders</h3>
-            <p style="color: var(--text-muted);">Customers order directly from their tables. Hear the ping and manage tickets in real-time.</p>
+            <div class="feature-icon">🛎️</div>
+            <h3>Discreet Ordering</h3>
+            <p style="color: var(--text-muted); font-weight:300;">Guests place requests directly from their tables. Receive live chimes with elegant precision.</p>
         </div>
         <div class="feature-card gsap-card">
-            <div class="feature-icon">✨</div>
-            <h3>AI Powered</h3>
-            <p style="color: var(--text-muted);">Scan your physical menu with our AI to automatically extract items and generate delicious descriptions.</p>
+            <div class="feature-icon">✒️</div>
+            <h3>AI Curation</h3>
+            <p style="color: var(--text-muted); font-weight:300;">Scan printed menus to automatically digitize items with sophisticated, appetizing descriptions.</p>
         </div>
     </section>
 
     <footer class="gsap-footer">
-        <p>&copy; 2026 Cafe Boss Platform. Engineered by Zakir Rashid.</p>
+        <p>&copy; 2026 Cafe Boss &middot; Engineered by Zakir Rashid</p>
     </footer>
 
     <script>
-        // Smooth GSAP Entrance Animations
-        gsap.from(".gsap-hero h1", { y: 50, opacity: 0, duration: 1, ease: "back.out(1.7)" });
-        gsap.from(".gsap-hero p", { y: 30, opacity: 0, duration: 1, delay: 0.2, ease: "power3.out" });
-        gsap.from(".gsap-hero .btn", { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: "power3.out" });
-        gsap.from(".gsap-card", { y: 50, opacity: 0, duration: 0.8, stagger: 0.2, delay: 0.6, ease: "power3.out" });
-        gsap.from(".gsap-footer", { opacity: 0, duration: 1, delay: 1.2 });
+        gsap.from(".gsap-hero h1", { y: 30, opacity: 0, duration: 1.5, ease: "power2.out" });
+        gsap.from(".gsap-hero p", { y: 20, opacity: 0, duration: 1.5, delay: 0.3, ease: "power2.out" });
+        gsap.from(".gsap-hero .btn", { opacity: 0, duration: 1.5, delay: 0.6 });
+        gsap.from(".gsap-card", { y: 40, opacity: 0, duration: 1, stagger: 0.2, delay: 0.8, ease: "power2.out" });
     </script>
 </body>
 </html>
