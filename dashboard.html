@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Cafe Boss</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    
     <style>
         :root { --primary: #FF6B35; --accent: #2F3E46; --bg: #1a1c1d; --text: #f0f0f0; --card-bg: #2a2a2c; --border: #3a3a3c; --success: #27ae60; --warning: #f39c12; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
         h1, h2, h3 { margin: 0; }
         .controls button, .controls select { margin-left: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text); cursor: pointer; }
@@ -31,9 +34,12 @@
         .hidden { display: none; }
         #qr-container { display: flex; flex-direction: column; align-items: center; margin-top: 15px; }
         .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center; }
+        #debug-panel { position: fixed; bottom: 0; left: 0; right: 0; background: red; color: white; padding: 10px; font-weight: bold; z-index: 9999; display: none; max-height: 200px; overflow-y: auto; }
     </style>
 </head>
 <body>
+    <div id="debug-panel"></div>
+
     <header>
         <h1 data-i18n="title">☕ Cafe Boss</h1>
         <div class="controls">
@@ -140,6 +146,13 @@
     <script type="module">
         import { supabase } from './config.js';
 
+        // Global Error Catcher
+        window.onerror = function(msg, url, line) {
+            const panel = document.getElementById('debug-panel');
+            panel.style.display = 'block';
+            panel.innerHTML += `🚨 ERROR: ${msg} <br><small>Line: ${line}</small><br><hr>`;
+        };
+
         let cafe = null;
         let currentOrderFilter = 'new';
         let audioCtx;
@@ -185,26 +198,37 @@
 
         async function init() {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return window.location.href = 'auth.html';
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                
+                if (authError) throw new Error("Auth check failed: " + authError.message);
 
-                let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
+                if (!user) {
+                    document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h2 style="color:var(--primary);">You are not logged in!</h2><a href="auth.html" class="btn" style="display:inline-block; margin-top:20px;">Go to Login Page</a></div>';
+                    return;
+                }
+
+                let { data: cafeData, error: fetchError } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
+                if (fetchError) throw new Error("Database Fetch Error: " + fetchError.message);
                 
                 if (!cafeData) {
-                    const { data: newCafe, error } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
-                    if (error) {
-                        console.error(error);
-                        cafe = { id: 'temp', owner_id: user.id, cafe_name: 'My Cafe', primary_color: '#FF6B35', accent_color: '#2F3E46', menu_views: 0 };
-                    } else { cafe = newCafe; }
-                } else { cafe = cafeData; }
+                    const { data: newCafe, error: insertError } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
+                    if (insertError) throw new Error("Database Insert Error: " + insertError.message);
+                    cafe = newCafe;
+                } else { 
+                    cafe = cafeData; 
+                }
 
                 populateSettings();
                 await loadStats();
                 await loadOrders();
                 await loadItems();
                 setupRealtime();
+                
             } catch (err) {
                 console.error("Initialization breakdown:", err);
+                const panel = document.getElementById('debug-panel');
+                panel.style.display = 'block';
+                panel.innerHTML += `💥 CRASH: ${err.message}<br><hr>`;
             }
         }
 
@@ -248,12 +272,14 @@
             const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('cafe_id', cafe.id);
             document.getElementById('stat-orders').innerText = orderCount || 0;
 
-            const ctx = document.getElementById('analyticsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#FF6B35', tension: 0.3 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
-            });
+            if (window.Chart) {
+                const ctx = document.getElementById('analyticsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#FF6B35', tension: 0.3 }] },
+                    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                });
+            }
         }
 
         window.filterOrders = (element, status) => {
@@ -304,14 +330,18 @@
         };
 
         window.generatePDF = (id) => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text(`Bill for Order ID: ${id}`, 10, 10);
-            doc.save(`Bill_${id}.pdf`);
+            if (window.jspdf) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.text(`Bill for Order ID: ${id}`, 10, 10);
+                doc.save(`Bill_${id}.pdf`);
+            } else {
+                alert("PDF engine is still loading. Try again in a moment.");
+            }
         };
 
         function setupRealtime() {
-            if (cafe.id === 'temp') return;
+            if (!cafe || cafe.id === 'temp') return;
             supabase.channel('custom-all-channel')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `cafe_id=eq.${cafe.id}` }, payload => {
                     beep();
@@ -386,12 +416,16 @@
 
         async function scanImage(file) {
             document.getElementById('ocr-preview').innerText = "Scanning... Please wait.";
-            const worker = await Tesseract.createWorker('eng');
-            const ret = await worker.recognize(file);
-            await worker.terminate();
-            
-            const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
-            document.getElementById('ocr-preview').innerText = lines.join('\n');
+            if (window.Tesseract) {
+                const worker = await Tesseract.createWorker('eng');
+                const ret = await worker.recognize(file);
+                await worker.terminate();
+                
+                const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
+                document.getElementById('ocr-preview').innerText = lines.join('\n');
+            } else {
+                document.getElementById('ocr-preview').innerText = "Scanner engine is still loading. Try again in a moment.";
+            }
         }
 
         init();
