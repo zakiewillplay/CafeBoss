@@ -66,7 +66,7 @@
         window.showRecovery = () => {
             const email = document.getElementById('email').value;
             if(!email) return showMsg('Enter email first to reset password.');
-            supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://zakiewillplay.github.io/CafeBoss.io/auth.html?type=recovery' })
+            supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://zakiewillplay.github.io/CafeBoss/auth.html?type=recovery' })
                 .then(({error}) => showMsg(error ? error.message : 'Recovery email sent!'));
         };
 
