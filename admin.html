@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Admin | Cafe Boss</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1c1d; color: #f0f0f0; padding: 20px; }
+        .card { background: #2a2a2c; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #3a3a3c; padding: 10px; text-align: left; }
+        th { background: #FF6B35; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Cafe Boss System Admin</h1>
+    <div class="card">
+        <h2>Global Stats</h2>
+        <p>Total Cafes: <span id="total-cafes">0</span></p>
+        <p>Total Orders (All Time): <span id="total-orders">0</span></p>
+    </div>
+    <div class="card">
+        <h2>20 Most Recent Global Orders</h2>
+        <table>
+            <thead><tr><th>ID</th><th>Cafe ID</th><th>Status</th><th>Total</th><th>Date</th></tr></thead>
+            <tbody id="admin-orders"></tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { supabase } from './config.js';
+
+        async function initAdmin() {
+            // Note: This assumes the admin user has RLS bypass or is authenticated as a super admin.
+            const { count: cafeCount } = await supabase.from('cafes').select('*', { count: 'exact', head: true });
+            document.getElementById('total-cafes').innerText = cafeCount || 0;
+
+            const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+            document.getElementById('total-orders').innerText = orderCount || 0;
+
+            const { data: recentOrders } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20);
+            
+            const tbody = document.getElementById('admin-orders');
+            if(recentOrders) {
+                recentOrders.forEach(o => {
+                    tbody.innerHTML += `<tr>
+                        <td>${o.id.split('-')[0]}...</td>
+                        <td>${o.cafe_id.split('-')[0]}...</td>
+                        <td>${o.status}</td>
+                        <td>₹${o.total}</td>
+                        <td>${new Date(o.created_at).toLocaleString()}</td>
+                    </tr>`;
+                });
+            }
+        }
+        initAdmin();
+    </script>
+</body>
+</html>
