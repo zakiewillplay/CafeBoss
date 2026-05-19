@@ -12,15 +12,27 @@
         
         .ambient-glow { position: absolute; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, rgba(10,9,8,1) 60%); z-index: -1; top: 0; left: 0; }
 
-        header { padding: 80px 20px 40px 20px; text-align: center; position: relative; }
-        h1 { font-family: 'Cormorant Garamond', serif; font-size: 4rem; color: var(--text); margin-bottom: 10px; font-weight: 600; letter-spacing: 2px; }
+        /* 🔥 BULLETPROOF MOBILE CENTERING 🔥 */
+        header { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 80vh; /* Takes exactly 80% of the screen height */
+            padding: 20px; 
+            text-align: center; 
+            position: relative; 
+        }
+        
+        /* Auto-scaling fonts based on screen size */
+        h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 12vw, 4.5rem); color: var(--text); margin-top: 0; margin-bottom: 15px; font-weight: 600; letter-spacing: 2px; }
         .highlight { color: var(--primary); font-style: italic; }
-        p.tagline { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; font-weight: 300; letter-spacing: 1px; }
+        p.tagline { font-size: clamp(0.95rem, 4vw, 1.2rem); color: var(--text-muted); margin-bottom: 40px; max-width: 600px; font-weight: 300; letter-spacing: 1px; }
         
         .btn { display: inline-block; background: transparent; color: var(--primary); padding: 14px 40px; border: 1px solid var(--primary); text-decoration: none; font-weight: 400; font-size: 0.95rem; letter-spacing: 2px; text-transform: uppercase; transition: all 0.4s ease; }
         .btn:hover { background: var(--primary); color: var(--bg); }
         
-        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 20px 20px 60px 20px; }
+        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 40px 20px 80px 20px; }
         .feature-card { background: transparent; padding: 30px 25px; width: 280px; text-align: center; border: 1px solid var(--border); transition: border-color 0.4s ease; position: relative; overflow: hidden; }
         .feature-card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px; background: var(--primary); transition: width 0.4s ease; }
         .feature-card:hover { border-color: rgba(212, 175, 55, 0.3); }
@@ -30,14 +42,6 @@
         .feature-card h3 { font-family: 'Cormorant Garamond', serif; color: var(--text); margin-top: 0; font-size: 1.6rem; font-weight: 600; letter-spacing: 1px; }
         
         footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); letter-spacing: 1px; text-transform: uppercase; }
-
-        /* 🔥 MOBILE PHONE FIX 🔥 */
-        @media (max-width: 600px) {
-            header { padding: 40px 15px 20px 15px; }
-            h1 { font-size: 2.8rem; }
-            p.tagline { font-size: 0.95rem; margin-bottom: 25px; }
-            .feature-card { width: 100%; padding: 20px; }
-        }
     </style>
 </head>
 <body>
