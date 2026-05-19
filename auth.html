@@ -8,21 +8,19 @@
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --border: #2A2520; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.05) 0%, rgba(10,9,8,1) 80%); }
-        .auth-container { background: transparent; padding: 50px 40px; width: 100%; max-width: 380px; border: 1px solid var(--border); position: relative; }
+        .auth-container { background: transparent; padding: 40px 30px; width: 100%; max-width: 360px; border: 1px solid var(--border); position: relative; }
         .auth-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); }
-        h2 { text-align: center; color: var(--text); margin-top: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 600; letter-spacing: 2px; margin-bottom: 30px; }
-        
+        h2 { text-align: center; color: var(--text); margin-top: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: 2px; margin-bottom: 25px; }
         .tabs { display: flex; margin-bottom: 30px; }
         .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #777; font-weight: 400; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; border-bottom: 1px solid var(--border); }
         .tab.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
-        
         input { width: 100%; padding: 15px 0; margin-bottom: 25px; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); box-sizing: border-box; outline: none; font-size: 1rem; font-family: 'Inter', sans-serif; transition: border-color 0.3s; }
         input:focus { border-bottom: 1px solid var(--primary); }
         input::placeholder { color: #555; font-weight: 300; }
-        
+        .pwd-wrapper { position: relative; width: 100%; }
+        .toggle-pwd { position: absolute; right: 0; top: 15px; cursor: pointer; color: #777; font-size: 1.2rem; user-select: none; }
         button { width: 100%; padding: 15px; background: var(--primary); color: var(--bg); border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; margin-top: 10px; }
         button:hover { background: #FDFBF7; }
-        
         .hidden { display: none; }
         .msg { font-size: 0.85rem; margin-top: 20px; text-align: center; color: var(--primary); font-style: italic; }
         .link { color: #777; cursor: pointer; font-size: 0.8rem; display: block; text-align: center; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
@@ -39,7 +37,10 @@
             </div>
             <form id="auth-form">
                 <input type="email" id="email" placeholder="Email Address" required>
-                <input type="password" id="password" placeholder="Password" required>
+                <div class="pwd-wrapper">
+                    <input type="password" id="password" placeholder="Password" required>
+                    <span class="toggle-pwd" id="toggle-pwd" title="Show/Hide">👁️</span>
+                </div>
                 <button type="submit" id="submit-btn">Enter Dashboard</button>
             </form>
             <span class="link" onclick="showRecovery()">Recover Credentials</span>
@@ -59,6 +60,17 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+
+        // Auto-redirect if already logged in!
+        supabase.auth.getSession().then(({ data }) => {
+            if (data.session) window.location.href = 'dashboard.html';
+        });
+
+        document.getElementById('toggle-pwd').addEventListener('click', function() {
+            const pwdInput = document.getElementById('password');
+            if (pwdInput.type === 'password') { pwdInput.type = 'text'; this.innerText = '🙈'; } 
+            else { pwdInput.type = 'password'; this.innerText = '👁️'; }
+        });
 
         let isLogin = true;
         const urlParams = new URLSearchParams(window.location.search);
