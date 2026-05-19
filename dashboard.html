@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Management | Cafe Boss</title>
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A0908">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" defer></script>
@@ -28,28 +31,28 @@
         .unlock-btn:hover { background: var(--primary); color: var(--bg); }
         
         header { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 600; letter-spacing: 1px; color: var(--text); }
+        h1 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: 1px; color: var(--text); }
         h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 600; letter-spacing: 1px; color: var(--primary); margin-top: 0; }
         
-        .controls { display: flex; gap: 15px; align-items: center; }
-        .controls button, .controls select { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .controls button, .controls select { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
         .controls button:hover, .controls select:hover { color: var(--primary); border-color: var(--primary); }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
         .card { background: var(--surface); border: 1px solid var(--border); padding: 30px; position: relative; }
         
         .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 25px; }
-        .stat-box span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--text); font-weight: 400; line-height: 1; margin-bottom: 8px; }
-        .stat-box small { color: var(--primary); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 0.7rem; }
+        .stat-box span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: var(--text); font-weight: 400; line-height: 1; margin-bottom: 8px; }
+        .stat-box small { color: var(--primary); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 0.65rem; }
         
         input, textarea, select { width: 100%; padding: 15px 0; margin: 10px 0 20px 0; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; transition: 0.3s; }
         input:focus, textarea:focus { border-bottom-color: var(--primary); }
         
-        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 15px 20px; cursor: pointer; width: 100%; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s; }
+        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 15px 20px; cursor: pointer; width: 100%; font-weight: 400; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s; }
         .btn:hover { background: var(--primary); color: var(--bg); }
         
         .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--border); }
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
         .tab.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
         
         .order-card { background: transparent; border: 1px solid var(--border); padding: 25px; margin-top: 15px; position: relative; }
@@ -179,6 +182,15 @@
         </div>
     </div>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .catch(err => console.error('Service Worker Error', err));
+            });
+        }
+    </script>
+
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
@@ -205,7 +217,7 @@
         const beep = () => {
             if(!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
-            osc.type = 'triangle'; // Softer, bell-like tone
+            osc.type = 'triangle';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.connect(gainNode); gainNode.connect(audioCtx.destination);
             osc.start(); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
@@ -298,9 +310,9 @@
                 let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-family:serif;">${i.qty}x</span> <span style="font-weight:300;">${i.name}</span> <span style="color:var(--text-muted); font-size:0.85em;">(₹${i.price})</span>`).join('<br>');
                 let actionBtn = '';
                 
-                if(o.status === 'new') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px;" onclick="updateOrderStatus('${o.id}', 'accepted')">Acknowledge</button>`;
-                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Dispatch</button><button class="btn" style="width:auto; padding:10px 30px; border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Conclude</button>`;
-                else if(o.status === 'completed') actionBtn = `<button class="btn" style="width:auto; padding:10px 30px; border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Issue Ledger</button>`;
+                if(o.status === 'new') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'accepted')">Acknowledge</button>`;
+                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Dispatch</button><button class="btn" style="width:auto; padding:10px 20px; border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Conclude</button>`;
+                else if(o.status === 'completed') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Issue Ledger</button>`;
 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:flex-end;">
@@ -362,20 +374,29 @@
 
         window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
 
+        // OCR Fix
         const handleImage = (e) => {
             const file = e.target.files; if(!file) return;
-            document.getElementById('ocr-preview').innerText = "Analyzing parchment...";
+            const preview = document.getElementById('ocr-preview');
+            preview.innerText = "Analyzing parchment...";
             
             if (window.Tesseract) {
                 setTimeout(async () => {
-                    const worker = await Tesseract.createWorker('eng');
-                    const ret = await worker.recognize(file);
-                    await worker.terminate();
-                    const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
-                    document.getElementById('ocr-preview').innerText = lines.join('\n') || "No distinct offerings discerned.";
-                }, 500);
+                    try {
+                        const worker = await Tesseract.createWorker('eng');
+                        const ret = await worker.recognize(file);
+                        await worker.terminate();
+                        const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
+                        preview.innerText = lines.join('\n') || "No distinct offerings discerned.";
+                    } catch (err) {
+                        preview.innerText = "Analysis failed. Please ensure the image is clear.";
+                    }
+                }, 100);
+            } else {
+                preview.innerText = "Optical engine is still loading. Please try again.";
             }
         };
+        
         document.getElementById('camera-input').addEventListener('change', handleImage);
         document.getElementById('gallery-input').addEventListener('change', handleImage);
 
