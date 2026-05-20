@@ -3,214 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafe Boss - Live Dashboard</title>
-    
-    <style>
-        :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #ffffff;
-            --brand-color: #ff9800;
-            --success-color: #4caf50;
-        }
-        
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #333;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            margin: 0;
-            color: var(--brand-color);
-        }
-
-        .activation-panel {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            text-align: center;
-            margin-bottom: 30px;
-            border: 1px solid #333;
-        }
-
-        .btn-activate {
-            background-color: var(--brand-color);
-            color: black;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
-            transition: transform 0.1s;
-        }
-
-        .btn-activate:active {
-            transform: scale(0.98);
-        }
-
-        #status-indicator {
-            margin-top: 15px;
-            font-weight: bold;
-            color: #888;
-        }
-
-        .orders-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .order-card {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-            border-left: 5px solid var(--success-color);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .order-card h3 {
-            margin-top: 0;
-            color: var(--success-color);
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
-
+    <title>Cafe Boss Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #f59e0b; --success: #10b981; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; }
+        h1 { margin: 0; color: var(--accent); }
+        .panel { background: var(--card); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #334155; }
+        button { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent); animation: slideIn 0.3s ease-out forwards; }
+        .new-badge { background: var(--success); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; float: right; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Cafe Boss Dashboard</h1>
-        <div id="clock">Waiting for sync...</div>
+        <h1>Cafe Boss</h1>
+        <div id="clock">00:00</div>
     </div>
 
-    <div class="activation-panel" id="activationPanel">
+    <div class="panel" id="activationPanel">
         <h2>System Standby</h2>
-        <p>Click the button below to unlock live background audio and order synchronization.</p>
-        <button class="btn-activate" onclick="activateSystem()">Turn On Live Orders & Audio</button>
-        <div id="status-indicator">🔴 Offline</div>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Click to link audio and orders.</p>
+        <button id="activateBtn" onclick="activateSystem()">Turn On Live Orders & Audio</button>
+        <div id="statusText" style="margin-top: 15px; font-weight: bold; color: #94a3b8;">🔴 Offline</div>
     </div>
 
-    <div class="orders-container" id="ordersList">
-        </div>
+    <div class="grid" id="ordersList"></div>
 
     <audio id="orderAlertSound" src="notification.mp3" preload="auto"></audio>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        const SUPABASE_URL = 'https://udlmyspetkjzcdkfshgl.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'; 
+        const SUPA_URL = 'https://udlmyspetkjzcdkfshgl.supabase.co'; 
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'; 
         
-        let supabaseClient;
-        const alertSound = document.getElementById('orderAlertSound');
-        const statusIndicator = document.getElementById('status-indicator');
-        const ordersList = document.getElementById('ordersList');
+        let client;
+        const sound = document.getElementById('orderAlertSound');
 
-        // --- 2. REGISTER SERVICE WORKER (Using Relative Path) ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker actively linked:', reg.scope))
-                    .catch(err => console.error('Service Worker link failure:', err));
-            });
+        // Link SW (Wrapped in try/catch for local preview safety)
+        try {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js');
+            }
+        } catch(e) { console.log("SW bypass for local testing."); }
+
+        async function activateSystem() {
+            const btn = document.getElementById('activateBtn');
+            btn.innerText = "Connecting...";
+
+            try {
+                // 1. Safe Audio Unlock
+                try {
+                    await sound.play();
+                    sound.pause();
+                    sound.currentTime = 0;
+                } catch(e) { console.warn("Audio waiting for interaction"); }
+
+                // 2. Safe Notification Request (This is what froze your screenshot)
+                if ('Notification' in window && window.location.protocol !== 'file:') {
+                    if (Notification.permission === 'default') {
+                        await Notification.requestPermission();
+                    }
+                }
+
+                // 3. Connect Database
+                if (!client) {
+                    client = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                    startListener();
+                }
+
+                // 4. Force UI Update
+                document.getElementById('statusText').innerHTML = "🟢 Live & Listening";
+                document.getElementById('statusText').style.color = "var(--success)";
+                btn.style.display = 'none';
+
+            } catch (error) {
+                alert("Connection failed: " + error.message + "\nAre you offline?");
+                btn.innerText = "Try Again";
+            }
         }
 
-        // --- 3. SYSTEM ACTIVATION ---
-        function activateSystem() {
-            if ('Notification' in window && Notification.permission !== 'granted') {
-                Notification.requestPermission();
-            }
-
-            // Unlock audio for the mobile browser
-            alertSound.play().then(() => {
-                alertSound.pause();
-                alertSound.currentTime = 0;
-            }).catch(err => console.log("Audio initialized:", err));
-
-            // Connect to database
-            if (!supabaseClient) {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                startRealtimeListener();
-            }
-
-            statusIndicator.innerHTML = "🟢 Live & Listening for Orders";
-            statusIndicator.style.color = "var(--success-color)";
-            document.querySelector('.btn-activate').style.display = 'none';
-        }
-
-        // --- 4. SUPABASE REALTIME LISTENER ---
-        function startRealtimeListener() {
-            supabaseClient
-                .channel('public:orders')
+        function startListener() {
+            client.channel('public:orders')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-                    const newOrder = payload.new;
-                    console.log('🚨 Incoming Order Details:', newOrder);
-
-                    // A. Force the local audio chime to ring
-                    alertSound.play().catch(e => console.error("Sound play blocked:", e));
-
-                    // B. Route notification through Service Worker using safe relative paths
-                    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
-                        navigator.serviceWorker.ready.then((registration) => {
-                            registration.showNotification("🚨 New Cafe Boss Order!", {
-                                body: `Amount: ₹${newOrder.total_price || newOrder.amount || '0'}`,
-                                vibrate:,
-                                data: { url: './' }
-                            });
-                        });
+                    sound.play().catch(e => console.log("Sound block:", e));
+                    
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification("🚨 New Order!", { body: `Amount: ₹${payload.new.amount || '0'}` });
                     }
-
-                    // C. Append the order to the dashboard feed instantly
-                    renderOrderCard(newOrder);
-                })
-                .subscribe((status) => {
-                    if(status === 'SUBSCRIBED') {
-                        console.log("WebSocket connection established successfully.");
-                    }
-                });
+                    renderCard(payload.new);
+                }).subscribe();
         }
 
-        // --- 5. VANILLA JS CARD RENDER ---
-        function renderOrderCard(orderData) {
-            const card = document.createElement('div');
-            card.className = 'order-card';
-            const timeString = new Date().toLocaleTimeString();
-
-            card.innerHTML = `
-                <h3>New Order Received</h3>
-                <p><strong>Time:</strong> ${timeString}</p>
-                <p><strong>Order ID:</strong> #${orderData.id || 'N/A'}</p>
-                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-                <p style="color: #aaa; font-size: 0.9em;">Check your database table for item breakdowns.</p>
+        function renderCard(data) {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <h3 style="margin-top:0;">Order #${data.id || 'N/A'} <span class="new-badge">NEW</span></h3>
+                <p>Time: ${new Date().toLocaleTimeString()}</p>
+                <h2 style="color: var(--success); margin-bottom:0;">₹${data.amount || '0'}</h2>
             `;
-
-            ordersList.prepend(card);
+            document.getElementById('ordersList').prepend(div);
         }
 
-        // Dashboard Live Clock
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
     </script>
 </body>
 </html>
