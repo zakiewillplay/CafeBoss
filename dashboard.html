@@ -10,13 +10,21 @@
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 25px; }
         h1 { margin: 0; color: var(--accent); }
-        .panel { background: var(--card); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #334155; }
+        
+        /* The Standby Panel */
+        .panel { background: var(--card); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid #334155; transition: 0.3s; }
         button { background: var(--accent); color: #000; border: none; padding: 15px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         button:active { transform: scale(0.95); }
+        
+        /* The Live Header that appears after activation */
+        .live-header { display: none; background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--success); animation: fadeIn 0.4s ease-in; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
         .card { background: var(--card); padding: 20px; border-radius: 8px; border-left: 5px solid var(--accent); animation: slideIn 0.3s ease-out forwards; }
         .new-badge { background: var(--success); color: white; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; float: right; }
+        
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -33,6 +41,11 @@
         <div id="statusText" style="margin-top: 15px; font-weight: bold; color: #94a3b8;">🔴 Offline</div>
     </div>
 
+    <div class="live-header" id="liveHeader">
+        <h3 style="margin: 0; color: var(--success);">🟢 Live & Listening for Orders</h3>
+        <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9em;">You can minimize this browser. Tapping a new order notification will bring you back here.</p>
+    </div>
+
     <div class="grid" id="ordersList"></div>
 
     <audio id="orderAlertSound" src="notification.mp3" preload="auto"></audio>
@@ -47,19 +60,14 @@
         // Link SW (Silent catch so it doesn't break locally)
         try {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW bypass for local testing."));
+                navigator.serviceWorker.register('./sw.js').catch(e => console.log("SW bypass"));
             }
         } catch(e) {}
 
-        // Removed the 'async' keyword. This function will now run straight through instantly.
         function activateSystem() {
-            const btn = document.getElementById('activateBtn');
-            const statusText = document.getElementById('statusText');
-
-            // 1. INSTANT UI UPDATE (Never wait for the browser again)
-            statusText.innerHTML = "🟢 Live & Listening";
-            statusText.style.color = "var(--success)";
-            btn.style.display = 'none';
+            // 1. Instantly swap the UI to the clean dashboard look
+            document.getElementById('activationPanel').style.display = 'none';
+            document.getElementById('liveHeader').style.display = 'block';
 
             // 2. Fire Audio (Non-blocking)
             try {
@@ -68,31 +76,27 @@
                     playPromise.then(() => {
                         sound.pause();
                         sound.currentTime = 0;
-                    }).catch(e => console.log("Audio unlock deferred to next interaction."));
+                    }).catch(e => console.log("Audio deferred"));
                 }
             } catch(e) {}
 
             // 3. Fire Notification Request (Non-blocking)
             try {
-                if ('Notification' in window) {
-                    if (Notification.permission === 'default') {
-                        Notification.requestPermission(); // Notice there is no 'await' here
-                    }
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission(); 
                 }
             } catch(e) {}
 
             // 4. Connect to Supabase
             try {
                 if (!client) {
-                    // Create client and start listening immediately
-                    client = supabase.createClient(SUPA_URL, SUPA_KEY);
+                    client = window.supabase.createClient(SUPA_URL, SUPA_KEY);
                     startListener();
                 }
             } catch (error) {
                 alert("Database connection error: " + error.message);
-                btn.style.display = 'inline-block';
-                statusText.innerHTML = "🔴 Offline";
-                statusText.style.color = "#94a3b8";
+                document.getElementById('activationPanel').style.display = 'block';
+                document.getElementById('liveHeader').style.display = 'none';
             }
         }
 
@@ -106,9 +110,15 @@
                         playPromise.catch(e => console.log("Sound block:", e));
                     }
                     
-                    // Show notification if allowed
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification("🚨 New Order!", { body: `Amount: ₹${payload.new.amount || '0'}` });
+                    // Fire notification through Service Worker so tapping it redirects to the app
+                    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            reg.showNotification("🚨 New Cafe Boss Order!", {
+                                body: `Amount: ₹${payload.new.amount || '0'} - Tap to view`,
+                                vibrate:,
+                                data: { url: './dashboard.html' } // This data object is what sw.js uses to redirect
+                            });
+                        });
                     }
                     
                     // Render to screen
