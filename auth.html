@@ -1,41 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Cafe Boss</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: #1e293b; padding: 30px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 6px; border: none; background: #334155; color: white; }
-        button { width: 100%; padding: 12px; background: #f59e0b; color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #msg { margin-top: 15px; font-size: 0.9rem; color: #ef4444; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Login | Cafe Boss</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --border: #e7e5e4; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+    .auth-card { background: var(--surface); padding: 32px 24px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 400px; animation: slideUp 0.5s ease; }
+    h2 { text-align: center; margin-bottom: 24px; color: var(--primary); }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #444; }
+    input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: var(--primary); }
+    button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+    button:active { background: #d97706; }
+    .error { color: #ef4444; font-size: 0.85rem; text-align: center; margin-top: 12px; display: none; }
+    .back { display: block; text-align: center; margin-top: 16px; color: #78716c; text-decoration: none; font-size: 0.9rem; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2 style="color: #f59e0b;">Admin Access</h2>
-        <input type="email" id="email" placeholder="Admin Email">
-        <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()">Sign In</button>
-        <div id="msg"></div>
-    </div>
+  <div class="auth-card">
+    <h2>Admin Access</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" id="submitBtn">Login to Admin</button>
+      <div id="errorMsg" class="error"></div>
+    </form>
+    <a href="./index.html" class="back">← Back to Hub</a>
+  </div>
 
-    <script>
-        const sup = supabase.createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
-        
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('pass').value;
-            const { data, error } = await sup.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                document.getElementById('msg').innerText = error.message;
-            } else {
-                window.location.href = 'admin.html';
-            }
-        }
-    </script>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://udlmyspetkjzcdkfshgl.supabase.co', 
+      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
+    );
+    
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      btn.innerText = 'Authenticating...';
+      errorMsg.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errorMsg.innerText = error.message;
+        errorMsg.style.display = 'block';
+        btn.innerText = 'Login to Admin';
+      } else {
+        window.location.href = './admin.html';
+      }
+    });
+  </script>
 </body>
 </html>
