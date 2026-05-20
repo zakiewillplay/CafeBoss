@@ -3,97 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Cafe Menu</title>
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 120px; }
-        #intro { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .logo-reveal { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: var(--primary); letter-spacing: 4px; opacity: 0; }
-        header { padding: 60px 20px 30px 20px; text-align: center; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 600; color: var(--text); letter-spacing: 2px; }
-        p#cafe-desc { color: var(--primary); margin-top: 15px; font-size: 0.9rem; font-style: italic; font-family: 'Cormorant Garamond', serif; letter-spacing: 1px; }
-        .search-container { padding: 25px 20px; position: sticky; top: 0; z-index: 100; background: rgba(10, 9, 8, 0.95); backdrop-filter: blur(10px); }
-        #search { width: 100%; padding: 15px 0; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); outline: none; font-size: 1rem; font-family: 'Inter', sans-serif; transition: 0.3s; }
-        #search:focus { border-bottom-color: var(--primary); }
-        #search::placeholder { color: #555; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-        .categories { display: flex; overflow-x: auto; gap: 30px; padding: 10px 20px 20px 20px; scrollbar-width: none; border-bottom: 1px solid var(--border); }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 120px; }
+        
+        header { padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0; font-size: 2.5rem; color: var(--text); }
+        p#cafe-desc { color: var(--primary); margin-top: 10px; font-size: 1rem; }
+        
+        .search-container { padding: 20px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; }
+        #search { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 5px; box-sizing: border-box; }
+        
+        .categories { display: flex; overflow-x: auto; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border); }
         .categories::-webkit-scrollbar { display: none; }
-        .cat-tab { padding-bottom: 5px; white-space: nowrap; cursor: pointer; font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--text-muted); transition: 0.3s; border-bottom: 1px solid transparent; }
-        .cat-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .menu-section { padding: 40px 20px 0 20px; }
-        .menu-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--text); margin-bottom: 30px; font-weight: 400; letter-spacing: 2px; text-align: center; }
-        .menu-item { margin-bottom: 40px; opacity: 0; }
-        .item-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-        .item-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 1.4rem; color: var(--text); letter-spacing: 1px; }
-        .item-dots { flex-grow: 1; border-bottom: 1px dotted #333; margin: 0 15px; opacity: 0.5; position: relative; top: -6px; }
-        .item-price { font-weight: 400; color: var(--primary); font-size: 1.1rem; }
-        .item-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; font-weight: 300; margin-bottom: 15px; padding-right: 40px; }
-        .badge { border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; margin-left: 10px; vertical-align: middle; }
-        .variants { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; }
-        .variant-pill { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; color: var(--text-muted); transition: 0.3s; }
-        .variant-pill.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
+        .cat-tab { padding: 8px 15px; cursor: pointer; color: var(--text-muted); font-weight: bold; border-radius: 20px; background: var(--surface); }
+        .cat-tab.active { background: var(--primary); color: var(--bg); }
+        
+        .menu-section { padding: 20px; }
+        .menu-section h2 { font-size: 1.8rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        
+        .menu-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dotted var(--border); }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .item-title { font-weight: bold; font-size: 1.2rem; color: var(--text); }
+        .item-price { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
+        .item-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
+        .badge { background: var(--primary); color: var(--bg); padding: 2px 5px; font-size: 0.7rem; border-radius: 3px; margin-left: 5px; font-weight: bold; }
+        
+        .variants { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .variant-pill { font-size: 0.8rem; padding: 5px 10px; border: 1px solid var(--border); border-radius: 15px; cursor: pointer; color: var(--text-muted); }
+        .variant-pill.active { background: var(--primary); color: var(--bg); border-color: var(--primary); }
+        
         .qty-controls { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
-        .qty-btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; font-family: serif; transition: 0.3s; }
-        .qty-btn:active { background: var(--primary); color: var(--bg); }
-        .qty-val { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; min-width: 20px; text-align: center; }
-        #cart-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--bg); color: var(--primary); border: 1px solid var(--primary); padding: 15px 40px; font-weight: 400; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; z-index: 1000; transition: 0.3s; white-space: nowrap; }
-        #cart-btn:hover { background: var(--primary); color: var(--bg); }
-        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--primary); padding: 40px 30px; transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1001; }
+        .qty-btn { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); width: 30px; height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
+        .qty-val { font-size: 1.2rem; font-weight: bold; min-width: 20px; text-align: center; }
+        
+        #cart-btn { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: var(--bg); padding: 15px 30px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; z-index: 1000; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 2px solid var(--primary); padding: 30px; transform: translateY(100%); transition: transform 0.3s; z-index: 1001; }
         #cart-panel.open { transform: translateY(0); }
-        .cart-input { width: 100%; padding: 15px 0; margin-bottom: 25px; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: 0.3s; }
-        .cart-input:focus { border-bottom-color: var(--primary); }
-        .cart-input::placeholder { color: #555; font-weight: 300; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
-        .place-order-btn { width: 100%; background: var(--primary); color: var(--bg); padding: 18px; border: none; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .place-order-btn:hover { background: var(--text); }
+        .cart-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 5px; box-sizing: border-box; }
+        .place-order-btn { width: 100%; background: var(--primary); color: var(--bg); padding: 15px; border: none; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="intro"><div class="logo-reveal">CAFE BOSS</div></div>
     <header>
-        <h1 id="cafe-name">The Establishment</h1>
-        <p id="cafe-desc">A curated selection of fine provisions.</p>
+        <h1 id="cafe-name">Cafe Menu</h1>
+        <p id="cafe-desc">Delicious food ordered directly from your table.</p>
     </header>
+
     <div class="search-container">
-        <input type="text" id="search" placeholder="Search the collection...">
+        <input type="text" id="search" placeholder="Search menu...">
     </div>
+    
     <div class="categories" id="categories-container"></div>
     <div id="menu-container"></div>
+
     <button id="cart-btn" style="display:none;" onclick="toggleCart()">
-        Review Selection (₹<span id="cart-total">0</span>)
+        View Cart (₹<span id="cart-total">0</span>)
     </button>
+
     <div id="cart-panel">
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:30px; border-bottom:1px solid var(--border); padding-bottom:15px;">
-            <h3 style="margin:0; font-family:'Cormorant Garamond', serif; font-size:2rem; font-weight:400; letter-spacing:1px; color:var(--text);">The Tab</h3>
-            <button style="background:none; border:none; font-size:2rem; font-family:serif; color:var(--text-muted); cursor:pointer;" onclick="toggleCart()">&times;</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0; font-size:1.5rem; color:var(--text);">Your Order</h3>
+            <button style="background:none; border:none; font-size:2rem; color:var(--text-muted); cursor:pointer;" onclick="toggleCart()">✕</button>
         </div>
-        <div id="cart-items" style="max-height:40vh; overflow-y:auto; margin-bottom:30px; font-size:0.95rem; font-weight:300; color:var(--text); line-height:2;"></div>
-        <input type="text" id="table-number" class="cart-input" placeholder="Table Designation (Required) *" required>
-        <input type="text" id="customer-name" class="cart-input" placeholder="Name of Guest (Optional)">
-        <button class="place-order-btn" onclick="placeOrder()">Submit Request</button>
+        <div id="cart-items" style="max-height:200px; overflow-y:auto; margin-bottom:20px; font-size:1rem; color:var(--text);"></div>
+        
+        <input type="text" id="table-number" class="cart-input" placeholder="Table Number *" required>
+        <input type="text" id="customer-name" class="cart-input" placeholder="Your Name (Optional)">
+        
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
     </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+
         const urlParams = new URLSearchParams(window.location.search);
         const cafeId = urlParams.get('id');
         let allItems = []; let cart = {};
 
-        const tl = gsap.timeline();
-        tl.to('.logo-reveal', { opacity: 1, duration: 1.5, ease: "power2.inOut" })
-          .to('.logo-reveal', { opacity: 0, duration: 1, delay: 0.5 })
-          .to('#intro', { opacity: 0, duration: 1, onComplete: () => { document.getElementById('intro').style.display = 'none'; init(); }});
-
         async function init() {
-            if(!cafeId) return document.body.innerHTML = '<div style="padding:100px 20px; text-align:center; font-family:\'Cormorant Garamond\', serif; font-size:1.5rem;">No valid credentials detected.</div>';
+            if(!cafeId) return document.body.innerHTML = '<h2 style="text-align:center; margin-top:50px;">Invalid QR Code. Please scan again.</h2>';
             supabase.from('menu_views_log').insert([{ cafe_id: cafeId }]).then();
+            
             const { data: cafe } = await supabase.from('cafes').select('*').eq('id', cafeId).single();
             if(cafe) {
                 document.getElementById('cafe-name').innerText = cafe.cafe_name;
                 document.getElementById('cafe-desc').innerText = cafe.description;
             }
+            
             const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true);
             allItems = data || []; renderMenu(allItems);
         }
@@ -104,12 +104,15 @@
         }
 
         function renderMenu(items) {
-            const container = document.getElementById('menu-container'); const catContainer = document.getElementById('categories-container');
+            const container = document.getElementById('menu-container'); 
+            const catContainer = document.getElementById('categories-container');
             container.innerHTML = ''; catContainer.innerHTML = '';
+            
             const categories = [...new Set(items.map(i => i.category))];
             categories.forEach((c, idx) => {
                 catContainer.innerHTML += `<div class="cat-tab ${idx===0?'active':''}" onclick="scrollToCat('${c}')">${c}</div>`;
                 let html = `<div class="menu-section" id="cat-${c.replace(/\s+/g, '-')}"><h2>${c}</h2>`;
+                
                 items.filter(i => i.category === c).forEach(item => {
                     const variants = parseVariants(item.description);
                     const cleanDesc = item.description ? item.description.replace(/VAR::.*/, '') : '';
@@ -123,8 +126,7 @@
                     html += `
                     <div class="menu-item">
                         <div class="item-header">
-                            <div class="item-title">${item.name} ${item.featured?'<span style="color:var(--primary); font-size:1rem;">✦</span>':''} ${item.discount?`<span class="badge">${item.discount}</span>`:''}</div>
-                            <div class="item-dots"></div>
+                            <div class="item-title">${item.name} ${item.featured?'⭐':''} ${item.discount?`<span class="badge">${item.discount}</span>`:''}</div>
                             <div class="item-price" id="price-${item.id}" data-baseprice="${variants ? variants.price : item.price}">${priceHtml}</div>
                         </div>
                         <div class="item-desc">${cleanDesc}</div>
@@ -138,7 +140,6 @@
                 });
                 html += `</div>`; container.innerHTML += html;
             });
-            if(window.gsap) gsap.fromTo('.menu-item', { opacity: 0, y: 30 }, { opacity: 1, y: 0, stagger: 0.1, duration: 1, ease: "power2.out" });
         }
 
         document.getElementById('search').addEventListener('input', (e) => {
@@ -148,27 +149,30 @@
         });
 
         window.scrollToCat = (cat) => {
-            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active')); event.target.classList.add('active');
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active')); 
+            event.target.classList.add('active');
             const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
-            const y = el.getBoundingClientRect().top + window.scrollY - 100;
-            window.scrollTo({top: y, behavior: 'smooth'});
+            window.scrollTo({top: el.offsetTop - 80, behavior: 'smooth'});
         };
 
         window.selectVariant = (el, id, price, vName) => {
-            el.parentElement.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
+            el.parentElement.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active')); 
+            el.classList.add('active');
             document.getElementById(`price-${id}`).innerText = `₹${price}`;
             document.getElementById(`price-${id}`).dataset.baseprice = price;
             document.getElementById(`price-${id}`).dataset.vname = vName;
-            if(cart[id]) { updateQty(id, -cart[id].qty); }
+            if(cart[id]) updateQty(id, -cart[id].qty);
         };
 
         window.updateQty = (id, delta, name) => {
             let current = cart[id]?.qty || 0; current += delta; if(current < 0) current = 0;
             document.getElementById(`qty-${id}`).innerText = current;
+            
             const priceEl = document.getElementById(`price-${id}`);
             const price = parseFloat(priceEl.dataset.baseprice);
             const vName = priceEl.dataset.vname || '';
             const fullName = vName ? `${name} (${vName})` : name;
+            
             if(current > 0) cart[id] = { name: fullName, price, qty: current }; else delete cart[id];
             updateCartUI();
         };
@@ -177,16 +181,14 @@
             let totalQty = 0, totalPrice = 0; const itemsHtml = [];
             for(let key in cart) {
                 totalQty += cart[key].qty; totalPrice += cart[key].price * cart[key].qty;
-                itemsHtml.push(`<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span><span style="font-family:'Cormorant Garamond', serif; font-size:1.2rem; color:var(--primary); margin-right:10px;">${cart[key].qty}</span> ${cart[key].name}</span> <span>₹${cart[key].price * cart[key].qty}</span></div>`);
+                itemsHtml.push(`<div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;"><span><b>${cart[key].qty}x</b> ${cart[key].name}</span> <span>₹${cart[key].price * cart[key].qty}</span></div>`);
             }
             document.getElementById('cart-total').innerText = totalPrice;
             document.getElementById('cart-items').innerHTML = itemsHtml.join('');
+            
             const btn = document.getElementById('cart-btn');
-            if(totalQty > 0 && btn.style.display === 'none') {
-                btn.style.display = 'block'; gsap.fromTo(btn, {y: 50, opacity:0}, {y:0, opacity:1, duration:0.5, ease:"power2.out"});
-            } else if (totalQty === 0) {
-                btn.style.display = 'none'; document.getElementById('cart-panel').classList.remove('open');
-            }
+            if(totalQty > 0) { btn.style.display = 'block'; } 
+            else { btn.style.display = 'none'; document.getElementById('cart-panel').classList.remove('open'); }
         }
 
         window.toggleCart = () => document.getElementById('cart-panel').classList.toggle('open');
@@ -194,14 +196,19 @@
         window.placeOrder = async () => {
             const table = document.getElementById('table-number').value;
             const name = document.getElementById('customer-name').value || 'Guest';
-            if(!table) return alert('Kindly provide your table designation.');
-            document.querySelector('.place-order-btn').innerText = 'Transmitting...';
+            if(!table) return alert('Please enter your table number.');
+            
+            document.querySelector('.place-order-btn').innerText = 'Sending Order...';
             const itemsArr = Object.values(cart); const total = parseFloat(document.getElementById('cart-total').innerText);
+            
             const { data, error } = await supabase.from('orders').insert([{ cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total }]).select().single();
+            
             if(!error) {
-                document.getElementById('cart-panel').innerHTML = `<div style="text-align:center; padding:40px 20px;"><div style="font-size:3rem; margin-bottom:20px; color:var(--primary);">✦</div><h3 style="font-family:'Cormorant Garamond', serif; font-size:2rem; margin:0 0 15px 0; font-weight:400; letter-spacing:1px;">Request Received</h3><p style="color:var(--text-muted); font-weight:300; line-height:1.6;">Our staff has been notified.<br>Your selections are being prepared.</p><button onclick="window.location.reload()" style="margin-top:40px; background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:12px 30px; text-transform:uppercase; letter-spacing:2px; font-size:0.8rem; cursor:pointer;">Return to Menu</button></div>`;
+                document.getElementById('cart-panel').innerHTML = `<div style="text-align:center; padding:30px 10px;"><h2 style="color:var(--primary);">Order Placed Successfully!</h2><p>The kitchen has received your order and is cooking it now.</p><button onclick="window.location.reload()" style="margin-top:20px; background:var(--primary); color:var(--bg); padding:10px 20px; border:none; border-radius:5px; font-weight:bold;">Close</button></div>`;
             }
         };
+
+        init();
     </script>
 </body>
 </html>
