@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cafe Boss Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="manifest" href="manifest.json">
     <style>
         :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #f59e0b; --success: #10b981; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -29,7 +28,7 @@
 
     <div class="panel" id="activationPanel">
         <h2>System Standby</h2>
-        <p style="color: #94a3b8; margin-bottom: 20px;">Click to link audio and orders.</p>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Click the button below to unlock live background audio and order synchronization.</p>
         <button id="activateBtn" onclick="activateSystem()">Turn On Live Orders & Audio</button>
         <div id="statusText" style="margin-top: 15px; font-weight: bold; color: #94a3b8;">🔴 Offline</div>
     </div>
@@ -45,57 +44,74 @@
         let client;
         const sound = document.getElementById('orderAlertSound');
 
-        // Link SW (Wrapped in try/catch for local preview safety)
+        // Link SW (Silent catch so it doesn't break locally)
         try {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js');
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW bypass for local testing."));
             }
-        } catch(e) { console.log("SW bypass for local testing."); }
+        } catch(e) {}
 
-        async function activateSystem() {
+        // Removed the 'async' keyword. This function will now run straight through instantly.
+        function activateSystem() {
             const btn = document.getElementById('activateBtn');
-            btn.innerText = "Connecting...";
+            const statusText = document.getElementById('statusText');
 
+            // 1. INSTANT UI UPDATE (Never wait for the browser again)
+            statusText.innerHTML = "🟢 Live & Listening";
+            statusText.style.color = "var(--success)";
+            btn.style.display = 'none';
+
+            // 2. Fire Audio (Non-blocking)
             try {
-                // 1. Safe Audio Unlock
-                try {
-                    await sound.play();
-                    sound.pause();
-                    sound.currentTime = 0;
-                } catch(e) { console.warn("Audio waiting for interaction"); }
+                let playPromise = sound.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        sound.pause();
+                        sound.currentTime = 0;
+                    }).catch(e => console.log("Audio unlock deferred to next interaction."));
+                }
+            } catch(e) {}
 
-                // 2. Safe Notification Request (This is what froze your screenshot)
-                if ('Notification' in window && window.location.protocol !== 'file:') {
+            // 3. Fire Notification Request (Non-blocking)
+            try {
+                if ('Notification' in window) {
                     if (Notification.permission === 'default') {
-                        await Notification.requestPermission();
+                        Notification.requestPermission(); // Notice there is no 'await' here
                     }
                 }
+            } catch(e) {}
 
-                // 3. Connect Database
+            // 4. Connect to Supabase
+            try {
                 if (!client) {
-                    client = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                    // Create client and start listening immediately
+                    client = supabase.createClient(SUPA_URL, SUPA_KEY);
                     startListener();
                 }
-
-                // 4. Force UI Update
-                document.getElementById('statusText').innerHTML = "🟢 Live & Listening";
-                document.getElementById('statusText').style.color = "var(--success)";
-                btn.style.display = 'none';
-
             } catch (error) {
-                alert("Connection failed: " + error.message + "\nAre you offline?");
-                btn.innerText = "Try Again";
+                alert("Database connection error: " + error.message);
+                btn.style.display = 'inline-block';
+                statusText.innerHTML = "🔴 Offline";
+                statusText.style.color = "#94a3b8";
             }
         }
 
         function startListener() {
             client.channel('public:orders')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
-                    sound.play().catch(e => console.log("Sound block:", e));
                     
+                    // Play sound instantly on new order
+                    let playPromise = sound.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.log("Sound block:", e));
+                    }
+                    
+                    // Show notification if allowed
                     if ('Notification' in window && Notification.permission === 'granted') {
                         new Notification("🚨 New Order!", { body: `Amount: ₹${payload.new.amount || '0'}` });
                     }
+                    
+                    // Render to screen
                     renderCard(payload.new);
                 }).subscribe();
         }
@@ -104,7 +120,7 @@
             const div = document.createElement('div');
             div.className = 'card';
             div.innerHTML = `
-                <h3 style="margin-top:0;">Order #${data.id || 'N/A'} <span class="new-badge">NEW</span></h3>
+                <h3 style="margin-top:0;">Order #${data.id || Math.floor(Math.random() * 1000)} <span class="new-badge">NEW</span></h3>
                 <p>Time: ${new Date().toLocaleTimeString()}</p>
                 <h2 style="color: var(--success); margin-bottom:0;">₹${data.amount || '0'}</h2>
             `;
