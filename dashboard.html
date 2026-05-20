@@ -117,7 +117,7 @@
     <audio id="orderAlertSound" src="notification.mp3" preload="auto"></audio>
 
     <script>
-        // --- 1. CONFIGURATION (PRE-FILLED WITH YOUR LIVE KEYS) ---
+        // --- 1. CONFIGURATION ---
         const SUPABASE_URL = 'https://udlmyspetkjzcdkfshgl.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'; 
         
@@ -126,34 +126,39 @@
         const statusIndicator = document.getElementById('status-indicator');
         const ordersList = document.getElementById('ordersList');
 
-        // --- 2. SYSTEM ACTIVATION ---
-        // Unlocks native audio and permissions on the phone browser screen
+        // --- 2. REGISTER SERVICE WORKER (Using Relative Path) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker actively linked:', reg.scope))
+                    .catch(err => console.error('Service Worker link failure:', err));
+            });
+        }
+
+        // --- 3. SYSTEM ACTIVATION ---
         function activateSystem() {
-            // Request Native Browser Notifications
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
 
-            // Unlock Audio Playback for Android/Mobile devices
+            // Unlock audio for the mobile browser
             alertSound.play().then(() => {
                 alertSound.pause();
                 alertSound.currentTime = 0;
             }).catch(err => console.log("Audio initialized:", err));
 
-            // Connect to your database
+            // Connect to database
             if (!supabaseClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 startRealtimeListener();
             }
 
-            // Update UI State
             statusIndicator.innerHTML = "🟢 Live & Listening for Orders";
             statusIndicator.style.color = "var(--success-color)";
             document.querySelector('.btn-activate').style.display = 'none';
         }
 
-        // --- 3. SUPABASE REALTIME LISTENER ---
-        // Captures inserts on the 'orders' table immediately via WebSockets
+        // --- 4. SUPABASE REALTIME LISTENER ---
         function startRealtimeListener() {
             supabaseClient
                 .channel('public:orders')
@@ -161,17 +166,21 @@
                     const newOrder = payload.new;
                     console.log('🚨 Incoming Order Details:', newOrder);
 
-                    // 1. Play the notification.mp3 file
+                    // A. Force the local audio chime to ring
                     alertSound.play().catch(e => console.error("Sound play blocked:", e));
 
-                    // 2. Fire native device banner notification over screen
-                    if ('Notification' in window && Notification.permission === 'granted') {
-                        new Notification("🚨 New Cafe Boss Order!", {
-                            body: `Amount: ₹${newOrder.total_price || newOrder.amount || '0'}`
+                    // B. Route notification through Service Worker using safe relative paths
+                    if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+                        navigator.serviceWorker.ready.then((registration) => {
+                            registration.showNotification("🚨 New Cafe Boss Order!", {
+                                body: `Amount: ₹${newOrder.total_price || newOrder.amount || '0'}`,
+                                vibrate:,
+                                data: { url: './' }
+                            });
                         });
                     }
 
-                    // 3. Append the order to the dashboard feed instantly
+                    // C. Append the order to the dashboard feed instantly
                     renderOrderCard(newOrder);
                 })
                 .subscribe((status) => {
@@ -181,7 +190,7 @@
                 });
         }
 
-        // --- 4. VANILLA JS CARD RENDER ---
+        // --- 5. VANILLA JS CARD RENDER ---
         function renderOrderCard(orderData) {
             const card = document.createElement('div');
             card.className = 'order-card';
