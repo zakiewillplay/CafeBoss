@@ -3,59 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
-    <title>Cafe Boss | Digital Menus</title>
+    <title>Cafe Boss | Welcome</title>
     <style>
-        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: sans-serif; background: var(--bg) !important; color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
-        
-        /* 🔥 Button Fix: Made this section shorter so the button is always visible 🔥 */
-        header { 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            min-height: 50vh; padding: 20px; text-align: center; 
-        }
-        
-        h1 { font-size: clamp(2.5rem, 10vw, 4rem); color: var(--text); margin: 0 0 10px 0; font-weight: bold; }
-        .highlight { color: var(--primary); }
-        p.tagline { font-size: 1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 600px; }
-        
-        .btn { display: inline-block; background: var(--primary) !important; color: var(--bg) !important; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 1rem; text-transform: uppercase; }
-        .btn:hover { opacity: 0.9; }
-        
-        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
-        .feature-card { background: var(--surface); padding: 25px; width: 280px; text-align: center; border: 1px solid var(--border); border-top: 3px solid var(--primary); }
-        .feature-icon { font-size: 2rem; margin-bottom: 10px; color: var(--primary); }
-        .feature-card h3 { color: var(--text); margin-top: 0; font-size: 1.5rem; }
-        footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { background: #1e293b; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h1 { color: #f59e0b; }
+        a { display: block; margin: 15px 0; padding: 15px; background: #334155; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        a:hover { background: #f59e0b; color: black; }
+        .dev-credit { margin-top: 30px; font-size: 0.8rem; color: #64748b; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Cafe <span class="highlight">Boss</span></h1>
-        <p class="tagline">Create beautiful digital menus and take table orders easily from your phone.</p>
-        <a href="auth.html" class="btn">Go to Dashboard</a>
-    </header>
-    
-    <section class="features">
-        <div class="feature-card">
-            <div class="feature-icon">📱</div>
-            <h3>Digital Menus</h3>
-            <p style="color: var(--text-muted); font-size:0.9rem;">Create a digital menu that customers can see instantly by scanning a QR code.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">🛎️</div>
-            <h3>Table Orders</h3>
-            <p style="color: var(--text-muted); font-size:0.9rem;">Customers order directly from their table. Get a notification sound instantly.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">📷</div>
-            <h3>Smart Scanner</h3>
-            <p style="color: var(--text-muted); font-size:0.9rem;">Take a photo of your paper menu to scan the text directly into the app.</p>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 Cafe Boss</p>
-    </footer>
+    <div class="box">
+        <h1>Cafe Boss Suite</h1>
+        <p>Select your portal:</p>
+        <a href="menu.html">📱 Customer Digital Menu</a>
+        <a href="dashboard.html">🛎️ Live Order Dashboard</a>
+        <a href="auth.html">🔒 Admin / Management</a>
+    </div>
+    <div class="dev-credit">System developed by Zakir Rashid</div>
 </body>
 </html>
