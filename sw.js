@@ -1,55 +1,40 @@
 self.addEventListener('install', (event) => {
-    self.skipWaiting();
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(clients.claim());
+  event.waitUntil(clients.claim());
 });
 
-self.addEventListener('push', function(event) {
-    let orderData = {
-        title: 'New Cafe Order!',
-        body: 'You have received a new order.',
-        sound: 'notification.mp3'
-    };
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : { title: 'Cafe Boss', body: 'New Order Received!' };
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      vibrate: [200, 100, 200]
+    })
+  );
+});
 
-    if (event.data) {
-        try {
-            const payload = event.data.json();
-            orderData.title = payload.title || orderData.title;
-            orderData.body = payload.body || orderData.body;
-        } catch (e) {
-            orderData.body = event.data.text();
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if dashboard is already open
+      for (let i = 0; i < clientList.length; i++) {
+        let client = clientList[i];
+        if (client.url.includes('dashboard.html') && 'focus' in client) {
+          return client.focus();
         }
-    }
-
-    const options = {
-        body: orderData.body,
-        vibrate:,
-        sound: orderData.sound,
-        tag: 'new-order-' + Date.now(),
-        renotify: true,
-        data: { url: './dashboard.html' }
-    };
-
-    event.waitUntil(self.registration.showNotification(orderData.title, options));
-});
-
-self.addEventListener('notificationclick', function(event) {
-    event.notification.close();
-    const targetUrl = event.notification.data ? event.notification.data.url : './dashboard.html';
-
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-            for (let i = 0; i < clientList.length; i++) {
-                let client = clientList[i];
-                if (client.url.includes('dashboard') && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
-            }
-        })
-    );
+      }
+      // If not, open a new window/tab
+      if (clients.openWindow) {
+        return clients.openWindow('./dashboard.html');
+      }
+    })
+  );
 });
