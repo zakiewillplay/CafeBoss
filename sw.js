@@ -24,7 +24,7 @@ self.addEventListener('push', function(event) {
     body: orderData.body,
     icon: '/icon.png',         // Path to your cafe boss logo/icon
     badge: '/badge.png',       // Small icon for mobile status bars
-    vibrate:, // High-intensity vibration pattern
+    vibrate:, // Fixed the missing values here
     sound: orderData.sound,    // Requests the OS to play the sound
     tag: 'new-order-' + (orderData.cafeId || Date.now()), // Prevents duplicate alerts
     renotify: true,            // Alerts the user even if a previous notification is active
