@@ -3,251 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafe Menu</title>
+    <title>QR Menu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; padding-bottom: 120px; }
-        
-        header { padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; font-size: 2.5rem; color: var(--text); }
-        p#cafe-desc { color: var(--primary); margin-top: 10px; font-size: 1rem; }
-        
-        .search-container { padding: 20px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 100; }
-        #search { width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 5px; box-sizing: border-box; }
-        
-        .categories { display: flex; overflow-x: auto; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border); }
-        .categories::-webkit-scrollbar { display: none; }
-        .cat-tab { padding: 8px 15px; cursor: pointer; color: var(--text-muted); font-weight: bold; border-radius: 20px; background: var(--surface); }
-        .cat-tab.active { background: var(--primary); color: var(--bg); }
-        
-        .menu-section { padding: 20px; }
-        .menu-section h2 { font-size: 1.8rem; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        
-        .menu-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dotted var(--border); }
-        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .item-title { font-weight: bold; font-size: 1.2rem; color: var(--text); }
-        .item-price { font-weight: bold; color: var(--primary); font-size: 1.1rem; }
-        .item-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 10px; }
-        .badge { background: var(--primary); color: var(--bg); padding: 2px 5px; font-size: 0.7rem; border-radius: 3px; margin-left: 5px; font-weight: bold; }
-        
-        .variants { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .variant-pill { font-size: 0.8rem; padding: 5px 10px; border: 1px solid var(--border); border-radius: 15px; cursor: pointer; color: var(--text-muted); }
-        .variant-pill.active { background: var(--primary); color: var(--bg); border-color: var(--primary); }
-        
-        .qty-controls { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
-        .qty-btn { background: var(--surface); color: var(--primary); border: 1px solid var(--primary); width: 30px; height: 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; font-weight: bold; }
-        .qty-val { font-size: 1.2rem; font-weight: bold; min-width: 20px; text-align: center; }
-        
-        #cart-btn { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--primary); color: var(--bg); padding: 15px 30px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; z-index: 1000; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        
-        #cart-panel { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 2px solid var(--primary); padding: 30px; transform: translateY(100%); transition: transform 0.3s; z-index: 1001; }
-        #cart-panel.open { transform: translateY(0); }
-        .cart-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 5px; box-sizing: border-box; }
-        .place-order-btn { width: 100%; background: var(--primary); color: var(--bg); padding: 15px; border: none; border-radius: 5px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        body { font-family: system-ui, sans-serif; background: #f8fafc; color: #334155; padding: 20px; margin: 0; }
+        .header { text-align: center; padding: 20px; background: #0f172a; color: white; border-radius: 12px; margin-bottom: 20px;}
+        .menu-item { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+        .order-btn { background: #f59e0b; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px;}
     </style>
 </head>
 <body>
-    <header>
-        <h1 id="cafe-name">Cafe Menu</h1>
-        <p id="cafe-desc">Delicious food ordered directly from your table.</p>
-    </header>
-
-    <div class="search-container">
-        <input type="text" id="search" placeholder="Search menu...">
+    <div class="header">
+        <h1>Cafe Al Buraaq</h1>
+        <p>Digital Order System</p>
     </div>
-    
-    <div class="categories" id="categories-container"></div>
-    <div id="menu-container"></div>
 
-    <button id="cart-btn" style="display:none;" onclick="toggleCart()">
-        View Cart (₹<span id="cart-total">0</span>)
-    </button>
-
-    <div id="cart-panel">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3 style="margin:0; font-size:1.5rem; color:var(--text);">Your Order</h3>
-            <button style="background:none; border:none; font-size:2rem; color:var(--text-muted); cursor:pointer;" onclick="toggleCart()">✕</button>
+    <div id="menuList">
+        <div class="menu-item">
+            <div><strong>Test Coffee</strong><br>₹150</div>
         </div>
-        <div id="cart-items" style="max-height:200px; overflow-y:auto; margin-bottom:20px; font-size:1rem; color:var(--text);"></div>
-        
-        <input type="text" id="table-number" class="cart-input" placeholder="Table Number *" required>
-        <input type="text" id="customer-name" class="cart-input" placeholder="Your Name (Optional)">
-        
-        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
     </div>
 
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+    <button class="order-btn" onclick="placeTestOrder()">Tap to Send Test Order</button>
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const cafeId = urlParams.get('id');
-        let allItems = []; let cart = {};
+    <script>
+        const sup = supabase.createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
-        async function init() {
-            if(!cafeId) return document.body.innerHTML = '<h2 style="text-align:center; margin-top:50px;">Invalid QR Code. Please scan again.</h2>';
-            supabase.from('menu_views_log').insert([{ cafe_id: cafeId }]).then();
+        async function placeTestOrder() {
+            const btn = document.querySelector('.order-btn');
+            btn.innerText = "Sending...";
             
-            const { data: cafe } = await supabase.from('cafes').select('*').eq('id', cafeId).single();
-            if(cafe) {
-                document.getElementById('cafe-name').innerText = cafe.cafe_name;
-                document.getElementById('cafe-desc').innerText = cafe.description;
+            // Fires directly into the 'orders' table to wake up the dashboard
+            const { error } = await sup.from('orders').insert([{ amount: 150 }]);
+            
+            if(error) {
+                alert("Order failed. Check database RLS.");
+                btn.innerText = "Try Again";
+            } else {
+                btn.innerText = "Order Sent!";
+                btn.style.background = "#10b981";
+                setTimeout(() => { btn.innerText = "Tap to Send Test Order"; btn.style.background = "#f59e0b"; }, 3000);
             }
-            
-            const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true);
-            allItems = data || []; renderMenu(allItems);
         }
-
-        function parseVariants(desc) {
-            const match = desc?.match(/VAR::(.*)/); if(!match) return null;
-            return match.split('|').map(v => { const [name, price] = v.split('='); return { name, price: parseFloat(price) }; });
-        }
-
-        function renderMenu(items) {
-            const container = document.getElementById('menu-container'); 
-            const catContainer = document.getElementById('categories-container');
-            container.innerHTML = ''; catContainer.innerHTML = '';
-            
-            const categories = [...new Set(items.map(i => i.category))];
-            categories.forEach((c, idx) => {
-                catContainer.innerHTML += `<div class="cat-tab ${idx===0?'active':''}" onclick="scrollToCat('${c}')">${c}</div>`;
-                let html = `<div class="menu-section" id="cat-${c.replace(/\s+/g, '-')}"><h2>${c}</h2>`;
-                
-                items.filter(i => i.category === c).forEach(item => {
-                    const variants = parseVariants(item.description);
-                    const cleanDesc = item.description ? item.description.replace(/VAR::.*/, '') : '';
-                    let priceHtml = variants ? `₹${variants.price}` : `₹${item.price}`;
-                    let variantHtml = '';
-                    if(variants) {
-                        variantHtml = `<div class="variants">` + variants.map((v, i) => 
-                            `<div class="variant-pill ${i===0?'active':''}" onclick="selectVariant(this, '${item.id}', ${v.price}, '${v.name}')">${v.name}</div>`
-                        ).join('') + `</div>`;
-                    }
-                    html += `
-                    <div class="menu-item">
-                        <div class="item-header">
-                            <div class="item-title">${item.name} ${item.featured?'⭐':''} ${item.discount?`<span class="badge">${item.discount}</span>`:''}</div>
-                            <div class="item-price" id="price-${item.id}" data-baseprice="${variants ? variants.price : item.price}">${priceHtml}</div>
-                        </div>
-                        <div class="item-desc">${cleanDesc}</div>
-                        ${variantHtml}
-                        <div class="qty-controls">
-                            <button class="qty-btn" onclick="updateQty('${item.id}', -1)">-</button>
-                            <span class="qty-val" id="qty-${item.id}">0</span>
-                            <button class="qty-btn" onclick="updateQty('${item.id}', 1, '${item.name.replace(/'/g, "\\'")}')">+</button>
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`; container.innerHTML += html;
-            });
-        }
-
-        document.getElementById('search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allItems.filter(i => i.name.toLowerCase().includes(term) || i.description?.toLowerCase().includes(term));
-            renderMenu(filtered);
-        });
-
-        window.scrollToCat = (cat) => {
-            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active')); 
-            event.target.classList.add('active');
-            const el = document.getElementById(`cat-${cat.replace(/\s+/g, '-')}`);
-            window.scrollTo({top: el.offsetTop - 80, behavior: 'smooth'});
-        };
-
-        window.selectVariant = (el, id, price, vName) => {
-            el.parentElement.querySelectorAll('.variant-pill').forEach(p => p.classList.remove('active')); 
-            el.classList.add('active');
-            document.getElementById(`price-${id}`).innerText = `₹${price}`;
-            document.getElementById(`price-${id}`).dataset.baseprice = price;
-            document.getElementById(`price-${id}`).dataset.vname = vName;
-            if(cart[id]) updateQty(id, -cart[id].qty);
-        };
-
-        window.updateQty = (id, delta, name) => {
-            let current = cart[id]?.qty || 0; current += delta; if(current < 0) current = 0;
-            document.getElementById(`qty-${id}`).innerText = current;
-            
-            const priceEl = document.getElementById(`price-${id}`);
-            const price = parseFloat(priceEl.dataset.baseprice);
-            const vName = priceEl.dataset.vname || '';
-            const fullName = vName ? `${name} (${vName})` : name;
-            
-            if(current > 0) cart[id] = { name: fullName, price, qty: current }; else delete cart[id];
-            updateCartUI();
-        };
-
-        function updateCartUI() {
-            let totalQty = 0, totalPrice = 0; const itemsHtml = [];
-            for(let key in cart) {
-                totalQty += cart[key].qty; totalPrice += cart[key].price * cart[key].qty;
-                itemsHtml.push(`<div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;"><span><b>${cart[key].qty}x</b> ${cart[key].name}</span> <span>₹${cart[key].price * cart[key].qty}</span></div>`);
-            }
-            document.getElementById('cart-total').innerText = totalPrice;
-            document.getElementById('cart-items').innerHTML = itemsHtml.join('');
-            
-            const btn = document.getElementById('cart-btn');
-            if(totalQty > 0) { btn.style.display = 'block'; } 
-            else { btn.style.display = 'none'; document.getElementById('cart-panel').classList.remove('open'); }
-        }
-
-        window.toggleCart = () => document.getElementById('cart-panel').classList.toggle('open');
-
-        window.placeOrder = async () => {
-            const table = document.getElementById('table-number').value;
-            const name = document.getElementById('customer-name').value || 'Guest';
-            if(!table) return alert('Please enter your table number.');
-            
-            document.querySelector('.place-order-btn').innerText = 'Sending Order...';
-            const itemsArr = Object.values(cart); const total = parseFloat(document.getElementById('cart-total').innerText);
-            
-            const { data, error } = await supabase.from('orders').insert([{ cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total }]).select().single();
-            
-            if(!error) {
-                // 🔥 Start watching the order live! 🔥
-                startOrderTracking(data.id);
-            }
-        };
-
-        // 🔥 Real-Time Tracking Feature Function 🔥
-        function startOrderTracking(orderId) {
-            const panel = document.getElementById('cart-panel');
-            panel.innerHTML = `
-                <div style="text-align:center; padding:40px 20px;">
-                    <div style="font-size:3rem; margin-bottom:20px; color:var(--primary);" id="status-icon">🍳</div>
-                    <h2 id="status-title" style="margin:0 0 10px 0;">Order Sent</h2>
-                    <p id="status-text" style="color:var(--text-muted);">The kitchen is reviewing your order.</p>
-                    <div style="margin:20px 0; font-size:0.85rem; color:var(--text-muted); font-family:monospace;">Order Ref: ${orderId.split('-')}</div>
-                </div>
-            `;
-            if (!panel.classList.contains('open')) panel.classList.add('open');
-
-            // Listen to database changes for this order ID
-            supabase.channel(`track-${orderId}`)
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` }, payload => {
-                    const status = payload.new.status;
-                    const iconEl = document.getElementById('status-icon');
-                    const titleEl = document.getElementById('status-title');
-                    const textEl = document.getElementById('status-text');
-
-                    if (status === 'accepted') {
-                        iconEl.innerText = '🔥';
-                        titleEl.innerText = 'Cooking';
-                        textEl.innerText = 'The chef is preparing your order now!';
-                    } else if (status === 'delivered') {
-                        iconEl.innerText = '🛎️';
-                        titleEl.innerText = 'On The Way';
-                        textEl.innerText = 'Your food is ready! A server is bringing it over.';
-                    } else if (status === 'completed') {
-                        iconEl.innerText = '✅';
-                        titleEl.innerText = 'Order Completed';
-                        textEl.innerText = 'Thank you! Enjoy your meal.';
-                    }
-                })
-                .subscribe();
-        }
-
-        init();
     </script>
 </body>
 </html>
