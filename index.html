@@ -1,26 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafe Boss | Welcome</title>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .box { background: #1e293b; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h1 { color: #f59e0b; }
-        a { display: block; margin: 15px 0; padding: 15px; background: #334155; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.2s; }
-        a:hover { background: #f59e0b; color: black; }
-        .dev-credit { margin-top: 30px; font-size: 0.8rem; color: #64748b; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cafe Boss | Hub</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    :root {
+      --primary: #f59e0b;
+      --primary-dark: #d97706;
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --text: #1c1917;
+      --text-light: #78716c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; }
+    header { text-align: center; margin: 40px 0; animation: fadeInDown 0.8s ease; }
+    h1 { font-size: 2.5rem; color: var(--primary); letter-spacing: -1px; }
+    p { color: var(--text-light); margin-top: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 400px; margin: 0 auto; width: 100%; animation: fadeInUp 0.8s ease; }
+    .card { background: var(--surface); padding: 24px; border-radius: 16px; text-decoration: none; color: var(--text); box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .card:active { transform: scale(0.98); }
+    .card h2 { font-size: 1.25rem; margin-bottom: 8px; }
+    .card p { font-size: 0.9rem; margin: 0; }
+    .icon { font-size: 2rem; margin-bottom: 12px; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
 <body>
-    <div class="box">
-        <h1>Cafe Boss Suite</h1>
-        <p>Select your portal:</p>
-        <a href="menu.html">📱 Customer Digital Menu</a>
-        <a href="dashboard.html">🛎️ Live Order Dashboard</a>
-        <a href="auth.html">🔒 Admin / Management</a>
-    </div>
-    <div class="dev-credit">System developed by Zakir Rashid</div>
+  <header>
+    <h1>Cafe Boss</h1>
+    <p>Central Management Hub</p>
+  </header>
+  <div class="grid">
+    <a href="./menu.html" class="card">
+      <div class="icon">📖</div>
+      <h2>Digital Menu</h2>
+      <p>Customer-facing interface to place orders</p>
+    </a>
+    <a href="./dashboard.html" class="card">
+      <div class="icon">🔔</div>
+      <h2>Live Dashboard</h2>
+      <p>Real-time order feed and notifications</p>
+    </a>
+    <a href="./auth.html" class="card">
+      <div class="icon">⚙️</div>
+      <h2>Admin Panel</h2>
+      <p>Manage inventory and system settings</p>
+    </a>
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Failed', err));
+    }
+  </script>
 </body>
 </html>
