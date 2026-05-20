@@ -204,9 +204,48 @@
             const { data, error } = await supabase.from('orders').insert([{ cafe_id: cafeId, customer_name: name, table_number: table, items: itemsArr, total: total }]).select().single();
             
             if(!error) {
-                document.getElementById('cart-panel').innerHTML = `<div style="text-align:center; padding:30px 10px;"><h2 style="color:var(--primary);">Order Placed Successfully!</h2><p>The kitchen has received your order and is cooking it now.</p><button onclick="window.location.reload()" style="margin-top:20px; background:var(--primary); color:var(--bg); padding:10px 20px; border:none; border-radius:5px; font-weight:bold;">Close</button></div>`;
+                // 🔥 Start watching the order live! 🔥
+                startOrderTracking(data.id);
             }
         };
+
+        // 🔥 Real-Time Tracking Feature Function 🔥
+        function startOrderTracking(orderId) {
+            const panel = document.getElementById('cart-panel');
+            panel.innerHTML = `
+                <div style="text-align:center; padding:40px 20px;">
+                    <div style="font-size:3rem; margin-bottom:20px; color:var(--primary);" id="status-icon">🍳</div>
+                    <h2 id="status-title" style="margin:0 0 10px 0;">Order Sent</h2>
+                    <p id="status-text" style="color:var(--text-muted);">The kitchen is reviewing your order.</p>
+                    <div style="margin:20px 0; font-size:0.85rem; color:var(--text-muted); font-family:monospace;">Order Ref: ${orderId.split('-')}</div>
+                </div>
+            `;
+            if (!panel.classList.contains('open')) panel.classList.add('open');
+
+            // Listen to database changes for this order ID
+            supabase.channel(`track-${orderId}`)
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` }, payload => {
+                    const status = payload.new.status;
+                    const iconEl = document.getElementById('status-icon');
+                    const titleEl = document.getElementById('status-title');
+                    const textEl = document.getElementById('status-text');
+
+                    if (status === 'accepted') {
+                        iconEl.innerText = '🔥';
+                        titleEl.innerText = 'Cooking';
+                        textEl.innerText = 'The chef is preparing your order now!';
+                    } else if (status === 'delivered') {
+                        iconEl.innerText = '🛎️';
+                        titleEl.innerText = 'On The Way';
+                        textEl.innerText = 'Your food is ready! A server is bringing it over.';
+                    } else if (status === 'completed') {
+                        iconEl.innerText = '✅';
+                        titleEl.innerText = 'Order Completed';
+                        textEl.innerText = 'Thank you! Enjoy your meal.';
+                    }
+                })
+                .subscribe();
+        }
 
         init();
     </script>
