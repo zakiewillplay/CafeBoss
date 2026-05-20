@@ -4,27 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Cafe Boss</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --border: #2A2520; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-image: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.05) 0%, rgba(10,9,8,1) 80%); }
-        .auth-container { background: transparent; padding: 40px 30px; width: 100%; max-width: 360px; border: 1px solid var(--border); position: relative; }
-        .auth-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), transparent); }
-        h2 { text-align: center; color: var(--text); margin-top: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: 2px; margin-bottom: 25px; }
-        .tabs { display: flex; margin-bottom: 30px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #777; font-weight: 400; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; border-bottom: 1px solid var(--border); }
-        .tab.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
-        input { width: 100%; padding: 15px 0; margin-bottom: 25px; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); box-sizing: border-box; outline: none; font-size: 1rem; font-family: 'Inter', sans-serif; transition: border-color 0.3s; }
-        input:focus { border-bottom: 1px solid var(--primary); }
-        input::placeholder { color: #555; font-weight: 300; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-container { background: var(--surface); padding: 30px; width: 100%; max-width: 350px; border: 1px solid var(--border); border-top: 3px solid var(--primary); }
+        h2 { text-align: center; color: var(--text); margin-top: 0; font-size: 2rem; margin-bottom: 20px; }
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #777; font-size: 0.9rem; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid var(--border); }
+        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; font-size: 1rem; }
         .pwd-wrapper { position: relative; width: 100%; }
-        .toggle-pwd { position: absolute; right: 0; top: 15px; cursor: pointer; color: #777; font-size: 1.2rem; user-select: none; }
-        button { width: 100%; padding: 15px; background: var(--primary); color: var(--bg); border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: #FDFBF7; }
+        
+        /* 🔥 Eye Icon Feature 🔥 */
+        .toggle-pwd { position: absolute; right: 10px; top: 12px; cursor: pointer; color: #777; font-size: 1.2rem; user-select: none; }
+        
+        button { width: 100%; padding: 15px; background: var(--primary); color: var(--bg); border: none; cursor: pointer; font-weight: bold; font-size: 1rem; text-transform: uppercase; margin-top: 5px; }
         .hidden { display: none; }
-        .msg { font-size: 0.85rem; margin-top: 20px; text-align: center; color: var(--primary); font-style: italic; }
-        .link { color: #777; cursor: pointer; font-size: 0.8rem; display: block; text-align: center; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
-        .link:hover { color: var(--primary); }
+        .msg { font-size: 0.9rem; margin-top: 15px; text-align: center; color: var(--primary); }
+        .link { color: #777; cursor: pointer; font-size: 0.85rem; display: block; text-align: center; margin-top: 20px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -32,8 +29,8 @@
         <h2>Cafe Boss</h2>
         <div id="standard-auth">
             <div class="tabs">
-                <div class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
-                <div class="tab" id="tab-signup" onclick="switchTab('signup')">Register</div>
+                <div class="tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+                <div class="tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
             </div>
             <form id="auth-form">
                 <input type="email" id="email" placeholder="Email Address" required>
@@ -41,18 +38,18 @@
                     <input type="password" id="password" placeholder="Password" required>
                     <span class="toggle-pwd" id="toggle-pwd" title="Show/Hide">👁️</span>
                 </div>
-                <button type="submit" id="submit-btn">Enter Dashboard</button>
+                <button type="submit" id="submit-btn">Login</button>
             </form>
-            <span class="link" onclick="showRecovery()">Recover Credentials</span>
+            <span class="link" onclick="showRecovery()">Forgot Password?</span>
         </div>
         
         <div id="recovery-auth" class="hidden">
-            <h3 style="text-align:center; font-family:'Cormorant Garamond', serif; font-size:1.8rem; font-weight:normal;">Reset Password</h3>
+            <h3 style="text-align:center;">Reset Password</h3>
             <form id="recovery-form">
                 <input type="password" id="new-password" placeholder="New Password" required>
-                <button type="submit">Update Security</button>
+                <button type="submit">Update Password</button>
             </form>
-            <span class="link" onclick="window.location.href='auth.html'">Return to Login</span>
+            <span class="link" onclick="window.location.href='auth.html'">Back to Login</span>
         </div>
         <div class="msg" id="msg"></div>
     </div>
@@ -61,11 +58,12 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
         const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
-        // Auto-redirect if already logged in!
+        // 🔥 Auto-Login Check 🔥
         supabase.auth.getSession().then(({ data }) => {
             if (data.session) window.location.href = 'dashboard.html';
         });
 
+        // Show/Hide Password
         document.getElementById('toggle-pwd').addEventListener('click', function() {
             const pwdInput = document.getElementById('password');
             if (pwdInput.type === 'password') { pwdInput.type = 'text'; this.innerText = '🙈'; } 
@@ -83,14 +81,14 @@
             isLogin = mode === 'login';
             document.getElementById('tab-login').classList.toggle('active', isLogin);
             document.getElementById('tab-signup').classList.toggle('active', !isLogin);
-            document.getElementById('submit-btn').innerText = isLogin ? 'Enter Dashboard' : 'Establish Account';
+            document.getElementById('submit-btn').innerText = isLogin ? 'Login' : 'Sign Up';
         };
 
         window.showRecovery = () => {
             const email = document.getElementById('email').value;
-            if(!email) return showMsg('Please provide your email address above.');
+            if(!email) return showMsg('Please enter your email above first.');
             supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://zakiewillplay.github.io/CafeBoss/auth.html?type=recovery' })
-                .then(({error}) => showMsg(error ? error.message : 'Recovery dispatch sent.'));
+                .then(({error}) => showMsg(error ? error.message : 'Password reset email sent!'));
         };
 
         const showMsg = (text) => document.getElementById('msg').innerText = text;
@@ -99,7 +97,7 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            showMsg('Authenticating...');
+            showMsg('Loading...');
 
             if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -108,7 +106,7 @@
             } else {
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) {
-                    if (error.message.includes('already registered')) showMsg("Email exists. Please sign in.");
+                    if (error.message.includes('already registered')) showMsg("Email already used. Try logging in.");
                     else showMsg(error.message);
                 } else {
                     if(data.user) await supabase.from('cafes').insert([{ owner_id: data.user.id }]);
@@ -121,7 +119,7 @@
             e.preventDefault();
             const { error } = await supabase.auth.updateUser({ password: document.getElementById('new-password').value });
             if (error) showMsg(error.message);
-            else { showMsg('Security updated.'); setTimeout(() => window.location.href='dashboard.html', 1500); }
+            else { showMsg('Password changed!'); setTimeout(() => window.location.href='dashboard.html', 1500); }
         });
     </script>
 </body>
