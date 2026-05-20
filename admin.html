@@ -3,59 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Oversight | Cafe Boss</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <title>Menu Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --border: #2A2520; --text-muted: #A9A499; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 50px 20px; max-width: 1000px; margin: 0 auto; }
-        h1 { color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 400; letter-spacing: 2px; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 40px; }
-        .card { background: var(--surface); padding: 40px; border: 1px solid var(--border); margin-bottom: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border-bottom: 1px solid var(--border); padding: 15px 10px; text-align: left; }
-        th { color: var(--primary); font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 1.1rem; letter-spacing: 1px; }
-        .stat { font-family: 'Cormorant Garamond', serif; font-size: 3rem; color: var(--text); }
-        .stat-label { color: var(--primary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
+        .panel { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: auto; }
+        input { width: 95%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white;}
+        button { background: #10b981; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;}
     </style>
 </head>
 <body>
-    <h1>System Oversight</h1>
-    <div class="card" style="display:flex; gap: 80px;">
-        <div><div class="stat-label">Active Estates</div><div class="stat" id="total-cafes">0</div></div>
-        <div><div class="stat-label">Global Fulfillments</div><div class="stat" id="total-orders">0</div></div>
-    </div>
-    <div class="card">
-        <h2 style="font-family:'Cormorant Garamond', serif; color:var(--text); font-weight:400; margin-top:0;">Recent Network Activity</h2>
-        <table>
-            <thead><tr><th>Reference</th><th>Estate ID</th><th>Status</th><th>Value</th><th>Timestamp</th></tr></thead>
-            <tbody id="admin-orders"></tbody>
-        </table>
+    <div class="panel">
+        <h2 style="color: #10b981;">Add New Menu Item</h2>
+        <input type="text" id="itemName" placeholder="Item Name (e.g. Espresso)">
+        <input type="number" id="itemPrice" placeholder="Price (₹)">
+        <button onclick="addItem()">Add to Database</button>
+        <p id="feedback"></p>
+        <a href="dashboard.html" style="color: #f59e0b; display: block; margin-top: 20px; text-align: center;">Go to Dashboard</a>
     </div>
 
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+    <script>
+        const sup = supabase.createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
 
-        async function initAdmin() {
-            const { count: cafeCount } = await supabase.from('cafes').select('*', { count: 'exact', head: true });
-            document.getElementById('total-cafes').innerText = cafeCount || 0;
-            const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-            document.getElementById('total-orders').innerText = orderCount || 0;
-            const { data: recentOrders } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(20);
+        async function addItem() {
+            const name = document.getElementById('itemName').value;
+            const price = document.getElementById('itemPrice').value;
             
-            const tbody = document.getElementById('admin-orders');
-            if(recentOrders) {
-                recentOrders.forEach(o => {
-                    tbody.innerHTML += `<tr>
-                        <td style="font-family:monospace; color:var(--text-muted);">${o.id.split('-')}</td>
-                        <td style="font-family:monospace; color:var(--text-muted);">${o.cafe_id.split('-')}</td>
-                        <td style="text-transform:uppercase; font-size:0.8rem; letter-spacing:1px; color:var(--primary);">${o.status}</td>
-                        <td style="font-family:'Cormorant Garamond', serif; font-size:1.2rem;">₹${o.total}</td>
-                        <td style="color:var(--text-muted); font-size:0.85rem;">${new Date(o.created_at).toLocaleString()}</td>
-                    </tr>`;
-                });
+            const { error } = await sup.from('menu').insert([{ name: name, price: parseFloat(price) }]);
+            
+            if(error) document.getElementById('feedback').innerText = "Error: " + error.message;
+            else {
+                document.getElementById('feedback').innerText = "Added successfully!";
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
             }
         }
-        initAdmin();
     </script>
 </body>
 </html>
