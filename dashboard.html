@@ -7,10 +7,10 @@
     
     <style>
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #333333;
-            --brand-color: #ff6b6b;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --brand-color: #ff9800;
             --success-color: #4caf50;
         }
         
@@ -27,7 +27,7 @@
             justify-content: space-between;
             align-items: center;
             padding-bottom: 20px;
-            border-bottom: 2px solid #ddd;
+            border-bottom: 2px solid #333;
             margin-bottom: 20px;
         }
 
@@ -40,21 +40,22 @@
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             text-align: center;
             margin-bottom: 30px;
+            border: 1px solid #333;
         }
 
         .btn-activate {
             background-color: var(--brand-color);
-            color: white;
+            color: black;
             border: none;
             padding: 15px 30px;
             font-size: 1.1rem;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
             transition: transform 0.1s;
         }
 
@@ -78,7 +79,7 @@
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
             border-left: 5px solid var(--success-color);
             animation: slideIn 0.3s ease-out;
         }
@@ -105,7 +106,7 @@
 
     <div class="activation-panel" id="activationPanel">
         <h2>System Standby</h2>
-        <p>You must click the button below to unlock background audio and notifications.</p>
+        <p>Click the button below to unlock live background audio and order synchronization.</p>
         <button class="btn-activate" onclick="activateSystem()">Turn On Live Orders & Audio</button>
         <div id="status-indicator">🔴 Offline</div>
     </div>
@@ -116,10 +117,9 @@
     <audio id="orderAlertSound" src="notification.mp3" preload="auto"></audio>
 
     <script>
-        // --- 1. CONFIGURATION ---
-        // REPLACE THESE WITH YOUR REAL SUPABASE CREDENTIALS
-        const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
-        const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY-HERE';
+        // --- 1. CONFIGURATION (PRE-FILLED WITH YOUR LIVE KEYS) ---
+        const SUPABASE_URL = 'https://udlmyspetkjzcdkfshgl.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'; 
         
         let supabaseClient;
         const alertSound = document.getElementById('orderAlertSound');
@@ -127,84 +127,78 @@
         const ordersList = document.getElementById('ordersList');
 
         // --- 2. SYSTEM ACTIVATION ---
-        // This function runs when the cafe owner taps the big activation button.
+        // Unlocks native audio and permissions on the phone browser screen
         function activateSystem() {
-            // A. Request Native Browser Notifications
+            // Request Native Browser Notifications
             if ('Notification' in window && Notification.permission !== 'granted') {
                 Notification.requestPermission();
             }
 
-            // B. Unlock Audio Playback for Android/Mobile
+            // Unlock Audio Playback for Android/Mobile devices
             alertSound.play().then(() => {
                 alertSound.pause();
                 alertSound.currentTime = 0;
-            }).catch(err => console.log("Audio unlock note:", err));
+            }).catch(err => console.log("Audio initialized:", err));
 
-            // C. Connect to Database
+            // Connect to your database
             if (!supabaseClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 startRealtimeListener();
             }
 
-            // Update UI
+            // Update UI State
             statusIndicator.innerHTML = "🟢 Live & Listening for Orders";
             statusIndicator.style.color = "var(--success-color)";
             document.querySelector('.btn-activate').style.display = 'none';
         }
 
         // --- 3. SUPABASE REALTIME LISTENER ---
+        // Captures inserts on the 'orders' table immediately via WebSockets
         function startRealtimeListener() {
             supabaseClient
                 .channel('public:orders')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
                     const newOrder = payload.new;
-                    console.log('🚨 Incoming Order:', newOrder);
+                    console.log('🚨 Incoming Order Details:', newOrder);
 
-                    // 1. Fire the Audio Ringtone
-                    alertSound.play().catch(e => console.error("Sound blocked by browser:", e));
+                    // 1. Play the notification.mp3 file
+                    alertSound.play().catch(e => console.error("Sound play blocked:", e));
 
-                    // 2. Fire the System Notification Over the Screen
+                    // 2. Fire native device banner notification over screen
                     if ('Notification' in window && Notification.permission === 'granted') {
                         new Notification("🚨 New Cafe Boss Order!", {
-                            body: `Check dashboard for details.`,
-                            // Optional: Add the path to your icon if you have one
-                            // icon: "/icon.png" 
+                            body: `Amount: ₹${newOrder.total_price || newOrder.amount || '0'}`
                         });
                     }
 
-                    // 3. Inject the order visually into the HTML
+                    // 3. Append the order to the dashboard feed instantly
                     renderOrderCard(newOrder);
                 })
                 .subscribe((status) => {
                     if(status === 'SUBSCRIBED') {
-                        console.log("Successfully locked into database stream.");
+                        console.log("WebSocket connection established successfully.");
                     }
                 });
         }
 
-        // --- 4. VANILLA JS HTML INJECTION ---
+        // --- 4. VANILLA JS CARD RENDER ---
         function renderOrderCard(orderData) {
-            // Create the card div
             const card = document.createElement('div');
             card.className = 'order-card';
-            
-            // Format a simple timestamp
             const timeString = new Date().toLocaleTimeString();
 
-            // Structure the inner HTML (Customize this based on your database columns)
             card.innerHTML = `
                 <h3>New Order Received</h3>
                 <p><strong>Time:</strong> ${timeString}</p>
                 <p><strong>Order ID:</strong> #${orderData.id || 'N/A'}</p>
-                <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                <p style="color: #666; font-size: 0.9em;">Refresh page for full details or check admin panel.</p>
+                <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                <p style="color: #aaa; font-size: 0.9em;">Check your database table for item breakdowns.</p>
             `;
 
-            // Insert at the top of the list
             ordersList.prepend(card);
         }
 
-        // Simple clock for the UI
+        // Dashboard Live Clock
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
