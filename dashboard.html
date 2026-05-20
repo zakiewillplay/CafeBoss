@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management | Cafe Boss</title>
+    <title>Dashboard | Cafe Boss</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0A0908">
@@ -12,180 +12,162 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <script>
         window.onerror = function(msg, url, line) {
-            document.body.innerHTML = "<div style='background:#2A0808; color:#D4AF37; padding:20px; font-family:serif; border-bottom:1px solid #D4AF37;'><i>Notice: A system anomaly occurred.</i><br>" + msg + " (Line " + line + ")</div>" + document.body.innerHTML;
+            document.body.innerHTML = "<div style='background:#2A0808; color:#D4AF37; padding:20px; border-bottom:1px solid #D4AF37;'><b>Error:</b> " + msg + " (Line " + line + ")</div>" + document.body.innerHTML;
         };
     </script>
 
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; max-width: 1200px; margin: 0 auto; }
         
-        #audio-unlocker { position: fixed; inset: 0; background: rgba(10, 9, 8, 0.98); backdrop-filter: blur(10px); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); cursor: pointer; text-align: center; padding: 20px; transition: opacity 0.8s; }
-        #audio-unlocker h2 { font-family: 'Cormorant Garamond', serif; font-size: 3rem; margin-bottom: 10px; font-weight: 400; letter-spacing: 2px; }
-        .unlock-btn { margin-top: 30px; padding: 15px 40px; border: 1px solid var(--primary); color: var(--primary); background: transparent; letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem; transition: 0.4s; }
-        .unlock-btn:hover { background: var(--primary); color: var(--bg); }
+        #audio-unlocker { position: fixed; inset: 0; background: rgba(10, 9, 8, 0.98); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); cursor: pointer; text-align: center; padding: 20px; }
+        #audio-unlocker h2 { font-size: 2.5rem; margin-bottom: 10px; }
+        .unlock-btn { margin-top: 30px; padding: 15px 40px; border: 1px solid var(--primary); color: var(--primary); font-size: 1.2rem; font-weight: bold; border-radius: 5px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: 1px; color: var(--text); }
-        h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 600; letter-spacing: 1px; color: var(--primary); margin-top: 0; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        h1 { margin: 0; font-size: 2rem; color: var(--text); }
+        h2, h3 { color: var(--primary); margin-top: 0; }
         
-        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .controls button, .controls select { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        .controls button:hover, .controls select:hover { color: var(--primary); border-color: var(--primary); }
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+        .controls button { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: bold; }
         
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
-        .card { background: var(--surface); border: 1px solid var(--border); padding: 30px; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: var(--surface); border: 1px solid var(--border); padding: 25px; }
         
-        .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 25px; }
-        .stat-box span { display: block; font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: var(--text); font-weight: 400; line-height: 1; margin-bottom: 8px; }
-        .stat-box small { color: var(--primary); font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-size: 0.65rem; }
+        .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 15px; }
+        .stat-box span { display: block; font-size: 2.5rem; color: var(--text); font-weight: bold; margin-bottom: 5px; }
+        .stat-box small { color: var(--primary); font-size: 0.8rem; text-transform: uppercase; }
         
-        input, textarea, select { width: 100%; padding: 15px 0; margin: 10px 0 20px 0; border: none; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; transition: 0.3s; }
-        input:focus, textarea:focus { border-bottom-color: var(--primary); }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0 15px 0; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
         
-        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 15px 20px; cursor: pointer; width: 100%; font-weight: 400; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s; }
-        .btn:hover { background: var(--primary); color: var(--bg); }
+        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 12px 20px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1rem; border-radius: 5px; margin-top: 5px; }
         
-        .tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--border); }
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        .tab.active { color: var(--primary); border-bottom: 1px solid var(--primary); }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; }
+        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
         
-        .order-card { background: transparent; border: 1px solid var(--border); padding: 25px; margin-top: 15px; position: relative; }
-        .order-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 2px; background: var(--primary); }
+        .order-card { border: 1px solid var(--border); padding: 20px; margin-top: 15px; border-left: 3px solid var(--primary); }
         
-        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; letter-spacing: 1px; color: var(--text); padding: 10px 0; border-bottom: 1px solid transparent; transition: 0.3s; }
-        collapsible:hover { color: var(--primary); }
+        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); }
         .hidden { display: none; }
         
-        #qr-container { display: flex; flex-direction: column; align-items: center; margin-top: 25px; padding: 30px; background: #fff; border: 1px solid var(--primary); }
-        .item-row { display: flex; justify-content: space-between; padding: 20px 0; border-bottom: 1px solid var(--border); align-items: center; }
+        #qr-container { display: flex; justify-content: center; margin-top: 20px; padding: 20px; background: #fff; }
+        .item-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); align-items: center; }
     </style>
 </head>
 <body>
 
     <div id="audio-unlocker">
-        <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.8;">🛎️</div>
-        <h2>Awaiting Service</h2>
-        <p style="color: var(--text-muted); font-weight: 300; letter-spacing: 1px;">Grant acoustic clearance to receive live table chimes.</p>
-        <div class="unlock-btn">Initialize Service</div>
+        <div style="font-size: 3rem; margin-bottom: 10px;">🛎️</div>
+        <h2>Tap to Start</h2>
+        <p style="color: var(--text-muted);">Turn on the order notification sound.</p>
+        <div class="unlock-btn">Start Dashboard</div>
     </div>
 
     <header>
-        <h1 data-i18n="title">Management Bureau</h1>
+        <h1>Cafe Dashboard</h1>
         <div class="controls">
-            <select id="lang-select">
-                <option value="en">EN</option>
-                <option value="hi">HI</option>
-            </select>
-            <button id="unmute-btn" style="border-color:var(--primary); color:var(--primary);">Acoustics: Off</button>
-            <button id="logout-btn">Depart</button>
+            <button id="unmute-btn" style="border-color:var(--primary); color:var(--primary);">Sound: Off</button>
+            <button id="logout-btn">Logout</button>
         </div>
     </header>
 
     <div class="grid">
         <div class="card">
-            <h3 data-i18n="stats">Executive Summary</h3>
+            <h3>Overview</h3>
             <div class="stats">
-                <div class="stat-box"><span id="stat-views">0</span><small>Impressions</small></div>
-                <div class="stat-box"><span id="stat-items">0</span><small>Offerings</small></div>
-                <div class="stat-box"><span id="stat-orders">0</span><small>Fulfillments</small></div>
+                <div class="stat-box"><span id="stat-views">0</span><small>Menu Views</small></div>
+                <div class="stat-box"><span id="stat-items">0</span><small>Total Items</small></div>
+                <div class="stat-box"><span id="stat-orders">0</span><small>Total Orders</small></div>
             </div>
         </div>
         <div class="card">
-            <h3>7-Day Trajectory</h3>
+            <h3>Orders Last 7 Days</h3>
             <canvas id="analyticsChart" height="90"></canvas>
         </div>
     </div>
 
     <div class="card" style="margin-bottom: 30px;">
-        <h2 data-i18n="orders">Active Requisitions</h2>
+        <h2>Live Orders</h2>
         <div class="tabs">
-            <div class="tab active" onclick="filterOrders(this, 'new')">Pending</div>
-            <div class="tab" onclick="filterOrders(this, 'accepted')">Preparing</div>
-            <div class="tab" onclick="filterOrders(this, 'completed')">Archived</div>
+            <div class="tab active" onclick="filterOrders(this, 'new')">New</div>
+            <div class="tab" onclick="filterOrders(this, 'accepted')">Cooking</div>
+            <div class="tab" onclick="filterOrders(this, 'completed')">Done</div>
         </div>
         <div id="orders-list"></div>
     </div>
 
     <div class="grid">
         <div class="card">
-            <collapsible onclick="toggleCard('settings-content')">Establishment Profile <span style="font-size:1rem;">▼</span></collapsible>
+            <collapsible onclick="toggleCard('settings-content')">Cafe Settings ▼</collapsible>
             <div id="settings-content" class="hidden">
-                <div style="margin-top:20px;"></div>
-                <input type="text" id="cafe-name" placeholder="Establishment Name">
-                <input type="text" id="whatsapp" placeholder="Concierge Number (WhatsApp)">
-                <textarea id="cafe-desc" placeholder="A refined description..."></textarea>
-                <button class="btn" id="save-settings" style="margin-top:15px;">Update Profile</button>
+                <input type="text" id="cafe-name" placeholder="Cafe Name">
+                <input type="text" id="whatsapp" placeholder="WhatsApp Number">
+                <textarea id="cafe-desc" placeholder="Cafe Description"></textarea>
+                <button class="btn" id="save-settings">Save Settings</button>
             </div>
         </div>
 
         <div class="card">
-            <collapsible onclick="toggleCard('qr-content')">Digital Plaque & QR <span style="font-size:1rem;">▼</span></collapsible>
+            <collapsible onclick="toggleCard('qr-content')">QR Code Settings ▼</collapsible>
             <div id="qr-content" class="hidden">
-                <div style="margin-top:20px;"></div>
-                <button class="btn" id="generate-qr">Mint QR Code</button>
+                <button class="btn" id="generate-qr">Generate QR Code</button>
                 <div id="qr-container"></div>
-                <input type="text" id="qr-url" readonly style="text-align: center; margin-top:20px; font-weight:600; color:var(--primary); font-family:monospace; border:none;">
-                <button class="btn" id="download-qr" style="margin-top:10px; display:none; border-color:var(--text-muted); color:var(--text-muted);">Acquire Image</button>
+                <input type="text" id="qr-url" readonly style="text-align: center; margin-top:20px; font-weight:bold; color:var(--primary); border:none;">
+                <button class="btn" id="download-qr" style="margin-top:10px; display:none;">Download Image</button>
             </div>
         </div>
     </div>
 
     <div class="grid">
         <div class="card">
-            <collapsible onclick="toggleCard('smart-menu-content')">Optical Character Reader <span style="font-size:1rem;">▼</span></collapsible>
+            <collapsible onclick="toggleCard('smart-menu-content')">Scan Menu with Camera ▼</collapsible>
             <div id="smart-menu-content" class="hidden">
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-top:20px;">Digitize physical parchment via optical recognition.</p>
-                <label class="btn" style="display:block; text-align:center; margin-bottom:15px;">
-                    Engage Lens
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-top:10px;">Take a picture of your menu to read the text.</p>
+                <label class="btn" style="display:block; text-align:center; margin-bottom:10px;">
+                    Open Camera
                     <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
                 </label>
                 <label class="btn" style="display:block; text-align:center; border-color:var(--text-muted); color:var(--text-muted);">
-                    Select Archive
+                    Choose from Gallery
                     <input type="file" id="gallery-input" accept="image/*" style="display:none;">
                 </label>
-                <div id="ocr-preview" style="margin-top: 20px; padding:15px; border:1px solid var(--border); font-family:'Cormorant Garamond', serif; font-size:1.1rem; color:var(--primary); white-space:pre-wrap; min-height:50px;">Awaiting parchment...</div>
+                <div id="ocr-preview" style="margin-top: 15px; padding:15px; border:1px solid var(--border); color:var(--primary); white-space:pre-wrap;">Waiting for image...</div>
             </div>
         </div>
 
         <div class="card">
-            <collapsible onclick="toggleCard('add-item-content')">Curate Offering <span style="font-size:1rem;">▼</span></collapsible>
+            <collapsible onclick="toggleCard('add-item-content')">Add Menu Item ▼</collapsible>
             <div id="add-item-content" class="hidden">
-                <div style="margin-top:20px;"></div>
-                <input type="text" id="item-name" placeholder="Dish Nomenclature *" required>
-                <div style="display:flex; gap:15px; align-items:flex-end;">
-                    <textarea id="item-desc" placeholder="Tasting Notes..." style="margin-bottom:0;"></textarea>
-                    <button id="ai-desc-btn" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:10px; cursor:pointer; margin-bottom:10px; font-family:serif; font-style:italic;" title="Invoke Muse">Muse</button>
-                </div>
-                <div style="display:flex; gap:20px;">
-                    <input type="number" id="item-price" placeholder="Valuation (₹) *" required>
-                    <input type="text" id="item-category" list="categories" placeholder="Classification *" required>
-                </div>
+                <input type="text" id="item-name" placeholder="Item Name *" required>
+                <textarea id="item-desc" placeholder="Item Description"></textarea>
+                <input type="number" id="item-price" placeholder="Price (₹) *" required>
+                <input type="text" id="item-category" list="categories" placeholder="Category (e.g. Drinks, Main Course) *" required>
                 <datalist id="categories"></datalist>
-                <input type="text" id="item-discount" placeholder="Complimentary Tag (e.g. 20% Honored)">
-                <input type="text" id="item-variants" placeholder="Portions (e.g. Petite=150|Grand=250)">
-                <label style="display:block; margin: 20px 0; font-family:'Cormorant Garamond', serif; font-size:1.2rem; color:var(--primary); cursor:pointer;"><input type="checkbox" id="item-featured" style="width:auto; margin:0 10px 0 0;"> Mark as Chef's Signature</label>
-                <button class="btn" id="save-item">Publish to Ledger</button>
+                <input type="text" id="item-discount" placeholder="Discount (e.g. 20% OFF)">
+                <input type="text" id="item-variants" placeholder="Sizes/Options (e.g. Small=150|Large=250)">
+                <label style="display:block; margin: 15px 0; font-weight:bold; color:var(--primary); cursor:pointer;">
+                    <input type="checkbox" id="item-featured"> Mark as Chef's Special
+                </label>
+                <button class="btn" id="save-item">Save Menu Item</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <collapsible onclick="toggleCard('items-list-content')">The Master Ledger <span style="font-size:1rem;">▼</span></collapsible>
+        <collapsible onclick="toggleCard('items-list-content')">All Menu Items ▼</collapsible>
         <div id="items-list-content" class="hidden">
-            <div id="items-container" style="margin-top:20px;"></div>
+            <div id="items-container" style="margin-top:15px;"></div>
         </div>
     </div>
 
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error', err));
             });
         }
     </script>
@@ -203,11 +185,8 @@
             gain.gain.value = 0; osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
             
-            const unlocker = document.getElementById('audio-unlocker');
-            unlocker.style.opacity = '0';
-            setTimeout(() => unlocker.style.display = 'none', 800);
-            
-            document.getElementById('unmute-btn').innerText = 'Acoustics: Live';
+            document.getElementById('audio-unlocker').style.display = 'none';
+            document.getElementById('unmute-btn').innerText = 'Sound: On';
             document.getElementById('unmute-btn').style.background = 'var(--primary)';
             document.getElementById('unmute-btn').style.color = 'var(--bg)';
             if(Notification.permission !== 'granted') Notification.requestPermission();
@@ -226,9 +205,7 @@
         document.getElementById('logout-btn').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'auth.html'; });
 
         window.toggleCard = (id) => {
-            const el = document.getElementById(id);
-            el.classList.toggle('hidden');
-            if(!el.classList.contains('hidden') && window.gsap) gsap.from(el, { opacity: 0, y: -10, duration: 0.5, ease: "power2.out" });
+            document.getElementById(id).classList.toggle('hidden');
         };
 
         async function init() {
@@ -238,7 +215,7 @@
                 let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
                 if (!cafeData) {
                     const { data: newCafe } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
-                    cafe = newCafe || { id: 'temp', cafe_name: 'The Establishment', menu_views: 0 };
+                    cafe = newCafe || { id: 'temp', cafe_name: 'My Cafe', menu_views: 0 };
                 } else { cafe = cafeData; }
 
                 populateSettings(); await loadStats(); await loadOrders(); await loadItems(); setupRealtime();
@@ -255,22 +232,22 @@
         document.getElementById('save-settings').addEventListener('click', async () => {
             const updates = { cafe_name: document.getElementById('cafe-name').value, whatsapp: document.getElementById('whatsapp').value, description: document.getElementById('cafe-desc').value };
             await supabase.from('cafes').update(updates).eq('id', cafe.id);
-            alert('Profile immortalized.');
+            alert('Settings Saved.');
         });
 
         document.getElementById('generate-qr').addEventListener('click', () => {
             const container = document.getElementById('qr-container'); container.innerHTML = '';
             const url = `https://zakiewillplay.github.io/CafeBoss/menu.html?id=${cafe.id}`;
-            new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#141210", colorLight: "#ffffff" });
+            new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#141210", colorLight: "#ffffff" });
             const urlInput = document.getElementById('qr-url'); urlInput.value = url;
-            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Address Copied.'); };
+            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Link Copied.'); };
             document.getElementById('download-qr').style.display = 'block';
         });
 
         document.getElementById('download-qr').addEventListener('click', () => {
             const canvas = document.querySelector('#qr-container canvas');
             if(!canvas) return;
-            const link = document.createElement('a'); link.download = 'Plaque.png'; link.href = canvas.toDataURL(); link.click();
+            const link = document.createElement('a'); link.download = 'QR_Code.png'; link.href = canvas.toDataURL(); link.click();
         });
 
         async function loadStats() {
@@ -283,8 +260,7 @@
             if (window.Chart) {
                 const ctx = document.getElementById('analyticsChart').getContext('2d');
                 Chart.defaults.color = '#A9A499';
-                Chart.defaults.font.family = 'Inter';
-                new Chart(ctx, { type: 'line', data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Requisitions', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4, borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, grid: { color: '#2A2520' } }, x: { grid: { color: '#2A2520' } } }, plugins: { legend: { display: false } } } });
+                new Chart(ctx, { type: 'line', data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
             }
         }
 
@@ -306,49 +282,43 @@
 
             filtered.forEach(o => {
                 const card = document.createElement('div'); card.className = 'order-card';
-                let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-family:serif;">${i.qty}x</span> <span style="font-weight:300;">${i.name}</span> <span style="color:var(--text-muted); font-size:0.85em;">(₹${i.price})</span>`).join('<br>');
+                let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-weight:bold;">${i.qty}x</span> <span>${i.name}</span> <span style="color:var(--text-muted);">(₹${i.price})</span>`).join('<br>');
                 let actionBtn = '';
                 
-                if(o.status === 'new') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'accepted')">Acknowledge</button>`;
-                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; margin-right:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Dispatch</button><button class="btn" style="width:auto; padding:10px 20px; border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Conclude</button>`;
-                else if(o.status === 'completed') actionBtn = `<button class="btn" style="width:auto; padding:10px 20px; border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Issue Ledger</button>`;
+                if(o.status === 'new') actionBtn = `<button class="btn" onclick="updateOrderStatus('${o.id}', 'accepted')">Accept Order</button>`;
+                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="margin-bottom:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Deliver Order</button><button class="btn" style="border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Complete Order</button>`;
+                else if(o.status === 'completed') actionBtn = `<button class="btn" style="border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Download Bill</button>`;
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:flex-end;">
-                        <strong style="color:var(--primary); font-family:'Cormorant Garamond', serif; font-size:1.6rem; font-weight:400; letter-spacing:1px;">Table: ${o.table_number || 'Outbound'}</strong>
-                        <span style="color:var(--text-muted); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">${new Date(o.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <strong style="color:var(--primary); font-size:1.2rem;">Table: ${o.table_number || 'Takeaway'}</strong>
+                        <span style="color:var(--text-muted); font-size:0.8rem;">${new Date(o.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <div style="line-height:2; font-size:1.05rem;">${itemsHtml}</div>
-                    <div style="margin-top:25px; font-family:'Cormorant Garamond', serif; font-size:1.5rem; color:var(--text);">Total <span style="color:var(--primary);">₹${o.total}</span></div>
-                    <div style="margin-top:20px;">${actionBtn}</div>
+                    <div style="line-height:1.8;">${itemsHtml}</div>
+                    <div style="margin-top:20px; font-size:1.2rem; font-weight:bold;">Total: <span style="color:var(--primary);">₹${o.total}</span></div>
+                    <div style="margin-top:15px;">${actionBtn}</div>
                 `;
                 list.appendChild(card);
             });
-            if(window.gsap && list.children.length > 0) gsap.from('.order-card', { opacity: 0, y: 15, stagger: 0.1, duration: 0.6, ease: "power2.out" });
         }
 
         window.updateOrderStatus = async (id, status) => { await supabase.from('orders').update({ status }).eq('id', id); loadOrders(); };
-        window.generatePDF = (id) => { if (window.jspdf) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "serif"); doc.text(`Cafe Boss Ledger\nTransaction: ${id.split('-')}`, 10, 20); doc.save(`Ledger_${id.split('-')}.pdf`); } };
+        window.generatePDF = (id) => { if (window.jspdf) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text(`Cafe Boss Bill\nOrder ID: ${id.split('-')}`, 10, 20); doc.save(`Bill_${id.split('-')}.pdf`); } };
 
         function setupRealtime() {
             if (!cafe || cafe.id === 'temp') return;
             supabase.channel('custom-all-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `cafe_id=eq.${cafe.id}` }, payload => {
-                beep(); if(Notification.permission === 'granted') new Notification('Requisition Arrived');
+                beep(); if(Notification.permission === 'granted') new Notification('New Order Arrived!');
                 if(currentOrderFilter === 'new') loadOrders();
             }).subscribe();
         }
-
-        document.getElementById('ai-desc-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            const phrases = ["Sourced with integrity, presented with elegance.", "A symphony of textures and heritage flavors.", "An uncompromising classic, refined for the modern palate.", "Delicate aromatics giving way to profound richness.", "Crafted meticulously to awaken the senses."];
-            document.getElementById('item-desc').value = phrases[Math.floor(Math.random() * phrases.length)];
-        });
 
         document.getElementById('save-item').addEventListener('click', async () => {
             const isVariants = document.getElementById('item-variants').value;
             const payload = { cafe_id: cafe.id, name: document.getElementById('item-name').value, description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''), price: isVariants ? 0 : (document.getElementById('item-price').value || 0), category: document.getElementById('item-category').value || 'Uncategorized', discount: document.getElementById('item-discount').value, featured: document.getElementById('item-featured').checked };
             await supabase.from('menu_items').insert([payload]); loadItems();
             document.getElementById('item-name').value = ''; document.getElementById('item-desc').value = ''; document.getElementById('item-price').value = '';
+            alert("Item Added!");
         });
 
         async function loadItems() {
@@ -361,10 +331,10 @@
                 const div = document.createElement('div'); div.className = 'item-row';
                 div.innerHTML = `
                     <div>
-                        <strong style="font-family:'Cormorant Garamond', serif; font-size:1.4rem; font-weight:600; color:var(--text); letter-spacing:1px;">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">✦</span>' : ''} ${item.discount ? `<span style="border:1px solid var(--primary); color:var(--primary); padding:2px 8px; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin-left:10px;">${item.discount}</span>` : ''}<br>
-                        <small style="color:var(--text-muted); font-weight:300; text-transform:uppercase; letter-spacing:2px; font-size:0.7rem;">${item.category} &nbsp;|&nbsp; <span style="color:var(--primary);">₹${item.price}</span></small>
+                        <strong style="font-size:1.2rem; color:var(--text);">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">⭐</span>' : ''} ${item.discount ? `<span style="border:1px solid var(--primary); color:var(--primary); padding:2px 5px; font-size:0.7rem; margin-left:10px;">${item.discount}</span>` : ''}<br>
+                        <small style="color:var(--text-muted);">${item.category} | <span style="color:var(--primary);">₹${item.price}</span></small>
                     </div>
-                    <div><button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; cursor:pointer;">Expunge</button></div>
+                    <div><button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; font-weight:bold; cursor:pointer;">Delete</button></div>
                 `;
                 container.appendChild(div);
             });
@@ -373,10 +343,11 @@
 
         window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
 
+        // 🔥 Fixed Scanner Bug (Added error catching) 🔥
         const handleImage = (e) => {
             const file = e.target.files; if(!file) return;
             const preview = document.getElementById('ocr-preview');
-            preview.innerText = "Analyzing parchment...";
+            preview.innerText = "Scanning image... Please wait.";
             
             if (window.Tesseract) {
                 setTimeout(async () => {
@@ -385,13 +356,13 @@
                         const ret = await worker.recognize(file);
                         await worker.terminate();
                         const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
-                        preview.innerText = lines.join('\n') || "No distinct offerings discerned.";
+                        preview.innerText = lines.join('\n') || "Could not read any text from the image.";
                     } catch (err) {
-                        preview.innerText = "Analysis failed. Please ensure the image is clear.";
+                        preview.innerText = "Error scanning image. Make sure the image is clear.";
                     }
                 }, 100);
             } else {
-                preview.innerText = "Optical engine is still loading. Please try again.";
+                preview.innerText = "Scanner is loading, try again in a few seconds.";
             }
         };
         
