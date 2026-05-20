@@ -4,99 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="dark">
-    <title>Cafe Boss | Elegant Digital Menus</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Cafe Boss | Digital Menus</title>
     <style>
         :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg) !important; color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
+        body { font-family: sans-serif; background: var(--bg) !important; color: var(--text); margin: 0; padding: 0; line-height: 1.6; overflow-x: hidden; }
         
-        .ambient-glow { position: absolute; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.08) 0%, rgba(10,9,8,1) 60%); z-index: -1; top: 0; left: 0; }
-
+        /* 🔥 Button Fix: Made this section shorter so the button is always visible 🔥 */
         header { 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 75vh; 
-            padding: 20px; 
-            text-align: center; 
-            position: relative; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            min-height: 50vh; padding: 20px; text-align: center; 
         }
         
-        h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem, 12vw, 4.5rem); color: var(--text); margin-top: 0; margin-bottom: 15px; font-weight: 600; letter-spacing: 2px; }
-        .highlight { color: var(--primary); font-style: italic; }
-        p.tagline { font-size: clamp(0.95rem, 4vw, 1.2rem); color: var(--text-muted); margin-bottom: 40px; max-width: 600px; font-weight: 300; letter-spacing: 1px; }
+        h1 { font-size: clamp(2.5rem, 10vw, 4rem); color: var(--text); margin: 0 0 10px 0; font-weight: bold; }
+        .highlight { color: var(--primary); }
+        p.tagline { font-size: 1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 600px; }
         
-        /* 🔥 GLITCH-FREE BUTTON 🔥 
-           Removed "transition: all" which was fighting GSAP. 
-           Now it only transitions background and transform. */
-        .btn { 
-            display: inline-block; 
-            background: var(--primary) !important; 
-            color: var(--bg) !important; 
-            padding: 16px 45px; 
-            border: none; 
-            border-radius: 4px;
-            text-decoration: none; 
-            font-weight: 600; 
-            font-size: 1rem; 
-            letter-spacing: 2px; 
-            text-transform: uppercase; 
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
-            transition: background 0.3s ease, transform 0.3s ease; 
-            opacity: 1 !important; /* Forces it to stay visible */
-        }
-        .btn:hover { background: #C5A059 !important; transform: translateY(-2px); }
+        .btn { display: inline-block; background: var(--primary) !important; color: var(--bg) !important; padding: 15px 40px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 1rem; text-transform: uppercase; }
+        .btn:hover { opacity: 0.9; }
         
-        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; padding: 40px 20px 80px 20px; }
-        .feature-card { background: var(--surface); padding: 30px 25px; width: 280px; text-align: center; border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .feature-card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 2px; background: var(--primary); transition: width 0.4s ease; }
-        .feature-card:hover { border-color: rgba(212, 175, 55, 0.3); }
-        .feature-card:hover::before { width: 100%; }
-        
-        .feature-icon { font-size: 2rem; margin-bottom: 15px; color: var(--primary); }
-        .feature-card h3 { font-family: 'Cormorant Garamond', serif; color: var(--text); margin-top: 0; font-size: 1.6rem; font-weight: 600; letter-spacing: 1px; }
-        
-        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); letter-spacing: 1px; text-transform: uppercase; }
+        .features { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .feature-card { background: var(--surface); padding: 25px; width: 280px; text-align: center; border: 1px solid var(--border); border-top: 3px solid var(--primary); }
+        .feature-icon { font-size: 2rem; margin-bottom: 10px; color: var(--primary); }
+        .feature-card h3 { color: var(--text); margin-top: 0; font-size: 1.5rem; }
+        footer { text-align: center; padding: 30px; color: var(--text-muted); font-size: 0.8rem; border-top: 1px solid var(--border); }
     </style>
 </head>
 <body>
-    <div class="ambient-glow"></div>
-
-    <header class="gsap-hero">
+    <header>
         <h1>Cafe <span class="highlight">Boss</span></h1>
-        <p class="tagline">Elevate your dining experience. Bespoke digital menus and seamless table-side ordering.</p>
-        <a href="auth.html" class="btn">Enter Dashboard</a>
+        <p class="tagline">Create beautiful digital menus and take table orders easily from your phone.</p>
+        <a href="auth.html" class="btn">Go to Dashboard</a>
     </header>
     
     <section class="features">
-        <div class="feature-card gsap-card">
-            <div class="feature-icon">✧</div>
-            <h3>Refined Menus</h3>
-            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Craft stunning digital menus accessible instantly via a graceful QR scan.</p>
+        <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Digital Menus</h3>
+            <p style="color: var(--text-muted); font-size:0.9rem;">Create a digital menu that customers can see instantly by scanning a QR code.</p>
         </div>
-        <div class="feature-card gsap-card">
+        <div class="feature-card">
             <div class="feature-icon">🛎️</div>
-            <h3>Discreet Ordering</h3>
-            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Guests place requests directly from tables. Receive live chimes seamlessly.</p>
+            <h3>Table Orders</h3>
+            <p style="color: var(--text-muted); font-size:0.9rem;">Customers order directly from their table. Get a notification sound instantly.</p>
         </div>
-        <div class="feature-card gsap-card">
-            <div class="feature-icon">✒️</div>
-            <h3>AI Curation</h3>
-            <p style="color: var(--text-muted); font-weight:300; font-size:0.9rem;">Scan printed menus to digitize items with sophisticated descriptions.</p>
+        <div class="feature-card">
+            <div class="feature-icon">📷</div>
+            <h3>Smart Scanner</h3>
+            <p style="color: var(--text-muted); font-size:0.9rem;">Take a photo of your paper menu to scan the text directly into the app.</p>
         </div>
     </section>
 
-    <footer class="gsap-footer">
-        <p>&copy; 2026 Cafe Boss &middot; Engineered by Zakir Rashid</p>
+    <footer>
+        <p>&copy; 2026 Cafe Boss</p>
     </footer>
-
-    <script>
-        gsap.from(".gsap-hero h1", { y: 20, opacity: 0, duration: 1, ease: "power2.out" });
-        gsap.from(".gsap-hero p", { y: 20, opacity: 0, duration: 1, delay: 0.2, ease: "power2.out" });
-        // Removed the button animation line here so it stays locked on screen!
-        gsap.from(".gsap-card", { y: 30, opacity: 0, duration: 0.8, stagger: 0.15, delay: 0.4, ease: "power2.out" });
-    </script>
 </body>
 </html>
