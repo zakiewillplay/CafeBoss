@@ -192,14 +192,29 @@
             if(Notification.permission !== 'granted') Notification.requestPermission();
         });
 
+        // 🔥 New Ding-Dong Sound 🔥
         const beep = () => {
             if(!audioCtx) return;
-            const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-            osc.start(); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.6);
-            osc.stop(audioCtx.currentTime + 0.6);
+            
+            // First Sound (Ding)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc1.connect(gain1); gain1.connect(audioCtx.destination);
+            osc1.start(); gain1.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            osc1.stop(audioCtx.currentTime + 0.5);
+
+            // Second Sound (Dong) - Plays slightly after
+            setTimeout(() => {
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                osc2.start(); gain2.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
+                osc2.stop(audioCtx.currentTime + 0.8);
+            }, 200);
         };
 
         document.getElementById('logout-btn').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'auth.html'; });
@@ -343,7 +358,6 @@
 
         window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
 
-        // 🔥 Fixed Scanner Bug (Added error catching) 🔥
         const handleImage = (e) => {
             const file = e.target.files; if(!file) return;
             const preview = document.getElementById('ocr-preview');
