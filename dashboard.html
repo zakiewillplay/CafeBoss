@@ -3,390 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Cafe Boss</title>
+    <title>Cafe Boss - Live Dashboard</title>
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0A0908">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-    
-    <script>
-        window.onerror = function(msg, url, line) {
-            document.body.innerHTML = "<div style='background:#2A0808; color:#D4AF37; padding:20px; border-bottom:1px solid #D4AF37;'><b>Error:</b> " + msg + " (Line " + line + ")</div>" + document.body.innerHTML;
-        };
-    </script>
-
     <style>
-        :root { --bg: #0A0908; --surface: #141210; --primary: #D4AF37; --text: #FDFBF7; --text-muted: #A9A499; --border: #2A2520; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --brand-color: #ff6b6b;
+            --success-color: #4caf50;
+        }
         
-        #audio-unlocker { position: fixed; inset: 0; background: rgba(10, 9, 8, 0.98); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--primary); cursor: pointer; text-align: center; padding: 20px; }
-        #audio-unlocker h2 { font-size: 2.5rem; margin-bottom: 10px; }
-        .unlock-btn { margin-top: 30px; padding: 15px 40px; border: 1px solid var(--primary); color: var(--primary); font-size: 1.2rem; font-weight: bold; border-radius: 5px; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
-        h1 { margin: 0; font-size: 2rem; color: var(--text); }
-        h2, h3 { color: var(--primary); margin-top: 0; }
-        
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; }
-        .controls button { padding: 8px 15px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; font-weight: bold; }
-        
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: var(--surface); border: 1px solid var(--border); padding: 25px; }
-        
-        .stats { display: flex; justify-content: space-between; text-align: center; margin-top: 15px; }
-        .stat-box span { display: block; font-size: 2.5rem; color: var(--text); font-weight: bold; margin-bottom: 5px; }
-        .stat-box small { color: var(--primary); font-size: 0.8rem; text-transform: uppercase; }
-        
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0 15px 0; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
-        
-        .btn { background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 12px 20px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1rem; border-radius: 5px; margin-top: 5px; }
-        
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: var(--text-muted); font-weight: bold; }
-        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-        
-        .order-card { border: 1px solid var(--border); padding: 20px; margin-top: 15px; border-left: 3px solid var(--primary); }
-        
-        collapsible { cursor: pointer; display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--border); }
-        .hidden { display: none; }
-        
-        #qr-container { display: flex; justify-content: center; margin-top: 20px; padding: 20px; background: #fff; }
-        .item-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); align-items: center; }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: var(--brand-color);
+        }
+
+        .activation-panel {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-activate {
+            background-color: var(--brand-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .btn-activate:active {
+            transform: scale(0.98);
+        }
+
+        #status-indicator {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #888;
+        }
+
+        .orders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .order-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--success-color);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .order-card h3 {
+            margin-top: 0;
+            color: var(--success-color);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <div id="audio-unlocker">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🛎️</div>
-        <h2>Tap to Start</h2>
-        <p style="color: var(--text-muted);">Turn on the order notification sound.</p>
-        <div class="unlock-btn">Start Dashboard</div>
+    <div class="header">
+        <h1>Cafe Boss Dashboard</h1>
+        <div id="clock">Waiting for sync...</div>
     </div>
 
-    <header>
-        <h1>Cafe Dashboard</h1>
-        <div class="controls">
-            <button id="unmute-btn" style="border-color:var(--primary); color:var(--primary);">Sound: Off</button>
-            <button id="logout-btn">Logout</button>
-        </div>
-    </header>
-
-    <div class="grid">
-        <div class="card">
-            <h3>Overview</h3>
-            <div class="stats">
-                <div class="stat-box"><span id="stat-views">0</span><small>Menu Views</small></div>
-                <div class="stat-box"><span id="stat-items">0</span><small>Total Items</small></div>
-                <div class="stat-box"><span id="stat-orders">0</span><small>Total Orders</small></div>
-            </div>
-        </div>
-        <div class="card">
-            <h3>Orders Last 7 Days</h3>
-            <canvas id="analyticsChart" height="90"></canvas>
-        </div>
+    <div class="activation-panel" id="activationPanel">
+        <h2>System Standby</h2>
+        <p>You must click the button below to unlock background audio and notifications.</p>
+        <button class="btn-activate" onclick="activateSystem()">Turn On Live Orders & Audio</button>
+        <div id="status-indicator">🔴 Offline</div>
     </div>
 
-    <div class="card" style="margin-bottom: 30px;">
-        <h2>Live Orders</h2>
-        <div class="tabs">
-            <div class="tab active" onclick="filterOrders(this, 'new')">New</div>
-            <div class="tab" onclick="filterOrders(this, 'accepted')">Cooking</div>
-            <div class="tab" onclick="filterOrders(this, 'completed')">Done</div>
-        </div>
-        <div id="orders-list"></div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <collapsible onclick="toggleCard('settings-content')">Cafe Settings ▼</collapsible>
-            <div id="settings-content" class="hidden">
-                <input type="text" id="cafe-name" placeholder="Cafe Name">
-                <input type="text" id="whatsapp" placeholder="WhatsApp Number">
-                <textarea id="cafe-desc" placeholder="Cafe Description"></textarea>
-                <button class="btn" id="save-settings">Save Settings</button>
-            </div>
+    <div class="orders-container" id="ordersList">
         </div>
 
-        <div class="card">
-            <collapsible onclick="toggleCard('qr-content')">QR Code Settings ▼</collapsible>
-            <div id="qr-content" class="hidden">
-                <button class="btn" id="generate-qr">Generate QR Code</button>
-                <div id="qr-container"></div>
-                <input type="text" id="qr-url" readonly style="text-align: center; margin-top:20px; font-weight:bold; color:var(--primary); border:none;">
-                <button class="btn" id="download-qr" style="margin-top:10px; display:none;">Download Image</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <collapsible onclick="toggleCard('smart-menu-content')">Scan Menu with Camera ▼</collapsible>
-            <div id="smart-menu-content" class="hidden">
-                <p style="color:var(--text-muted); font-size:0.9rem; margin-top:10px;">Take a picture of your menu to read the text.</p>
-                <label class="btn" style="display:block; text-align:center; margin-bottom:10px;">
-                    Open Camera
-                    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none;">
-                </label>
-                <label class="btn" style="display:block; text-align:center; border-color:var(--text-muted); color:var(--text-muted);">
-                    Choose from Gallery
-                    <input type="file" id="gallery-input" accept="image/*" style="display:none;">
-                </label>
-                <div id="ocr-preview" style="margin-top: 15px; padding:15px; border:1px solid var(--border); color:var(--primary); white-space:pre-wrap;">Waiting for image...</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <collapsible onclick="toggleCard('add-item-content')">Add Menu Item ▼</collapsible>
-            <div id="add-item-content" class="hidden">
-                <input type="text" id="item-name" placeholder="Item Name *" required>
-                <textarea id="item-desc" placeholder="Item Description"></textarea>
-                <input type="number" id="item-price" placeholder="Price (₹) *" required>
-                <input type="text" id="item-category" list="categories" placeholder="Category (e.g. Drinks, Main Course) *" required>
-                <datalist id="categories"></datalist>
-                <input type="text" id="item-discount" placeholder="Discount (e.g. 20% OFF)">
-                <input type="text" id="item-variants" placeholder="Sizes/Options (e.g. Small=150|Large=250)">
-                <label style="display:block; margin: 15px 0; font-weight:bold; color:var(--primary); cursor:pointer;">
-                    <input type="checkbox" id="item-featured"> Mark as Chef's Special
-                </label>
-                <button class="btn" id="save-item">Save Menu Item</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <collapsible onclick="toggleCard('items-list-content')">All Menu Items ▼</collapsible>
-        <div id="items-list-content" class="hidden">
-            <div id="items-container" style="margin-top:15px;"></div>
-        </div>
-    </div>
+    <audio id="orderAlertSound" src="notification.mp3" preload="auto"></audio>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error', err));
-            });
-        }
-    </script>
-
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        const supabase = createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
-
-        let cafe = null, currentOrderFilter = 'new', audioCtx;
+        // --- 1. CONFIGURATION ---
+        // REPLACE THESE WITH YOUR REAL SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'https://YOUR-PROJECT-ID.supabase.co';
+        const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY-HERE';
         
-        document.getElementById('audio-unlocker').addEventListener('click', () => {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            gain.gain.value = 0; osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            
-            document.getElementById('audio-unlocker').style.display = 'none';
-            document.getElementById('unmute-btn').innerText = 'Sound: On';
-            document.getElementById('unmute-btn').style.background = 'var(--primary)';
-            document.getElementById('unmute-btn').style.color = 'var(--bg)';
-            if(Notification.permission !== 'granted') Notification.requestPermission();
-        });
+        let supabaseClient;
+        const alertSound = document.getElementById('orderAlertSound');
+        const statusIndicator = document.getElementById('status-indicator');
+        const ordersList = document.getElementById('ordersList');
 
-        // Loud Ding-Dong Sound Fix
-        const beep = () => {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-            const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
-            osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now); gain1.gain.setValueAtTime(0.5, now);
-            osc1.connect(gain1); gain1.connect(audioCtx.destination);
-            osc1.start(now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.4); osc1.stop(now + 0.4);
-
-            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
-            osc2.type = 'sine'; osc2.frequency.setValueAtTime(660, now + 0.15); gain2.gain.setValueAtTime(0.5, now + 0.15);
-            osc2.connect(gain2); gain2.connect(audioCtx.destination);
-            osc2.start(now + 0.15); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.6); osc2.stop(now + 0.6);
-        };
-
-        document.getElementById('logout-btn').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'auth.html'; });
-
-        window.toggleCard = (id) => {
-            document.getElementById(id).classList.toggle('hidden');
-        };
-
-        async function init() {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return window.location.href = 'auth.html';
-                let { data: cafeData } = await supabase.from('cafes').select('*').eq('owner_id', user.id).maybeSingle();
-                if (!cafeData) {
-                    const { data: newCafe } = await supabase.from('cafes').insert([{ owner_id: user.id }]).select().maybeSingle();
-                    cafe = newCafe || { id: 'temp', cafe_name: 'My Cafe', menu_views: 0 };
-                } else { cafe = cafeData; }
-
-                populateSettings(); await loadStats(); await loadOrders(); await loadItems(); setupRealtime();
-            } catch (err) { console.error(err); }
-        }
-
-        function populateSettings() {
-            if (!cafe) return;
-            document.getElementById('cafe-name').value = cafe.cafe_name || '';
-            document.getElementById('whatsapp').value = cafe.whatsapp || '';
-            document.getElementById('cafe-desc').value = cafe.description || '';
-        }
-
-        document.getElementById('save-settings').addEventListener('click', async () => {
-            const updates = { cafe_name: document.getElementById('cafe-name').value, whatsapp: document.getElementById('whatsapp').value, description: document.getElementById('cafe-desc').value };
-            await supabase.from('cafes').update(updates).eq('id', cafe.id);
-            alert('Settings Saved.');
-        });
-
-        document.getElementById('generate-qr').addEventListener('click', () => {
-            const container = document.getElementById('qr-container'); container.innerHTML = '';
-            const url = `https://zakiewillplay.github.io/CafeBoss/menu.html?id=${cafe.id}`;
-            new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#141210", colorLight: "#ffffff" });
-            const urlInput = document.getElementById('qr-url'); urlInput.value = url;
-            urlInput.onclick = () => { urlInput.select(); document.execCommand('copy'); alert('Link Copied.'); };
-            document.getElementById('download-qr').style.display = 'block';
-        });
-
-        document.getElementById('download-qr').addEventListener('click', () => {
-            const canvas = document.querySelector('#qr-container canvas');
-            if(!canvas) return;
-            const link = document.createElement('a'); link.download = 'QR_Code.png'; link.href = canvas.toDataURL(); link.click();
-        });
-
-        async function loadStats() {
-            document.getElementById('stat-views').innerText = cafe.menu_views || 0;
-            const { count: itemCount } = await supabase.from('menu_items').select('*', { count: 'exact', head: true }).eq('cafe_id', cafe.id);
-            document.getElementById('stat-items').innerText = itemCount || 0;
-            const { count: orderCount } = await supabase.from('orders').select('*', { count: 'exact', head: true }).eq('cafe_id', cafe.id);
-            document.getElementById('stat-orders').innerText = orderCount || 0;
-
-            if (window.Chart) {
-                const ctx = document.getElementById('analyticsChart').getContext('2d');
-                Chart.defaults.color = '#A9A499';
-                new Chart(ctx, { type: 'line', data: { labels: ['D-6','D-5','D-4','D-3','D-2','D-1','Today'], datasets: [{ label: 'Orders', data: [0,0,0,0,0,0,orderCount||0], borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+        // --- 2. SYSTEM ACTIVATION ---
+        // This function runs when the cafe owner taps the big activation button.
+        function activateSystem() {
+            // A. Request Native Browser Notifications
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
             }
+
+            // B. Unlock Audio Playback for Android/Mobile
+            alertSound.play().then(() => {
+                alertSound.pause();
+                alertSound.currentTime = 0;
+            }).catch(err => console.log("Audio unlock note:", err));
+
+            // C. Connect to Database
+            if (!supabaseClient) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                startRealtimeListener();
+            }
+
+            // Update UI
+            statusIndicator.innerHTML = "🟢 Live & Listening for Orders";
+            statusIndicator.style.color = "var(--success-color)";
+            document.querySelector('.btn-activate').style.display = 'none';
         }
 
-        window.filterOrders = (element, status) => {
-            currentOrderFilter = status;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            element.classList.add('active'); loadOrders();
-        };
+        // --- 3. SUPABASE REALTIME LISTENER ---
+        function startRealtimeListener() {
+            supabaseClient
+                .channel('public:orders')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+                    const newOrder = payload.new;
+                    console.log('🚨 Incoming Order:', newOrder);
 
-        async function loadOrders() {
-            const { data } = await supabase.from('orders').select('*').eq('cafe_id', cafe.id).order('created_at', { ascending: false });
-            const list = document.getElementById('orders-list'); list.innerHTML = '';
-            
-            const filtered = (data || []).filter(o => {
-                if(currentOrderFilter === 'new') return o.status === 'new';
-                if(currentOrderFilter === 'accepted') return o.status === 'accepted' || o.status === 'delivered';
-                return o.status === 'completed';
-            });
+                    // 1. Fire the Audio Ringtone
+                    alertSound.play().catch(e => console.error("Sound blocked by browser:", e));
 
-            filtered.forEach(o => {
-                const card = document.createElement('div'); card.className = 'order-card';
-                let itemsHtml = (o.items || []).map(i => `<span style="color:var(--primary); font-weight:bold;">${i.qty}x</span> <span>${i.name}</span> <span style="color:var(--text-muted);">(₹${i.price})</span>`).join('<br>');
-                let actionBtn = '';
-                
-                if(o.status === 'new') actionBtn = `<button class="btn" onclick="updateOrderStatus('${o.id}', 'accepted')">Accept Order</button>`;
-                else if(o.status === 'accepted') actionBtn = `<button class="btn" style="margin-bottom:10px;" onclick="updateOrderStatus('${o.id}', 'delivered')">Deliver Order</button><button class="btn" style="border-color:var(--text-muted); color:var(--text-muted);" onclick="updateOrderStatus('${o.id}', 'completed')">Complete Order</button>`;
-                else if(o.status === 'completed') actionBtn = `<button class="btn" style="border-color:var(--text-muted); color:var(--text-muted);" onclick="generatePDF('${o.id}')">Download Bill</button>`;
-
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <strong style="color:var(--primary); font-size:1.2rem;">Table: ${o.table_number || 'Takeaway'}</strong>
-                        <span style="color:var(--text-muted); font-size:0.8rem;">${new Date(o.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div style="line-height:1.8;">${itemsHtml}</div>
-                    <div style="margin-top:20px; font-size:1.2rem; font-weight:bold;">Total: <span style="color:var(--primary);">₹${o.total}</span></div>
-                    <div style="margin-top:15px;">${actionBtn}</div>
-                `;
-                list.appendChild(card);
-            });
-        }
-
-        window.updateOrderStatus = async (id, status) => { await supabase.from('orders').update({ status }).eq('id', id); loadOrders(); };
-        window.generatePDF = (id) => { if (window.jspdf) { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text(`Cafe Boss Bill\nOrder ID: ${id.split('-')}`, 10, 20); doc.save(`Bill_${id.split('-')}.pdf`); } };
-
-        function setupRealtime() {
-            if (!cafe || cafe.id === 'temp') return;
-            supabase.channel('custom-all-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders', filter: `cafe_id=eq.${cafe.id}` }, payload => {
-                beep(); if(Notification.permission === 'granted') new Notification('New Order Arrived!');
-                if(currentOrderFilter === 'new') loadOrders();
-            }).subscribe();
-        }
-
-        document.getElementById('save-item').addEventListener('click', async () => {
-            const isVariants = document.getElementById('item-variants').value;
-            const payload = { cafe_id: cafe.id, name: document.getElementById('item-name').value, description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''), price: isVariants ? 0 : (document.getElementById('item-price').value || 0), category: document.getElementById('item-category').value || 'Uncategorized', discount: document.getElementById('item-discount').value, featured: document.getElementById('item-featured').checked, available: true };
-            await supabase.from('menu_items').insert([payload]); loadItems();
-            document.getElementById('item-name').value = ''; document.getElementById('item-desc').value = ''; document.getElementById('item-price').value = '';
-            alert("Item Added!");
-        });
-
-        async function loadItems() {
-            const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafe.id).order('name');
-            const container = document.getElementById('items-container'); container.innerHTML = '';
-            const datalist = document.getElementById('categories'); let cats = new Set();
-
-            (data || []).forEach(item => {
-                if (item.category) cats.add(item.category);
-                const div = document.createElement('div'); div.className = 'item-row';
-                const statusColor = item.available ? 'var(--text)' : '#DC2626';
-                const statusText = item.available ? 'Available' : 'Sold Out';
-                
-                div.innerHTML = `
-                    <div>
-                        <strong style="font-size:1.2rem; color:${statusColor};">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">⭐</span>' : ''}<br>
-                        <small style="color:var(--text-muted);">${item.category} | <span style="color:var(--primary);">₹${item.price}</span> | Status: ${statusText}</small>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="toggleAvailable('${item.id}', ${item.available})" style="background:transparent; border:1px solid ${item.available ? 'var(--text-muted)' : 'var(--primary)'}; color:${item.available ? 'var(--text-muted)' : 'var(--primary)'}; padding:5px 10px; border-radius:3px; cursor:pointer;">Mark ${item.available ? 'Sold Out' : 'Available'}</button>
-                        <button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; font-weight:bold; cursor:pointer;">Delete</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-            datalist.innerHTML = Array.from(cats).map(c => `<option value="${c}">`).join('');
-        }
-
-        // 🔥 New Sold Out Toggle Function 🔥
-        window.toggleAvailable = async (id, currentStatus) => {
-            await supabase.from('menu_items').update({ available: !currentStatus }).eq('id', id);
-            loadItems();
-        };
-
-        window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
-
-        const handleImage = (e) => {
-            const file = e.target.files; if(!file) return;
-            const preview = document.getElementById('ocr-preview');
-            preview.innerText = "Scanning image... Please wait.";
-            
-            if (window.Tesseract) {
-                setTimeout(async () => {
-                    try {
-                        const worker = await Tesseract.createWorker('eng');
-                        const ret = await worker.recognize(file);
-                        await worker.terminate();
-                        const lines = ret.data.text.split('\n').filter(l => l.match(/\d/));
-                        preview.innerText = lines.join('\n') || "Could not read any text from the image.";
-                    } catch (err) {
-                        preview.innerText = "Error scanning image. Make sure the image is clear.";
+                    // 2. Fire the System Notification Over the Screen
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification("🚨 New Cafe Boss Order!", {
+                            body: `Check dashboard for details.`,
+                            // Optional: Add the path to your icon if you have one
+                            // icon: "/icon.png" 
+                        });
                     }
-                }, 100);
-            } else {
-                preview.innerText = "Scanner is loading, try again in a few seconds.";
-            }
-        };
-        
-        document.getElementById('camera-input').addEventListener('change', handleImage);
-        document.getElementById('gallery-input').addEventListener('change', handleImage);
 
-        init();
+                    // 3. Inject the order visually into the HTML
+                    renderOrderCard(newOrder);
+                })
+                .subscribe((status) => {
+                    if(status === 'SUBSCRIBED') {
+                        console.log("Successfully locked into database stream.");
+                    }
+                });
+        }
+
+        // --- 4. VANILLA JS HTML INJECTION ---
+        function renderOrderCard(orderData) {
+            // Create the card div
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            
+            // Format a simple timestamp
+            const timeString = new Date().toLocaleTimeString();
+
+            // Structure the inner HTML (Customize this based on your database columns)
+            card.innerHTML = `
+                <h3>New Order Received</h3>
+                <p><strong>Time:</strong> ${timeString}</p>
+                <p><strong>Order ID:</strong> #${orderData.id || 'N/A'}</p>
+                <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                <p style="color: #666; font-size: 0.9em;">Refresh page for full details or check admin panel.</p>
+            `;
+
+            // Insert at the top of the list
+            ordersList.prepend(card);
+        }
+
+        // Simple clock for the UI
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
     </script>
 </body>
 </html>
