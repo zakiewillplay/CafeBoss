@@ -192,29 +192,20 @@
             if(Notification.permission !== 'granted') Notification.requestPermission();
         });
 
-        // 🔥 New Ding-Dong Sound 🔥
+        // Loud Ding-Dong Sound Fix
         const beep = () => {
-            if(!audioCtx) return;
-            
-            // First Sound (Ding)
-            const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(800, audioCtx.currentTime);
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+            osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now); gain1.gain.setValueAtTime(0.5, now);
             osc1.connect(gain1); gain1.connect(audioCtx.destination);
-            osc1.start(); gain1.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-            osc1.stop(audioCtx.currentTime + 0.5);
+            osc1.start(now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.4); osc1.stop(now + 0.4);
 
-            // Second Sound (Dong) - Plays slightly after
-            setTimeout(() => {
-                const osc2 = audioCtx.createOscillator();
-                const gain2 = audioCtx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(600, audioCtx.currentTime);
-                osc2.connect(gain2); gain2.connect(audioCtx.destination);
-                osc2.start(); gain2.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8);
-                osc2.stop(audioCtx.currentTime + 0.8);
-            }, 200);
+            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+            osc2.type = 'sine'; osc2.frequency.setValueAtTime(660, now + 0.15); gain2.gain.setValueAtTime(0.5, now + 0.15);
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.15); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.6); osc2.stop(now + 0.6);
         };
 
         document.getElementById('logout-btn').addEventListener('click', async () => { await supabase.auth.signOut(); window.location.href = 'auth.html'; });
@@ -330,31 +321,43 @@
 
         document.getElementById('save-item').addEventListener('click', async () => {
             const isVariants = document.getElementById('item-variants').value;
-            const payload = { cafe_id: cafe.id, name: document.getElementById('item-name').value, description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''), price: isVariants ? 0 : (document.getElementById('item-price').value || 0), category: document.getElementById('item-category').value || 'Uncategorized', discount: document.getElementById('item-discount').value, featured: document.getElementById('item-featured').checked };
+            const payload = { cafe_id: cafe.id, name: document.getElementById('item-name').value, description: document.getElementById('item-desc').value + (isVariants ? ` VAR::${isVariants}` : ''), price: isVariants ? 0 : (document.getElementById('item-price').value || 0), category: document.getElementById('item-category').value || 'Uncategorized', discount: document.getElementById('item-discount').value, featured: document.getElementById('item-featured').checked, available: true };
             await supabase.from('menu_items').insert([payload]); loadItems();
             document.getElementById('item-name').value = ''; document.getElementById('item-desc').value = ''; document.getElementById('item-price').value = '';
             alert("Item Added!");
         });
 
         async function loadItems() {
-            const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafe.id);
+            const { data } = await supabase.from('menu_items').select('*').eq('cafe_id', cafe.id).order('name');
             const container = document.getElementById('items-container'); container.innerHTML = '';
             const datalist = document.getElementById('categories'); let cats = new Set();
 
             (data || []).forEach(item => {
                 if (item.category) cats.add(item.category);
                 const div = document.createElement('div'); div.className = 'item-row';
+                const statusColor = item.available ? 'var(--text)' : '#DC2626';
+                const statusText = item.available ? 'Available' : 'Sold Out';
+                
                 div.innerHTML = `
                     <div>
-                        <strong style="font-size:1.2rem; color:var(--text);">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">⭐</span>' : ''} ${item.discount ? `<span style="border:1px solid var(--primary); color:var(--primary); padding:2px 5px; font-size:0.7rem; margin-left:10px;">${item.discount}</span>` : ''}<br>
-                        <small style="color:var(--text-muted);">${item.category} | <span style="color:var(--primary);">₹${item.price}</span></small>
+                        <strong style="font-size:1.2rem; color:${statusColor};">${item.name}</strong> ${item.featured ? '<span style="color:var(--primary);">⭐</span>' : ''}<br>
+                        <small style="color:var(--text-muted);">${item.category} | <span style="color:var(--primary);">₹${item.price}</span> | Status: ${statusText}</small>
                     </div>
-                    <div><button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; font-weight:bold; cursor:pointer;">Delete</button></div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="toggleAvailable('${item.id}', ${item.available})" style="background:transparent; border:1px solid ${item.available ? 'var(--text-muted)' : 'var(--primary)'}; color:${item.available ? 'var(--text-muted)' : 'var(--primary)'}; padding:5px 10px; border-radius:3px; cursor:pointer;">Mark ${item.available ? 'Sold Out' : 'Available'}</button>
+                        <button onclick="deleteItem('${item.id}')" style="background:transparent; border:none; color:#DC2626; font-weight:bold; cursor:pointer;">Delete</button>
+                    </div>
                 `;
                 container.appendChild(div);
             });
             datalist.innerHTML = Array.from(cats).map(c => `<option value="${c}">`).join('');
         }
+
+        // 🔥 New Sold Out Toggle Function 🔥
+        window.toggleAvailable = async (id, currentStatus) => {
+            await supabase.from('menu_items').update({ available: !currentStatus }).eq('id', id);
+            loadItems();
+        };
 
         window.deleteItem = async (id) => { await supabase.from('menu_items').delete().eq('id', id); loadItems(); }
 
