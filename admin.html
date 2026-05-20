@@ -1,43 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Management</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
-        .panel { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: auto; }
-        input { width: 95%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white;}
-        button { background: #10b981; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Manage Menu | Cafe Boss</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --border: #e7e5e4; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; padding-bottom: 80px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h2 { color: var(--primary); }
+    .header a { text-decoration: none; color: #78716c; font-size: 0.9rem; }
+    .card { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); animation: fade 0.4s ease; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #444; }
+    input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 600; transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  </style>
 </head>
 <body>
-    <div class="panel">
-        <h2 style="color: #10b981;">Add New Menu Item</h2>
-        <input type="text" id="itemName" placeholder="Item Name (e.g. Espresso)">
-        <input type="number" id="itemPrice" placeholder="Price (₹)">
-        <button onclick="addItem()">Add to Database</button>
-        <p id="feedback"></p>
-        <a href="dashboard.html" style="color: #f59e0b; display: block; margin-top: 20px; text-align: center;">Go to Dashboard</a>
-    </div>
+  <div class="header">
+    <h2>Inventory</h2>
+    <a href="./index.html">Exit</a>
+  </div>
 
-    <script>
-        const sup = supabase.createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+  <div class="card">
+    <form id="menuForm">
+      <div class="form-group">
+        <label>Item Name</label>
+        <input type="text" id="itemName" placeholder="e.g. Caramel Macchiato" required>
+      </div>
+      <div class="form-group">
+        <label>Price ($)</label>
+        <input type="number" step="0.01" id="itemPrice" placeholder="4.99" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="itemDesc" placeholder="Rich espresso with caramel and steamed milk..."></textarea>
+      </div>
+      <button type="submit" id="addBtn">Add to Menu</button>
+    </form>
+  </div>
 
-        async function addItem() {
-            const name = document.getElementById('itemName').value;
-            const price = document.getElementById('itemPrice').value;
-            
-            const { error } = await sup.from('menu').insert([{ name: name, price: parseFloat(price) }]);
-            
-            if(error) document.getElementById('feedback').innerText = "Error: " + error.message;
-            else {
-                document.getElementById('feedback').innerText = "Added successfully!";
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemPrice').value = '';
-            }
-        }
-    </script>
+  <div id="toast" class="toast">Item Added Successfully!</div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://udlmyspetkjzcdkfshgl.supabase.co', 
+      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
+    );
+
+    document.getElementById('menuForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('addBtn');
+      btn.innerText = 'Adding...';
+
+      const name = document.getElementById('itemName').value;
+      const price = document.getElementById('itemPrice').value;
+      const description = document.getElementById('itemDesc').value;
+
+      const { error } = await supabase
+        .from('menu')
+        .insert([{ name, price, description }]);
+
+      btn.innerText = 'Add to Menu';
+
+      if (!error) {
+        document.getElementById('menuForm').reset();
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      } else {
+        alert('Error: ' + error.message);
+      }
+    });
+  </script>
 </body>
 </html>
