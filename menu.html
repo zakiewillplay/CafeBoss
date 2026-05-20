@@ -1,50 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Menu</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, sans-serif; background: #f8fafc; color: #334155; padding: 20px; margin: 0; }
-        .header { text-align: center; padding: 20px; background: #0f172a; color: white; border-radius: 12px; margin-bottom: 20px;}
-        .menu-item { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-        .order-btn { background: #f59e0b; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px;}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Menu | Cafe Boss</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e7e5e4; padding-bottom: 16px; }
+    h1 { color: var(--primary); font-size: 1.5rem; }
+    .back { text-decoration: none; color: #78716c; }
+    .menu-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .menu-item { background: var(--surface); padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; animation: fadeInUp 0.5s ease; }
+    .details h3 { margin-bottom: 4px; font-size: 1.1rem; }
+    .details p { font-size: 0.85rem; color: #78716c; max-width: 200px; line-height: 1.3; }
+    .price-action { text-align: right; }
+    .price { font-weight: bold; color: var(--primary); font-size: 1.2rem; display: block; margin-bottom: 8px; }
+    button { padding: 8px 16px; background: #1c1917; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
+    button:active { transform: scale(0.95); }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 600; transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); z-index: 100; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Cafe Al Buraaq</h1>
-        <p>Digital Order System</p>
+  <header>
+    <h1>Cafe Boss Menu</h1>
+    <a href="./index.html" class="back">Back</a>
+  </header>
+
+  <div class="menu-list" id="menuList">
+    <!-- Static test item for triggering orders -->
+    <div class="menu-item">
+      <div class="details">
+        <h3>Test Espresso</h3>
+        <p>A quick shot to test the dashboard alerts.</p>
+      </div>
+      <div class="price-action">
+        <span class="price">$2.50</span>
+        <button onclick="placeOrder('Test Espresso', 2.50)">Order</button>
+      </div>
     </div>
+  </div>
 
-    <div id="menuList">
-        <div class="menu-item">
-            <div><strong>Test Coffee</strong><br>₹150</div>
-        </div>
-    </div>
+  <div id="toast" class="toast">Order Sent to Dashboard!</div>
 
-    <button class="order-btn" onclick="placeTestOrder()">Tap to Send Test Order</button>
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://udlmyspetkjzcdkfshgl.supabase.co', 
+      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
+    );
 
-    <script>
-        const sup = supabase.createClient('https://udlmyspetkjzcdkfshgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4');
+    async function placeOrder(itemName, price) {
+      const orderId = '#' + Math.floor(1000 + Math.random() * 9000);
+      
+      const { error } = await supabase
+        .from('orders')
+        .insert([{ 
+          order_id: orderId, 
+          summary: itemName, 
+          total: price, 
+          status: 'pending' 
+        }]);
 
-        async function placeTestOrder() {
-            const btn = document.querySelector('.order-btn');
-            btn.innerText = "Sending...";
-            
-            // Fires directly into the 'orders' table to wake up the dashboard
-            const { error } = await sup.from('orders').insert([{ amount: 150 }]);
-            
-            if(error) {
-                alert("Order failed. Check database RLS.");
-                btn.innerText = "Try Again";
-            } else {
-                btn.innerText = "Order Sent!";
-                btn.style.background = "#10b981";
-                setTimeout(() => { btn.innerText = "Tap to Send Test Order"; btn.style.background = "#f59e0b"; }, 3000);
-            }
-        }
-    </script>
+      if (!error) {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      } else {
+        alert("Failed to send order. Check database schema.");
+      }
+    }
+  </script>
 </body>
 </html>
