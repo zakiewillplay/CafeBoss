@@ -1,71 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Login | Cafe Boss</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --border: #e7e5e4; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-    .auth-card { background: var(--surface); padding: 32px 24px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 400px; animation: slideUp 0.5s ease; }
-    h2 { text-align: center; margin-bottom: 24px; color: var(--primary); }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #444; }
-    input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-    input:focus { border-color: var(--primary); }
-    button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
-    button:active { background: #d97706; }
-    .error { color: #ef4444; font-size: 0.85rem; text-align: center; margin-top: 12px; display: none; }
-    .back { display: block; text-align: center; margin-top: 16px; color: #78716c; text-decoration: none; font-size: 0.9rem; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Boss – Welcome</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B35; --bg: #0f0f13; --card: rgba(30,30,35,0.9);
+            --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #aaa; --input-bg: rgba(20,20,25,0.7);
+        }
+        body.light-mode {
+            --bg: #f2f1ed; --card: rgba(255,255,255,0.95); --border: rgba(0,0,0,0.15); --text: #1a1a1a; --muted: #555; --input-bg: #fff;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter',system-ui,sans-serif; background: var(--bg); color: var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; transition: background 0.4s; padding:1rem; }
+        .auth-card { background: var(--card); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 28px; padding: 3rem 2.5rem; width: 100%; max-width: 440px; box-shadow: 0 30px 50px rgba(0,0,0,0.4); }
+        .logo { text-align: center; font-size: 3rem; margin-bottom: 0.5rem; }
+        h2 { text-align: center; margin-bottom: 1.8rem; font-weight: 600; color: var(--primary); }
+        .tabs { display: flex; margin-bottom: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+        .tabs button { flex:1; padding:0.9rem; border:none; cursor:pointer; background: transparent; color: var(--muted); font-weight: 600; transition:0.2s; }
+        .tabs button.active { background: var(--primary); color:#fff; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--muted); }
+        input { width:100%; padding:0.9rem 1rem; border-radius: 12px; border:1px solid var(--border); background: var(--input-bg); color: var(--text); font-size:0.95rem; transition: 0.2s; }
+        input:focus { outline:none; border-color: var(--primary); }
+        .btn { width:100%; padding:1rem; border:none; border-radius: 12px; background: var(--primary); color:#fff; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem; transition:0.2s; }
+        .btn:disabled { opacity:0.6; cursor:not-allowed; }
+        .alt-links { text-align: center; margin-top: 1.2rem; font-size:0.85rem; color: var(--muted); }
+        .alt-links a { color: var(--primary); cursor:pointer; text-decoration: underline; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #27ae60; color: #fff; padding: 1rem 1.5rem; border-radius: 12px; z-index: 999; transform: translateX(120%); transition: 0.3s; font-weight:500; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .toast.error { background: #c0392b; }
+        .toast.show { transform: translateX(0); }
+        .hidden { display: none !important; }
+        .theme-toggle { position: absolute; top: 1.5rem; right: 1.5rem; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size:0.9rem; }
+    </style>
 </head>
-<body>
-  <div class="auth-card">
-    <h2>Admin Access</h2>
-    <form id="loginForm">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="email" required>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" required>
-      </div>
-      <button type="submit" id="submitBtn">Login to Admin</button>
-      <div id="errorMsg" class="error"></div>
-    </form>
-    <a href="./index.html" class="back">← Back to Hub</a>
-  </div>
+<body class="light-mode">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+    <div class="auth-card">
+        <div class="logo">☕</div>
+        <h2 id="authTitle">Welcome Back</h2>
+        <div id="toast" class="toast"></div>
+        <div class="tabs" id="tabsRow">
+            <button id="tabLogin" class="active">Login</button>
+            <button id="tabSignup">Sign Up</button>
+        </div>
+        <form id="authForm">
+            <div class="form-group hidden" id="nameGroup"><label for="cafeName">Cafe Name</label><input type="text" id="cafeName" placeholder="My Cafe"></div>
+            <div class="form-group"><label for="email">Email</label><input type="email" id="email" required placeholder="you@example.com"></div>
+            <div class="form-group"><label for="password">Password</label><input type="password" id="password" required placeholder="••••••••"></div>
+            <div class="form-group hidden" id="confirmGroup"><label for="confirmPassword">Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
+            <button type="submit" class="btn" id="submitBtn">Login</button>
+        </form>
+        <div class="alt-links">
+            <span id="toggleText">Don't have an account?</span> <a id="toggleLink">Sign Up</a>
+            <span style="margin:0 0.5rem;">|</span>
+            <a id="forgotLink">Forgot Password?</a>
+        </div>
+    </div>
+    <script>
+        const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const urlParams = new URLSearchParams(window.location.search);
+        const isRecovery = urlParams.get('type') === 'recovery';
+        let mode = isRecovery ? 'recovery' : 'login';
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://udlmyspetkjzcdkfshgl.supabase.co', 
-      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
-    );
-    
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const errorMsg = document.getElementById('errorMsg');
-      btn.innerText = 'Authenticating...';
-      errorMsg.style.display = 'none';
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') document.body.classList.remove('light-mode');
+            else if (saved === 'light') document.body.classList.add('light-mode');
+            else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.remove('light-mode');
+            document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
+        })();
 
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+        function showToast(msg, isError=false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast ' + (isError ? 'error' : '') + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        function updateUI() {
+            document.getElementById('authTitle').textContent = mode==='login'?'Welcome Back':(mode==='signup'?'Create Your Cafe':(mode==='forgot'?'Reset Password':'Set New Password'));
+            document.getElementById('tabsRow').classList.toggle('hidden', mode==='forgot'||mode==='recovery');
+            document.getElementById('nameGroup').classList.toggle('hidden', mode!=='signup');
+            document.getElementById('confirmGroup').classList.toggle('hidden', mode!=='signup'&&mode!=='recovery');
+            document.getElementById('toggleText').textContent = mode==='login'?"Don't have an account?":"Already have an account?";
+            document.getElementById('toggleLink').textContent = mode==='login'?'Sign Up':'Login';
+            document.getElementById('forgotLink').style.display = mode==='login'?'inline':'none';
+            document.getElementById('submitBtn').textContent = mode==='login'?'Login':(mode==='signup'?'Sign Up':(mode==='forgot'?'Send Reset Link':'Update Password'));
+        }
+        document.getElementById('tabLogin').addEventListener('click', ()=>{ mode='login'; updateUI(); });
+        document.getElementById('tabSignup').addEventListener('click', ()=>{ mode='signup'; updateUI(); });
+        document.getElementById('toggleLink').addEventListener('click', ()=>{ mode = mode==='login'?'signup':'login'; updateUI(); });
+        document.getElementById('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); mode='forgot'; updateUI(); });
 
-      if (error) {
-        errorMsg.innerText = error.message;
-        errorMsg.style.display = 'block';
-        btn.innerText = 'Login to Admin';
-      } else {
-        window.location.href = './admin.html';
-      }
-    });
-  </script>
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn'); btn.disabled = true;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            try {
+                if (mode === 'recovery') {
+                    if (password !== document.getElementById('confirmPassword').value) { showToast('Passwords do not match.', true); btn.disabled=false; return; }
+                    const { error } = await supabase.auth.updateUser({ password });
+                    if (error) throw error;
+                    showToast('Password updated! Redirecting...');
+                    setTimeout(() => window.location.href = 'auth.html', 2000);
+                    return;
+                }
+                if (mode === 'forgot') {
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/CafeBoss.io/auth.html?type=recovery' });
+                    if (error) throw error;
+                    showToast('Reset link sent! Check your email.');
+                    btn.disabled = false; return;
+                }
+                if (mode === 'signup') {
+                    if (password !== document.getElementById('confirmPassword').value) { showToast('Passwords do not match.', true); btn.disabled=false; return; }
+                    const cafeName = document.getElementById('cafeName').value.trim() || 'My Cafe';
+                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+                    if (signUpError) {
+                        if (signUpError.message.includes('already registered')) showToast('Email already registered. Try logging in.', true);
+                        else showToast(signUpError.message, true);
+                        btn.disabled=false; return;
+                    }
+                    if (signUpData.user) {
+                        const { error: cafeError } = await supabase.from('cafes').insert({ owner_id: signUpData.user.id, cafe_name: cafeName });
+                        if (cafeError && cafeError.code !== '23505') console.warn(cafeError);
+                    }
+                    showToast('Account created! You can now log in.');
+                    setTimeout(() => { mode='login'; updateUI(); }, 1500);
+                } else {
+                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    if (data.user) window.location.href = 'dashboard.html';
+                }
+            } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
+        });
+        updateUI();
+        if (isRecovery) { mode='recovery'; updateUI(); }
+    </script>
 </body>
 </html>
