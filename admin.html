@@ -1,84 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Manage Menu | Cafe Boss</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --border: #e7e5e4; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; padding-bottom: 80px; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .header h2 { color: var(--primary); }
-    .header a { text-decoration: none; color: #78716c; font-size: 0.9rem; }
-    .card { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); animation: fade 0.4s ease; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #444; }
-    input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
-    textarea { resize: vertical; min-height: 80px; }
-    button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 600; transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Boss – Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85);
+            --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #a0a0b0;
+        }
+        body.light-mode { --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555; }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; padding:2rem; }
+        .container { max-width:800px; margin:0 auto; }
+        .stats { display:flex; gap:1rem; margin-bottom:2rem; }
+        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center; flex:1; }
+        table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; }
+        th, td { padding:0.8rem; border-bottom:1px solid var(--border); text-align:left; }
+        th { color:var(--muted); font-weight:600; }
+        button { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; }
+    </style>
 </head>
-<body>
-  <div class="header">
-    <h2>Inventory</h2>
-    <a href="./index.html">Exit</a>
-  </div>
-
-  <div class="card">
-    <form id="menuForm">
-      <div class="form-group">
-        <label>Item Name</label>
-        <input type="text" id="itemName" placeholder="e.g. Caramel Macchiato" required>
-      </div>
-      <div class="form-group">
-        <label>Price ($)</label>
-        <input type="number" step="0.01" id="itemPrice" placeholder="4.99" required>
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="itemDesc" placeholder="Rich espresso with caramel and steamed milk..."></textarea>
-      </div>
-      <button type="submit" id="addBtn">Add to Menu</button>
-    </form>
-  </div>
-
-  <div id="toast" class="toast">Item Added Successfully!</div>
-
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://udlmyspetkjzcdkfshgl.supabase.co', 
-      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
-    );
-
-    document.getElementById('menuForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('addBtn');
-      btn.innerText = 'Adding...';
-
-      const name = document.getElementById('itemName').value;
-      const price = document.getElementById('itemPrice').value;
-      const description = document.getElementById('itemDesc').value;
-
-      const { error } = await supabase
-        .from('menu')
-        .insert([{ name, price, description }]);
-
-      btn.innerText = 'Add to Menu';
-
-      if (!error) {
-        document.getElementById('menuForm').reset();
-        const toast = document.getElementById('toast');
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-      } else {
-        alert('Error: ' + error.message);
-      }
-    });
-  </script>
+<body class="light-mode">
+    <div class="container">
+        <h1>☕ Cafe Boss Admin</h1>
+        <button id="themeToggle" style="float:right;">🌙 Dark</button>
+        <div class="stats">
+            <div class="stat-card"><h2 id="totalCafes">-</h2><p>Total Cafes</p></div>
+            <div class="stat-card"><h2 id="totalOrders">-</h2><p>Total Orders</p></div>
+        </div>
+        <h2>Recent Orders</h2>
+        <table><thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTbody"></tbody></table>
+    </div>
+    <script>
+        const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        (async ()=>{
+            const [{count:cafeCount},{count:orderCount},{data:orders}] = await Promise.all([
+                supabase.from('cafes').select('*',{count:'exact',head:true}),
+                supabase.from('orders').select('*',{count:'exact',head:true}),
+                supabase.from('orders').select('*,cafes(cafe_name)').order('created_at',{ascending:false}).limit(20)
+            ]);
+            document.getElementById('totalCafes').textContent = cafeCount||0;
+            document.getElementById('totalOrders').textContent = orderCount||0;
+            document.getElementById('ordersTbody').innerHTML = (orders||[]).map(o => {
+                const time = new Date(o.created_at).toLocaleString();
+                return `<tr><td>${time}</td><td>${o.cafes?.cafe_name||'?'}</td><td>${o.customer_name||'Guest'}</td><td>₹${parseFloat(o.total).toFixed(2)}</td><td>${o.status}</td></tr>`;
+            }).join('');
+        })();
+        document.getElementById('themeToggle').addEventListener('click', ()=>{
+            document.body.classList.toggle('light-mode');
+            document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
+        });
+    </script>
 </body>
 </html>
