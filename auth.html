@@ -14,26 +14,26 @@
             --bg: #f2f1ed; --card: rgba(255,255,255,0.95); --border: rgba(0,0,0,0.15); --text: #1a1a1a; --muted: #555; --input-bg: #fff;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family: 'Inter',system-ui,sans-serif; background: var(--bg); color: var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; transition: background 0.4s; padding:1rem; }
-        .auth-card { background: var(--card); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 28px; padding: 3rem 2.5rem; width: 100%; max-width: 440px; box-shadow: 0 30px 50px rgba(0,0,0,0.4); }
-        .logo { text-align: center; font-size: 3rem; margin-bottom: 0.5rem; }
-        h2 { text-align: center; margin-bottom: 1.8rem; font-weight: 600; color: var(--primary); }
-        .tabs { display: flex; margin-bottom: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-        .tabs button { flex:1; padding:0.9rem; border:none; cursor:pointer; background: transparent; color: var(--muted); font-weight: 600; transition:0.2s; }
-        .tabs button.active { background: var(--primary); color:#fff; }
-        .form-group { margin-bottom: 1.2rem; }
-        label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--muted); }
-        input { width:100%; padding:0.9rem 1rem; border-radius: 12px; border:1px solid var(--border); background: var(--input-bg); color: var(--text); font-size:0.95rem; transition: 0.2s; }
-        input:focus { outline:none; border-color: var(--primary); }
-        .btn { width:100%; padding:1rem; border:none; border-radius: 12px; background: var(--primary); color:#fff; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem; transition:0.2s; }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; transition:0.4s; padding:1rem; }
+        .auth-card { background:var(--card); backdrop-filter:blur(15px); border:1px solid var(--border); border-radius:28px; padding:3rem 2.5rem; width:100%; max-width:440px; box-shadow:0 30px 50px rgba(0,0,0,0.4); }
+        .logo { text-align:center; font-size:3rem; margin-bottom:0.5rem; }
+        h2 { text-align:center; margin-bottom:1.8rem; font-weight:600; color:var(--primary); }
+        .tabs { display:flex; margin-bottom:2rem; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+        .tabs button { flex:1; padding:0.9rem; border:none; cursor:pointer; background:transparent; color:var(--muted); font-weight:600; transition:0.2s; }
+        .tabs button.active { background:var(--primary); color:#fff; }
+        .form-group { margin-bottom:1.2rem; }
+        label { display:block; margin-bottom:0.4rem; font-size:0.9rem; color:var(--muted); }
+        input { width:100%; padding:0.9rem 1rem; border-radius:12px; border:1px solid var(--border); background:var(--input-bg); color:var(--text); font-size:0.95rem; transition:0.2s; }
+        input:focus { outline:none; border-color:var(--primary); }
+        .btn { width:100%; padding:1rem; border:none; border-radius:12px; background:var(--primary); color:#fff; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem; transition:0.2s; }
         .btn:disabled { opacity:0.6; cursor:not-allowed; }
-        .alt-links { text-align: center; margin-top: 1.2rem; font-size:0.85rem; color: var(--muted); }
-        .alt-links a { color: var(--primary); cursor:pointer; text-decoration: underline; }
-        .toast { position: fixed; top: 20px; right: 20px; background: #27ae60; color: #fff; padding: 1rem 1.5rem; border-radius: 12px; z-index: 999; transform: translateX(120%); transition: 0.3s; font-weight:500; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .toast.error { background: #c0392b; }
-        .toast.show { transform: translateX(0); }
-        .hidden { display: none !important; }
-        .theme-toggle { position: absolute; top: 1.5rem; right: 1.5rem; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; font-size:0.9rem; }
+        .alt-links { text-align:center; margin-top:1.2rem; font-size:0.85rem; color:var(--muted); }
+        .alt-links a { color:var(--primary); cursor:pointer; text-decoration:underline; }
+        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:1rem 1.5rem; border-radius:12px; z-index:999; transform:translateX(120%); transition:0.3s; font-weight:500; box-shadow:0 10px 25px rgba(0,0,0,0.3); }
+        .toast.error { background:#c0392b; }
+        .toast.show { transform:translateX(0); }
+        .hidden { display:none !important; }
+        .theme-toggle { position:absolute; top:1.5rem; right:1.5rem; background:var(--card); border:1px solid var(--border); color:var(--text); padding:0.5rem 1rem; border-radius:50px; cursor:pointer; font-size:0.9rem; }
     </style>
 </head>
 <body class="light-mode">
@@ -46,15 +46,28 @@
             <button id="tabLogin" class="active">Login</button>
             <button id="tabSignup">Sign Up</button>
         </div>
-        <form id="authForm">
-            <div class="form-group hidden" id="nameGroup"><label for="cafeName">Cafe Name</label><input type="text" id="cafeName" placeholder="My Cafe"></div>
-            <div class="form-group"><label for="email">Email</label><input type="email" id="email" required placeholder="you@example.com"></div>
-            <div class="form-group"><label for="password">Password</label><input type="password" id="password" required placeholder="••••••••"></div>
-            <div class="form-group hidden" id="confirmGroup"><label for="confirmPassword">Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
+        <form id="authForm" autocomplete="off">
+            <div class="form-group hidden" id="nameGroup">
+                <label for="cafeName">Cafe Name</label>
+                <input type="text" id="cafeName" placeholder="My Cafe">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+            <div class="form-group hidden" id="confirmGroup">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="••••••••">
+            </div>
             <button type="submit" class="btn" id="submitBtn">Login</button>
         </form>
         <div class="alt-links">
-            <span id="toggleText">Don't have an account?</span> <a id="toggleLink">Sign Up</a>
+            <span id="toggleText">Don't have an account?</span>
+            <a id="toggleLink">Sign Up</a>
             <span style="margin:0 0.5rem;">|</span>
             <a id="forgotLink">Forgot Password?</a>
         </div>
@@ -89,28 +102,70 @@
         }
 
         function updateUI() {
-            document.getElementById('authTitle').textContent = mode==='login'?'Welcome Back':(mode==='signup'?'Create Your Cafe':(mode==='forgot'?'Reset Password':'Set New Password'));
-            document.getElementById('tabsRow').classList.toggle('hidden', mode==='forgot'||mode==='recovery');
-            document.getElementById('nameGroup').classList.toggle('hidden', mode!=='signup');
-            document.getElementById('confirmGroup').classList.toggle('hidden', mode!=='signup'&&mode!=='recovery');
-            document.getElementById('toggleText').textContent = mode==='login'?"Don't have an account?":"Already have an account?";
-            document.getElementById('toggleLink').textContent = mode==='login'?'Sign Up':'Login';
-            document.getElementById('forgotLink').style.display = mode==='login'?'inline':'none';
-            document.getElementById('submitBtn').textContent = mode==='login'?'Login':(mode==='signup'?'Sign Up':(mode==='forgot'?'Send Reset Link':'Update Password'));
-        }
-        document.getElementById('tabLogin').addEventListener('click', ()=>{ mode='login'; updateUI(); });
-        document.getElementById('tabSignup').addEventListener('click', ()=>{ mode='signup'; updateUI(); });
-        document.getElementById('toggleLink').addEventListener('click', ()=>{ mode = mode==='login'?'signup':'login'; updateUI(); });
-        document.getElementById('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); mode='forgot'; updateUI(); });
+            // Update title
+            const titles = { login: 'Welcome Back', signup: 'Create Your Cafe', forgot: 'Reset Password', recovery: 'Set New Password' };
+            document.getElementById('authTitle').textContent = titles[mode] || 'Welcome Back';
 
+            // Show/hide tabs
+            const tabsRow = document.getElementById('tabsRow');
+            if (mode === 'forgot' || mode === 'recovery') {
+                tabsRow.classList.add('hidden');
+            } else {
+                tabsRow.classList.remove('hidden');
+                // Set active tab button
+                document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+                document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+            }
+
+            // Show/hide fields
+            document.getElementById('nameGroup').classList.toggle('hidden', mode !== 'signup');
+            document.getElementById('confirmGroup').classList.toggle('hidden', mode !== 'signup' && mode !== 'recovery');
+            
+            // Toggle text & link
+            document.getElementById('toggleText').textContent = mode === 'login' ? "Don't have an account?" : "Already have an account?";
+            document.getElementById('toggleLink').textContent = mode === 'login' ? 'Sign Up' : 'Login';
+            document.getElementById('forgotLink').style.display = mode === 'login' ? 'inline' : 'none';
+
+            // Button text
+            const btnTexts = { login: 'Login', signup: 'Sign Up', forgot: 'Send Reset Link', recovery: 'Update Password' };
+            document.getElementById('submitBtn').textContent = btnTexts[mode];
+        }
+
+        // Tab button listeners
+        document.getElementById('tabLogin').addEventListener('click', () => {
+            mode = 'login';
+            updateUI();
+        });
+        document.getElementById('tabSignup').addEventListener('click', () => {
+            mode = 'signup';
+            updateUI();
+        });
+
+        // Toggle link (bottom)
+        document.getElementById('toggleLink').addEventListener('click', () => {
+            mode = mode === 'login' ? 'signup' : 'login';
+            updateUI();
+        });
+
+        // Forgot password
+        document.getElementById('forgotLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            mode = 'forgot';
+            updateUI();
+        });
+
+        // Form submit
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn'); btn.disabled = true;
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+
             try {
                 if (mode === 'recovery') {
-                    if (password !== document.getElementById('confirmPassword').value) { showToast('Passwords do not match.', true); btn.disabled=false; return; }
+                    const confirm = document.getElementById('confirmPassword').value;
+                    if (password !== confirm) { showToast('Passwords do not match.', true); btn.disabled = false; return; }
                     const { error } = await supabase.auth.updateUser({ password });
                     if (error) throw error;
                     showToast('Password updated! Redirecting...');
@@ -118,35 +173,45 @@
                     return;
                 }
                 if (mode === 'forgot') {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/CafeBoss.io/auth.html?type=recovery' });
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin + '/CafeBoss.io/auth.html?type=recovery'
+                    });
                     if (error) throw error;
                     showToast('Reset link sent! Check your email.');
-                    btn.disabled = false; return;
+                    btn.disabled = false;
+                    return;
                 }
                 if (mode === 'signup') {
-                    if (password !== document.getElementById('confirmPassword').value) { showToast('Passwords do not match.', true); btn.disabled=false; return; }
+                    const confirm = document.getElementById('confirmPassword').value;
+                    if (password !== confirm) { showToast('Passwords do not match.', true); btn.disabled = false; return; }
                     const cafeName = document.getElementById('cafeName').value.trim() || 'My Cafe';
                     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
                     if (signUpError) {
                         if (signUpError.message.includes('already registered')) showToast('Email already registered. Try logging in.', true);
                         else showToast(signUpError.message, true);
-                        btn.disabled=false; return;
+                        btn.disabled = false; return;
                     }
                     if (signUpData.user) {
                         const { error: cafeError } = await supabase.from('cafes').insert({ owner_id: signUpData.user.id, cafe_name: cafeName });
-                        if (cafeError && cafeError.code !== '23505') console.warn(cafeError);
+                        if (cafeError && cafeError.code !== '23505') console.warn('Cafe insert warning:', cafeError);
                     }
                     showToast('Account created! You can now log in.');
-                    setTimeout(() => { mode='login'; updateUI(); }, 1500);
-                } else {
+                    setTimeout(() => { mode = 'login'; updateUI(); }, 1500);
+                } else { // login
                     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     if (data.user) window.location.href = 'dashboard.html';
                 }
-            } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
+            } catch (err) {
+                showToast(err.message, true);
+            } finally {
+                btn.disabled = false;
+            }
         });
+
+        // Initial UI
+        if (isRecovery) mode = 'recovery';
         updateUI();
-        if (isRecovery) { mode='recovery'; updateUI(); }
     </script>
 </body>
 </html>
