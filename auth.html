@@ -32,7 +32,6 @@
         .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:1rem 1.5rem; border-radius:12px; z-index:999; transform:translateX(120%); transition:0.3s; font-weight:500; box-shadow:0 10px 25px rgba(0,0,0,0.3); }
         .toast.error { background:#c0392b; }
         .toast.show { transform:translateX(0); }
-        .hidden { display:none !important; }
         .theme-toggle { position:absolute; top:1.5rem; right:1.5rem; background:var(--card); border:1px solid var(--border); color:var(--text); padding:0.5rem 1rem; border-radius:50px; cursor:pointer; font-size:0.9rem; }
     </style>
 </head>
@@ -47,7 +46,7 @@
             <button id="tabSignup">Sign Up</button>
         </div>
         <form id="authForm" autocomplete="off">
-            <div class="form-group hidden" id="nameGroup">
+            <div class="form-group" id="nameGroup">
                 <label for="cafeName">Cafe Name</label>
                 <input type="text" id="cafeName" placeholder="My Cafe">
             </div>
@@ -59,7 +58,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" required placeholder="••••••••">
             </div>
-            <div class="form-group hidden" id="confirmGroup">
+            <div class="form-group" id="confirmGroup">
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" id="confirmPassword" placeholder="••••••••">
             </div>
@@ -102,46 +101,39 @@
         }
 
         function updateUI() {
-            // Update title
+            // Title
             const titles = { login: 'Welcome Back', signup: 'Create Your Cafe', forgot: 'Reset Password', recovery: 'Set New Password' };
             document.getElementById('authTitle').textContent = titles[mode] || 'Welcome Back';
 
-            // Show/hide tabs
+            // Tabs visibility
             const tabsRow = document.getElementById('tabsRow');
             if (mode === 'forgot' || mode === 'recovery') {
-                tabsRow.classList.add('hidden');
+                tabsRow.style.display = 'none';
             } else {
-                tabsRow.classList.remove('hidden');
-                // Set active tab button
+                tabsRow.style.display = 'flex';
                 document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
                 document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
             }
 
-            // Show/hide fields
-            document.getElementById('nameGroup').classList.toggle('hidden', mode !== 'signup');
-            document.getElementById('confirmGroup').classList.toggle('hidden', mode !== 'signup' && mode !== 'recovery');
-            
-            // Toggle text & link
+            // Form fields – use style.display for bulletproof toggle
+            document.getElementById('nameGroup').style.display = (mode === 'signup') ? 'block' : 'none';
+            document.getElementById('confirmGroup').style.display = (mode === 'signup' || mode === 'recovery') ? 'block' : 'none';
+
+            // Bottom links
             document.getElementById('toggleText').textContent = mode === 'login' ? "Don't have an account?" : "Already have an account?";
             document.getElementById('toggleLink').textContent = mode === 'login' ? 'Sign Up' : 'Login';
             document.getElementById('forgotLink').style.display = mode === 'login' ? 'inline' : 'none';
 
-            // Button text
+            // Submit button
             const btnTexts = { login: 'Login', signup: 'Sign Up', forgot: 'Send Reset Link', recovery: 'Update Password' };
             document.getElementById('submitBtn').textContent = btnTexts[mode];
         }
 
-        // Tab button listeners
-        document.getElementById('tabLogin').addEventListener('click', () => {
-            mode = 'login';
-            updateUI();
-        });
-        document.getElementById('tabSignup').addEventListener('click', () => {
-            mode = 'signup';
-            updateUI();
-        });
+        // Tab clicks
+        document.getElementById('tabLogin').addEventListener('click', () => { mode = 'login'; updateUI(); });
+        document.getElementById('tabSignup').addEventListener('click', () => { mode = 'signup'; updateUI(); });
 
-        // Toggle link (bottom)
+        // Bottom toggle link
         document.getElementById('toggleLink').addEventListener('click', () => {
             mode = mode === 'login' ? 'signup' : 'login';
             updateUI();
@@ -154,7 +146,7 @@
             updateUI();
         });
 
-        // Form submit
+        // Submit
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -197,7 +189,7 @@
                     }
                     showToast('Account created! You can now log in.');
                     setTimeout(() => { mode = 'login'; updateUI(); }, 1500);
-                } else { // login
+                } else {
                     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     if (data.user) window.location.href = 'dashboard.html';
