@@ -1,78 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Menu | Cafe Boss</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root { --primary: #f59e0b; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #e7e5e4; padding-bottom: 16px; }
-    h1 { color: var(--primary); font-size: 1.5rem; }
-    .back { text-decoration: none; color: #78716c; }
-    .menu-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-    .menu-item { background: var(--surface); padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; justify-content: space-between; align-items: center; animation: fadeInUp 0.5s ease; }
-    .details h3 { margin-bottom: 4px; font-size: 1.1rem; }
-    .details p { font-size: 0.85rem; color: #78716c; max-width: 200px; line-height: 1.3; }
-    .price-action { text-align: right; }
-    .price { font-weight: bold; color: var(--primary); font-size: 1.2rem; display: block; margin-bottom: 8px; }
-    button { padding: 8px 16px; background: #1c1917; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
-    button:active { transform: scale(0.95); }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 600; transition: transform 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); z-index: 100; }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Menu</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        :root {
+            --gold: #E5C158; --dark: #0A0806; --glass: rgba(20,18,15,0.8);
+        }
+        body.light-mode { --dark: #fafaf5; --glass: rgba(255,255,250,0.9); --text-color: #1a1a1a; --card-bg: #fff; --border: #e0d5c0; }
+        body:not(.light-mode) { --text-color: #f0e6d3; --card-bg: rgba(30,26,20,0.9); --border: #3a3025; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--dark); color:var(--text-color); transition:0.4s; }
+        .cloche-overlay { position:fixed; inset:0; z-index:1000; background:#0a0806; display:flex; align-items:center; justify-content:center; flex-direction:column; animation:clocheFadeOut 0.6s ease 2.5s forwards; pointer-events:none; }
+        @keyframes clocheFadeOut { to { opacity:0; visibility:hidden; } }
+        .cloche { width:180px; height:180px; border-radius:50% 50% 0 0; background:radial-gradient(circle at 30% 30%, #c0c0c0, #707070); animation: liftCloche 2.5s ease forwards; }
+        @keyframes liftCloche { 0% { transform:translateY(0); } 100% { transform:translateY(-500px); opacity:0; } }
+        .plate { width:200px; height:20px; border-radius:50%; background:#e8e0d5; margin-top:-10px; }
+        .menu-content { opacity:0; animation:revealMenu 0.8s ease 2.6s forwards; max-width:700px; margin:0 auto; padding:1rem; }
+        @keyframes revealMenu { to { opacity:1; } }
+        header.menu-header { text-align:center; padding:2rem 1rem; border-bottom:1px solid var(--border); }
+        .search-bar { width:100%; padding:0.8rem 1.2rem; border-radius:25px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-color); margin:1rem 0; font-size:1rem; }
+        .category-tabs { display:flex; gap:0.5rem; overflow-x:auto; padding:0.5rem 0; }
+        .category-tabs button { flex-shrink:0; padding:0.5rem 1rem; border-radius:20px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-color); cursor:pointer; font-weight:500; }
+        .category-tabs button.active { background:var(--gold); color:#000; font-weight:600; }
+        .menu-item { display:flex; gap:1rem; background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:1rem; margin-bottom:0.8rem; align-items:center; transition: transform 0.2s; }
+        .menu-item:hover { transform: translateY(-2px); }
+        .item-details { flex:1; }
+        .variant-pills { display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.3rem; }
+        .variant-pill { padding:0.3rem 0.8rem; border-radius:16px; border:1px solid var(--border); background:transparent; cursor:pointer; font-size:0.8rem; }
+        .variant-pill.selected { background:var(--gold); color:#000; }
+        .qty-controls { display:flex; align-items:center; gap:0.5rem; }
+        .qty-controls button { width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--text-color); cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+        .add-btn { padding:0.5rem 1rem; border-radius:20px; background:var(--gold); color:#000; border:none; cursor:pointer; font-weight:600; }
+        .floating-cart { position:fixed; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--gold); color:#000; font-size:1.5rem; border:none; cursor:pointer; z-index:49; box-shadow:0 6px 24px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; }
+        .cart-badge { position:absolute; top:-4px; right:-4px; background:#c0392b; color:#fff; width:22px; height:22px; border-radius:50%; font-size:0.7rem; display:none; align-items:center; justify-content:center; font-weight:700; }
+        .cart-panel { position:fixed; bottom:0; left:0; right:0; background:var(--glass); backdrop-filter:blur(12px); border-radius:20px 20px 0 0; padding:1.5rem; transform:translateY(100%); transition:0.3s; z-index:50; max-height:70vh; overflow-y:auto; }
+        .cart-panel.open { transform:translateY(0); }
+        .success-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:60; display:flex; align-items:center; justify-content:center; flex-direction:column; opacity:0; pointer-events:none; transition:0.4s; }
+        .success-overlay.show { opacity:1; pointer-events:auto; }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>Cafe Boss Menu</h1>
-    <a href="./index.html" class="back">Back</a>
-  </header>
-
-  <div class="menu-list" id="menuList">
-    <!-- Static test item for triggering orders -->
-    <div class="menu-item">
-      <div class="details">
-        <h3>Test Espresso</h3>
-        <p>A quick shot to test the dashboard alerts.</p>
-      </div>
-      <div class="price-action">
-        <span class="price">$2.50</span>
-        <button onclick="placeOrder('Test Espresso', 2.50)">Order</button>
-      </div>
+<body class="light-mode">
+    <div class="cloche-overlay"><div class="cloche"></div><div class="plate"></div><p style="color:#aaa;margin-top:20px;">Preparing your menu...</p></div>
+    <div class="menu-content">
+        <div style="text-align:right; margin-bottom:0.5rem;">
+            <button id="themeToggle">🌙 Dark</button>
+            <select id="langToggle"><option value="en">English</option><option value="hi">हिन्दी</option></select>
+            <button id="shareBtn">📤</button>
+        </div>
+        <header class="menu-header">
+            <h1 id="cafeNameDisplay"></h1>
+            <p id="cafeDesc"></p>
+        </header>
+        <input class="search-bar" id="searchBar" placeholder="Search menu...">
+        <div class="category-tabs" id="categoryTabs"></div>
+        <div id="menuSections"></div>
     </div>
-  </div>
+    <button class="floating-cart" id="floatingCart">🛒<span class="cart-badge" id="cartBadge">0</span></button>
+    <div class="cart-panel" id="cartPanel">
+        <h3>Your Order</h3>
+        <div id="cartItemsList"></div>
+        <p style="font-weight:700; margin-top:0.5rem;">Total: ₹<span id="cartTotal">0</span></p>
+        <input id="tableNumber" placeholder="Table Number *"><input id="customerName" placeholder="Your name (optional)">
+        <button id="placeOrderBtn" style="width:100%; padding:0.9rem; border:none; border-radius:25px; background:var(--gold); color:#000; font-weight:700; font-size:1rem; cursor:pointer; margin-top:0.5rem;">Place Order</button>
+        <button id="closeCartBtn" style="width:100%; padding:0.6rem; background:transparent; border:1px solid var(--border); color:var(--text-color); border-radius:25px; margin-top:0.3rem; cursor:pointer;">Close</button>
+    </div>
+    <div class="success-overlay" id="successOverlay">✅<p id="successMsg" style="color:#fff; font-size:1.2rem; margin-top:1rem;"></p></div>
+    <script>
+        const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const urlParams = new URLSearchParams(window.location.search);
+        const cafeId = urlParams.get('id');
+        const t = {
+            en: { search:'Search menu...', table:'Table Number *', name:'Your name (optional)', place:'Place Order', orderPlaced:'Order placed!', waiting:'Waiting for confirmation...', accepted:'Your order has been accepted! 🎉', noItems:'No items match your search.' },
+            hi: { search:'मेनू खोजें...', table:'टेबल नंबर *', name:'आपका नाम (वैकल्पिक)', place:'ऑर्डर करें', orderPlaced:'ऑर्डर सफलतापूर्वक रखा गया!', waiting:'पुष्टि की प्रतीक्षा...', accepted:'आपका ऑर्डर स्वीकार कर लिया गया! 🎉', noItems:'कोई आइटम नहीं मिला।' }
+        };
+        let lang = 'en';
+        function tl(key) { return t[lang]?.[key] || key; }
+        document.getElementById('langToggle').addEventListener('change', e => { lang = e.target.value; updateLabels(); renderMenu(); });
+        function updateLabels() {
+            document.getElementById('searchBar').placeholder = tl('search');
+            document.getElementById('tableNumber').placeholder = tl('table');
+            document.getElementById('customerName').placeholder = tl('name');
+            document.getElementById('placeOrderBtn').textContent = tl('place');
+        }
+        document.getElementById('themeToggle').addEventListener('click', ()=>{
+            document.body.classList.toggle('light-mode');
+            document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
+        });
+        document.getElementById('shareBtn').addEventListener('click', ()=>{
+            const url = window.location.href;
+            if (navigator.share) navigator.share({ title: cafeData?.cafe_name || 'Menu', url });
+            else { navigator.clipboard.writeText(url); alert('Link copied!'); }
+        });
+        let cafeData = null, menuItems = [], cart = [], activeCategory = 'All', polling = null;
 
-  <div id="toast" class="toast">Order Sent to Dashboard!</div>
+        async function loadMenu() {
+            if (!cafeId) return document.getElementById('cafeNameDisplay').textContent = 'Invalid Menu Link';
+            const { data: cafe } = await supabase.from('cafes').select('*').eq('id', cafeId).maybeSingle();
+            if (!cafe) return document.getElementById('cafeNameDisplay').textContent = 'Cafe Not Found';
+            cafeData = cafe;
+            document.getElementById('cafeNameDisplay').textContent = cafe.cafe_name;
+            document.getElementById('cafeDesc').textContent = cafe.description || '';
+            document.documentElement.style.setProperty('--gold', cafe.primary_color || '#E5C158');
+            document.title = cafe.cafe_name + ' – Menu';
+            supabase.from('menu_views_log').insert({ cafe_id: cafeId }).then(()=>{});
+            const { data: items } = await supabase.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true).order('category');
+            menuItems = items || [];
+            renderMenu();
+        }
 
-  <script>
-    const supabase = window.supabase.createClient(
-      'https://udlmyspetkjzcdkfshgl.supabase.co', 
-      'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkbG15c3BldGtqemNka2ZzaGdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODIzMDksImV4cCI6MjA5NDc1ODMwOX0.oQL6hbwjQlU_2h4xcbD-v1yl7EubMz90VpIpTPBwEM4'
-    );
+        function renderMenu() {
+            const search = document.getElementById('searchBar').value.toLowerCase();
+            const filtered = menuItems.filter(i => (i.name.toLowerCase().includes(search) || (i.description||'').toLowerCase().includes(search) || i.category.toLowerCase().includes(search)) && (activeCategory==='All' || i.category===activeCategory));
+            const cats = ['All', ...new Set(menuItems.map(i=>i.category).filter(Boolean))].sort();
+            document.getElementById('categoryTabs').innerHTML = cats.map(c => `<button class="${c===activeCategory?'active':''}" data-cat="${c}">${c}</button>`).join('');
+            document.querySelectorAll('#categoryTabs button').forEach(b => b.addEventListener('click', function(){ activeCategory=this.dataset.cat; renderMenu(); }));
+            let html = '';
+            if (!filtered.length) html = `<p style="text-align:center;padding:2rem;color:var(--muted);">${tl('noItems')}</p>`;
+            else {
+                const catSet = activeCategory==='All' ? [...new Set(filtered.map(i=>i.category))].sort() : [activeCategory];
+                catSet.forEach(cat => {
+                    const catItems = filtered.filter(i=>i.category===cat);
+                    if (!catItems.length) return;
+                    html += `<div class="category-section"><h3 style="color:var(--gold); margin:1rem 0; font-size:1.1rem;">${cat}</h3>`;
+                    catItems.forEach(item => {
+                        const hasVariants = item.description?.startsWith('VAR::');
+                        let variants = [], priceDisplay = item.price;
+                        if (hasVariants) {
+                            const vStr = item.description.replace('VAR::','');
+                            variants = vStr.split('|').map(v => { const [n,p]=v.split('='); return { name:n, price:parseFloat(p) }; });
+                            if (variants.length) priceDisplay = variants[0].price;
+                        }
+                        let variantHTML = '';
+                        if (variants.length) {
+                            variantHTML = '<div class="variant-pills">' + variants.map((v,i) => `<button class="variant-pill${i===0?' selected':''}" data-price="${v.price}" data-vname="${v.name}">${v.name} ₹${v.price}</button>`).join('') + '</div>';
+                        }
+                        html += `<div class="menu-item" data-id="${item.id}" data-name="${item.name}" data-base-price="${priceDisplay}">
+                            <div class="item-details">
+                                <strong>${item.name}</strong>
+                                ${item.discount ? `<span style="background:#c0392b;color:#fff;padding:2px 6px;border-radius:4px;font-size:0.7rem;margin-left:4px;">${item.discount}</span>` : ''}
+                                ${item.featured ? ' 🔥' : ''}
+                                ${!hasVariants && item.description ? `<p style="font-size:0.8rem;opacity:0.7;margin-top:2px;">${item.description}</p>` : ''}
+                                ${variantHTML}
+                                <div style="font-weight:700;color:var(--gold);">₹<span class="active-price">${priceDisplay}</span></div>
+                            </div>
+                            <div class="qty-controls">
+                                <button class="qty-minus">−</button><span class="qty-num">0</span><button class="qty-plus">+</button>
+                                <button class="add-btn">Add</button>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                });
+            }
+            document.getElementById('menuSections').innerHTML = html;
+            attachEvents();
+            gsap.fromTo('.menu-item', { opacity:0, y:20 }, { opacity:1, y:0, stagger:0.06, duration:0.4 });
+        }
 
-    async function placeOrder(itemName, price) {
-      const orderId = '#' + Math.floor(1000 + Math.random() * 9000);
-      
-      const { error } = await supabase
-        .from('orders')
-        .insert([{ 
-          order_id: orderId, 
-          summary: itemName, 
-          total: price, 
-          status: 'pending' 
-        }]);
+        function attachEvents() {
+            document.querySelectorAll('.variant-pill').forEach(p => p.addEventListener('click', function(){
+                const itemEl = this.closest('.menu-item');
+                itemEl.querySelectorAll('.variant-pill').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                itemEl.querySelector('.active-price').textContent = parseFloat(this.dataset.price).toFixed(2);
+                itemEl.dataset.basePrice = this.dataset.price;
+            }));
+            document.querySelectorAll('.qty-minus').forEach(b => b.addEventListener('click', function(){
+                const num = this.parentElement.querySelector('.qty-num');
+                let val = parseInt(num.textContent); if (val>0) { val--; num.textContent = val; }
+            }));
+            document.querySelectorAll('.qty-plus').forEach(b => b.addEventListener('click', function(){
+                const num = this.parentElement.querySelector('.qty-num');
+                num.textContent = parseInt(num.textContent) + 1;
+            }));
+            document.querySelectorAll('.add-btn').forEach(b => b.addEventListener('click', function(){
+                const itemEl = this.closest('.menu-item');
+                const qty = parseInt(itemEl.querySelector('.qty-num').textContent);
+                if (qty<=0) return;
+                const name = itemEl.dataset.name;
+                const price = parseFloat(itemEl.dataset.basePrice);
+                const selectedPill = itemEl.querySelector('.variant-pill.selected');
+                const variant = selectedPill ? selectedPill.dataset.vname : null;
+                const cartKey = variant ? `${itemEl.dataset.id}__${variant}` : itemEl.dataset.id;
+                const existing = cart.find(c => c.cartKey === cartKey);
+                if (existing) existing.qty += qty;
+                else cart.push({ cartKey, id: itemEl.dataset.id, name, price, qty, variant });
+                itemEl.querySelector('.qty-num').textContent = '0';
+                updateCartUI();
+            }));
+        }
 
-      if (!error) {
-        const toast = document.getElementById('toast');
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
-      } else {
-        alert("Failed to send order. Check database schema.");
-      }
-    }
-  </script>
+        function updateCartUI() {
+            const totalQty = cart.reduce((s,c)=>s+c.qty,0);
+            const totalPrice = cart.reduce((s,c)=>s+c.price*c.qty,0);
+            const badge = document.getElementById('cartBadge');
+            badge.textContent = totalQty;
+            badge.style.display = totalQty ? 'flex' : 'none';
+            document.getElementById('cartTotal').textContent = totalPrice.toFixed(2);
+            document.getElementById('cartItemsList').innerHTML = cart.map(c => `<div style="display:flex; justify-content:space-between; padding:0.3rem 0;">${c.name}${c.variant?' ('+c.variant+')':''} x${c.qty} <span>₹${(c.price*c.qty).toFixed(2)}</span></div>`).join('');
+        }
+
+        document.getElementById('floatingCart').addEventListener('click', ()=> document.getElementById('cartPanel').classList.toggle('open'));
+        document.getElementById('closeCartBtn').addEventListener('click', ()=> document.getElementById('cartPanel').classList.remove('open'));
+        document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
+            if (!cart.length) return alert('Cart is empty');
+            const table = document.getElementById('tableNumber').value.trim();
+            if (!table) return alert('Please enter your table number');
+            const name = document.getElementById('customerName').value.trim() || 'Guest';
+            const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
+            const items = cart.map(c => ({ name: c.name + (c.variant?' ('+c.variant+')':''), price: c.price, qty: c.qty }));
+            const { data: order, error } = await supabase.from('orders').insert({ cafe_id: cafeId, customer_name: name, table_number: table, items, total, status:'new' }).select().maybeSingle();
+            if (error) { alert('Failed to place order. Please try again.'); return; }
+            cart = []; updateCartUI(); document.getElementById('cartPanel').classList.remove('open');
+            const overlay = document.getElementById('successOverlay');
+            overlay.classList.add('show');
+            document.getElementById('successMsg').textContent = tl('orderPlaced') + ' ' + tl('waiting');
+            if (order) startPolling(order.id);
+            setTimeout(() => overlay.classList.remove('show'), 4000);
+        });
+
+        function startPolling(orderId) {
+            if (polling) clearInterval(polling);
+            polling = setInterval(async ()=>{
+                const { data } = await supabase.from('orders').select('status').eq('id', orderId).maybeSingle();
+                if (data && (data.status==='accepted'||data.status==='delivered')) {
+                    clearInterval(polling);
+                    document.getElementById('successOverlay').classList.add('show');
+                    document.getElementById('successMsg').textContent = tl('accepted');
+                    if (Notification.permission==='granted') new Notification(tl('accepted'), { icon:'☕' });
+                    setTimeout(() => document.getElementById('successOverlay').classList.remove('show'), 4000);
+                }
+            }, 5000);
+        }
+
+        if ('Notification' in window && Notification.permission==='default') document.addEventListener('click', ()=> Notification.requestPermission(), { once:true });
+        loadMenu();
+    </script>
 </body>
 </html>
