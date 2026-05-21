@@ -1,60 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cafe Boss | Hub</title>
-  <link rel="manifest" href="./manifest.json">
-  <style>
-    :root {
-      --primary: #f59e0b;
-      --primary-dark: #d97706;
-      --bg: #fafaf9;
-      --surface: #ffffff;
-      --text: #1c1917;
-      --text-light: #78716c;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 20px; }
-    header { text-align: center; margin: 40px 0; animation: fadeInDown 0.8s ease; }
-    h1 { font-size: 2.5rem; color: var(--primary); letter-spacing: -1px; }
-    p { color: var(--text-light); margin-top: 10px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 400px; margin: 0 auto; width: 100%; animation: fadeInUp 0.8s ease; }
-    .card { background: var(--surface); padding: 24px; border-radius: 16px; text-decoration: none; color: var(--text); box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .card:active { transform: scale(0.98); }
-    .card h2 { font-size: 1.25rem; margin-bottom: 8px; }
-    .card p { font-size: 0.9rem; margin: 0; }
-    .icon { font-size: 2rem; margin-bottom: 12px; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cafe Boss - Free digital QR menus. Instant setup, easy ordering, your brand.">
+    <meta name="keywords" content="QR menu, digital menu, cafe, restaurant">
+    <meta name="robots" content="index, follow">
+    <title>Cafe Boss – Free Digital QR Menus</title>
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --primary-glow: #FF8C5A;
+            --bg: #0f0f13;
+            --surface: rgba(255,255,255,0.05);
+            --text: #f0f0f0;
+            --muted: #a0a0b0;
+            --card-bg: rgba(25,25,30,0.85);
+            --border: rgba(255,255,255,0.08);
+            --radius: 24px;
+            --shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+        }
+        body.light-mode {
+            --bg: #f8f7f4;
+            --surface: rgba(255,255,255,0.7);
+            --text: #1a1a1a;
+            --muted: #5a5a5a;
+            --card-bg: rgba(255,255,255,0.9);
+            --border: rgba(0,0,0,0.1);
+            --shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.4s, color 0.4s;
+            overflow-x: hidden;
+        }
+        .bg-glow {
+            position: fixed; top: -20%; left: -10%; width: 70vw; height: 70vw;
+            background: radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%);
+            z-index: 0; pointer-events: none;
+            animation: floatGlow 12s ease-in-out infinite;
+        }
+        @keyframes floatGlow { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(5%,10%) scale(1.1); } }
+        .container { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; flex-wrap: wrap; gap: 1rem; }
+        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FF6B35, #FF8C5A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .theme-toggle { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); font-size: 0.9rem; transition: all 0.2s; }
+        .theme-toggle:hover { border-color: var(--primary); }
+        .hero { text-align: center; padding: 5rem 1rem 4rem; }
+        .hero h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 800; background: linear-gradient(to right, #FF6B35, #FFB380); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .hero .tagline { font-size: 1.3rem; color: var(--muted); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.5; }
+        .btn-primary { display: inline-block; background: linear-gradient(135deg, #FF6B35, #FF8C5A); color: #fff; padding: 1rem 2.5rem; border-radius: 50px; font-weight: 700; font-size: 1.1rem; text-decoration: none; box-shadow: 0 10px 25px rgba(255,107,53,0.35); transition: transform 0.2s, box-shadow 0.3s; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255,107,53,0.5); }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; padding: 2rem 0 4rem; }
+        .feature-card { background: var(--card-bg); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 1.8rem; text-align: center; transition: transform 0.3s, box-shadow 0.3s; box-shadow: var(--shadow); }
+        .feature-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -10px rgba(0,0,0,0.6); }
+        .feature-icon { font-size: 3rem; margin-bottom: 1.2rem; }
+        .feature-card h3 { color: var(--primary); margin-bottom: 0.8rem; font-size: 1.3rem; }
+        .feature-card p { color: var(--muted); line-height: 1.6; font-size: 0.95rem; }
+        footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+        @media (max-width: 600px) { .hero h1 { font-size: 2.5rem; } }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>Cafe Boss</h1>
-    <p>Central Management Hub</p>
-  </header>
-  <div class="grid">
-    <a href="./menu.html" class="card">
-      <div class="icon">📖</div>
-      <h2>Digital Menu</h2>
-      <p>Customer-facing interface to place orders</p>
-    </a>
-    <a href="./dashboard.html" class="card">
-      <div class="icon">🔔</div>
-      <h2>Live Dashboard</h2>
-      <p>Real-time order feed and notifications</p>
-    </a>
-    <a href="./auth.html" class="card">
-      <div class="icon">⚙️</div>
-      <h2>Admin Panel</h2>
-      <p>Manage inventory and system settings</p>
-    </a>
-  </div>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Failed', err));
-    }
-  </script>
+<body class="light-mode">
+    <div class="bg-glow"></div>
+    <div class="container">
+        <header>
+            <div class="logo">☕ Cafe Boss</div>
+            <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+        </header>
+        <section class="hero">
+            <h1>Cafe Boss</h1>
+            <p class="tagline">Free digital QR menus for your cafe.<br>Beautiful, instant, and your brand.</p>
+            <a href="auth.html" class="btn-primary">Get Started Free</a>
+        </section>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div><h3>Instant QR Menu</h3><p>Generate a branded QR code in seconds. Customers scan and browse your menu instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div><h3>Easy Ordering</h3><p>Customers order from their phone. You get real-time sound & notification alerts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div><h3>Your Brand Colors</h3><p>Customize colors to match your cafe. The menu feels unmistakably yours.</p>
+            </div>
+        </div>
+        <footer>© 2026 Cafe Boss – 100% Free. Built with ☕</footer>
+    </div>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.body.classList.remove('light-mode');
+                themeToggle.textContent = '☀️ Light';
+            } else {
+                document.body.classList.add('light-mode');
+                themeToggle.textContent = '🌙 Dark';
+            }
+        }
+        applyTheme();
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            themeToggle.textContent = isLight ? '🌙 Dark' : '☀️ Light';
+        });
+    </script>
 </body>
 </html>
