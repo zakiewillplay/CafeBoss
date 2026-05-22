@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cafe Boss - Free digital QR menus. Instant setup, easy ordering, your brand.">
+    <meta name="keywords" content="QR menu, digital menu, cafe, restaurant">
+    <title>Cafe Boss – Free Digital QR Menus</title>
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --bg: #0f0f13;
+            --text: #f0f0f0;
+            --muted: #a0a0b0;
+            --card-bg: rgba(25,25,30,0.85);
+            --border: rgba(255,255,255,0.08);
+        }
+        body.light-mode {
+            --bg: #f8f7f4;
+            --text: #1a1a1a;
+            --muted: #5a5a5a;
+            --card-bg: rgba(255,255,255,0.9);
+            --border: rgba(0,0,0,0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); transition: 0.4s; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 0; }
+        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #FF6B35, #FF8C5A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .theme-toggle { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 50px; cursor: pointer; }
+        .hero { text-align: center; padding: 5rem 1rem 4rem; }
+        .hero h1 { font-size: clamp(3rem, 8vw, 5rem); font-weight: 800; background: linear-gradient(to right, #FF6B35, #FFB380); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .hero p { font-size: 1.3rem; color: var(--muted); max-width: 600px; margin: 0 auto 2.5rem; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #FF6B35, #FF8C5A); color: #fff; padding: 1rem 2.5rem; border-radius: 50px; font-weight: 700; text-decoration: none; transition: 0.2s; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(255,107,53,0.5); }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; padding: 2rem 0; }
+        .feature-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; text-align: center; transition: 0.3s; }
+        .feature-card:hover { transform: translateY(-5px); }
+        .feature-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .feature-card h3 { color: var(--primary); margin-bottom: 0.5rem; }
+        footer { text-align: center; padding: 2rem; color: var(--muted); }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="container">
+        <header>
+            <div class="logo">☕ Cafe Boss</div>
+            <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+        </header>
+        <section class="hero">
+            <h1>Cafe Boss</h1>
+            <p>Free digital QR menus for your cafe. Beautiful, instant, and your brand.</p>
+            <a href="auth.html" class="btn">Get Started Free</a>
+        </section>
+        <div class="features">
+            <div class="feature-card"><div class="icon">🚀</div><h3>Instant QR Menu</h3><p>Generate a QR code in seconds. Customers scan and browse your menu instantly.</p></div>
+            <div class="feature-card"><div class="icon">📱</div><h3>Easy Ordering</h3><p>Customers order from their phone. You get real-time alerts with sound.</p></div>
+            <div class="feature-card"><div class="icon">🎨</div><h3>Your Brand Colors</h3><p>Customize colors to match your cafe. The menu feels unmistakably yours.</p></div>
+        </div>
+        <footer>© 2026 Cafe Boss – 100% Free. Built with ☕</footer>
+    </div>
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        function applyTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.remove('light-mode');
+                themeToggle.textContent = '☀️ Light';
+            } else {
+                document.body.classList.add('light-mode');
+                themeToggle.textContent = '🌙 Dark';
+            }
+        }
+        applyTheme();
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+            applyTheme();
+        });
+    </script>
+</body>
+</html>
