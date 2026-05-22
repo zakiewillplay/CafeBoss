@@ -2,7 +2,7 @@
   "name": "Cafe Boss",
   "short_name": "Cafe Boss",
   "description": "Free digital QR menus for your cafe.",
-  "start_url": "/CafeBoss/index.html",
+  "start_url": "/CafeBoss/",
   "scope": "/CafeBoss/",
   "display": "standalone",
   "orientation": "any",
@@ -10,14 +10,16 @@
   "theme_color": "#FF6B35",
   "icons": [
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAhQAGQkAMvgAAAAASUVORK5CYII=",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADAAQAAAABM1+//AAAARklEQVR42u3BAQEAAACAkP6v7ggKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgZ/cAAf////+zQJwAAAAASUVORK5CYII=",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAhQAGQkAMvgAAAAASUVORK5CYII=",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIAAQAAAABM1+//AAAARklEQVR42u3BAQEAAACAkP6v7ggKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgZ/cAAf////+zQJwAAAAASUVORK5CYII=",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
