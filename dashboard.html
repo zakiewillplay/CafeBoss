@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/CafeBoss/manifest.json">
     <title>Cafe Boss – Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -159,13 +160,18 @@
         </div>
     </div>
     <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/CafeBoss/sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed', err));
+        }
+
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const jsPDF = window.jspdf?.jsPDF || window.jspdf;
 
-        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast ' + (err ? 'error' : '') + ' show';
@@ -174,7 +180,6 @@
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
-        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -188,7 +193,6 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        // Audio + Notifications
         let audioCtx, audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
@@ -205,12 +209,7 @@
 
         function beep() {
             if (!audioReady) {
-                // Try to create audio context on demand (may need user gesture)
-                try {
-                    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-                    audioReady = true;
-                    unmuteBtn.style.display = 'none';
-                } catch(e) { return; }
+                try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); audioReady = true; unmuteBtn.style.display = 'none'; } catch(e) { return; }
             }
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const o = audioCtx.createOscillator(), g = audioCtx.createGain();
@@ -219,7 +218,6 @@
             o.start(); o.stop(audioCtx.currentTime + 0.15);
         }
 
-        // Notification setup
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
@@ -250,7 +248,6 @@
             }
         }
 
-        // Test alert button
         document.getElementById('testAlertBtn').addEventListener('click', () => {
             beep();
             if (Notification.permission === 'granted') {
@@ -302,17 +299,14 @@
             }
         }
 
-        // Refresh orders manually (still available)
         document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => {
             e.stopPropagation();
             loadOrders();
             toast('Orders refreshed');
         });
 
-        // Order search
         document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
 
-        // Update print button visibility based on active tab
         function updatePrintButton() {
             const printTabBtn = document.getElementById('printTabBtn');
             if (activeOrderTab === 'completed') {
@@ -326,7 +320,6 @@
             }
         }
 
-        // Save settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { cafe_name: document.getElementById('setCafeName').value.trim(), whatsapp: document.getElementById('setWhatsapp').value.trim(), description: document.getElementById('setDesc').value.trim(), primary_color: document.getElementById('setPrimary').value, accent_color: document.getElementById('setAccent').value };
@@ -335,7 +328,6 @@
             else { Object.assign(cafeData, u); toast('Settings saved'); }
         });
 
-        // QR
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
@@ -345,7 +337,6 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // ========== DATA ==========
         async function loadStats() {
             if (!cafeData.id || cafeData._temp) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -392,7 +383,6 @@
             document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) printSingleOrder(o); }));
         }
 
-        // Export CSV
         function exportCSV() {
             const ordersToExport = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
             if (!ordersToExport.length) { toast('No orders to export', true); return; }
@@ -413,7 +403,6 @@
         }
         document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
 
-        // Print all visible orders (completed or new based on tab)
         document.getElementById('printTabBtn').addEventListener('click', () => {
             const ordersToPrint = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
             if (!ordersToPrint.length) { toast(`No ${activeOrderTab} orders to print`, true); return; }
@@ -448,7 +437,6 @@
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
         }
 
-        // ----- REALTIME (orders appear instantly) -----
         function setupRealtime() {
             if (realtimeChannel) {
                 _supabase.removeChannel(realtimeChannel);
@@ -474,7 +462,6 @@
                 });
         }
 
-        // Analytics
         async function loadAnalytics() {
             if (!cafeData.id) return;
             const days = analyticsMode === 'week' ? 7 : 30;
@@ -685,7 +672,6 @@
             document.getElementById('addItemCard').classList.remove('collapsed');
         }
 
-        // Tab switching
         document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){
             document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active'));
             this.classList.add('active');
