@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Boss – Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        :root { --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #a0a0b0; }
+        body.light-mode { --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555; }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; padding:2rem; }
+        .container { max-width:800px; margin:0 auto; }
+        .stats { display:flex; gap:1rem; margin-bottom:2rem; }
+        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center; flex:1; }
+        table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; }
+        th, td { padding:0.8rem; border-bottom:1px solid var(--border); }
+        th { color:var(--muted); }
+        button { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="container">
+        <h1>☕ Cafe Boss Admin</h1>
+        <button id="themeToggle" style="float:right;">🌙 Dark</button>
+        <div class="stats">
+            <div class="stat-card"><h2 id="totalCafes">-</h2><p>Total Cafes</p></div>
+            <div class="stat-card"><h2 id="totalOrders">-</h2><p>Total Orders</p></div>
+        </div>
+        <h2>Recent Orders</h2>
+        <table><thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTbody"></tbody></table>
+    </div>
+    <script>
+        const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        (async ()=>{
+            const [{count:cafeCount},{count:orderCount},{data:orders}] = await Promise.all([
+                _supabase.from('cafes').select('*',{count:'exact',head:true}),
+                _supabase.from('orders').select('*',{count:'exact',head:true}),
+                _supabase.from('orders').select('*,cafes(cafe_name)').order('created_at',{ascending:false}).limit(20)
+            ]);
+            document.getElementById('totalCafes').textContent = cafeCount||0;
+            document.getElementById('totalOrders').textContent = orderCount||0;
+            document.getElementById('ordersTbody').innerHTML = (orders||[]).map(o => `<tr><td>${new Date(o.created_at).toLocaleString()}</td><td>${o.cafes?.cafe_name||'?'}</td><td>${o.customer_name||'Guest'}</td><td>₹${o.total}</td><td>${o.status}</td></tr>`).join('');
+        })();
+        document.getElementById('themeToggle').addEventListener('click', ()=>{ document.body.classList.toggle('light-mode'); document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light'; });
+    </script>
+</body>
+</html>
