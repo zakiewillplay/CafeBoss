@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root {
             --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85);
@@ -24,7 +23,7 @@
         .toast.show { transform:translateX(0); } .toast.error { background:#c0392b; }
         header { background:var(--card); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
         .logo { font-weight:700; font-size:1.3rem; color:var(--primary); }
-        button, select, input, textarea { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; }
+        button, select, input, textarea { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.2s; }
         button:hover { border-color:var(--primary); }
         .container { max-width:1200px; margin:2rem auto; padding:0 1.5rem; display:grid; gap:1.8rem; }
         .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
@@ -37,7 +36,7 @@
         .order-tabs button { flex:1; padding:0.7rem; border:none; background:transparent; color:var(--muted); font-weight:600; }
         .order-tabs button.active { background:var(--primary); color:#fff; }
         .order-card { background:rgba(0,0,0,0.2); border-radius:12px; padding:1rem; margin-bottom:0.8rem; }
-        .item-row { display:flex; align-items:center; gap:1rem; background:rgba(0,0,0,0.2); padding:0.8rem; border-radius:8px; margin-bottom:0.5rem; }
+        .item-row { display:flex; align-items:center; gap:1rem; background:rgba(0,0,0,0.2); padding:0.8rem; border-radius:8px; margin-bottom:0.5rem; flex-wrap:wrap; }
         .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; }
         .badge-discount { background:#c0392b; color:#fff; } .badge-featured { background:#f39c12; color:#000; }
         .toggle-switch { position:relative; width:44px; height:24px; }
@@ -47,18 +46,20 @@
         input:checked+.toggle-slider { background:#27ae60; }
         input:checked+.toggle-slider:before { transform:translateX(20px); }
         .qr-display img { border-radius:12px; background:#fff; padding:0.5rem; }
-        .scan-row { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:0.4rem; }
-        .scan-row input, .scan-row select { flex:1; margin:0; }
+        .btn-sm { padding:0.4rem 1rem; font-size:0.8rem; }
+        .flex-row { display:flex; gap:0.5rem; align-items:center; }
+        .header-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
     </style>
 </head>
 <body class="light-mode">
     <div class="toast-container" id="toastContainer"></div>
     <header>
         <div class="logo">☕ Cafe Boss</div>
-        <div>
+        <div class="header-actions">
             <select id="langSelect"><option value="en">English</option><option value="hi">हिन्दी</option></select>
             <button id="themeToggle">🌙 Dark</button>
             <button id="unmuteBtn">🔊 Unmute</button>
+            <button id="notifBtn" style="display:none;">🔔 Enable Alerts</button>
             <button id="livePreviewBtn">👁️ Live Menu</button>
             <button id="logoutBtn" style="color:#f87171;">Logout</button>
         </div>
@@ -73,26 +74,46 @@
         <div class="card" id="ordersCard"><h3>📋 Orders</h3><div class="card-content"><div class="order-tabs"><button class="active" data-tab="new">New</button><button data-tab="accepted">Accepted</button><button data-tab="completed">Completed</button></div><div id="ordersList"></div></div></div>
         <div class="card collapsed" id="settingsCard"><h3>⚙️ Settings</h3><div class="card-content"><input id="setCafeName" placeholder="Cafe name"><input id="setWhatsapp" placeholder="WhatsApp"><textarea id="setDesc"></textarea><input type="color" id="setPrimary" value="#FF6B35"><input type="color" id="setAccent" value="#2F3E46"><button id="saveSettingsBtn">Save</button></div></div>
         <div class="card collapsed" id="qrCard"><h3>📱 QR Code</h3><div class="card-content"><button id="generateQrBtn">Generate QR</button><div id="qrDisplay" class="qr-display"></div><p id="qrUrl"></p><button id="copyQrLink" style="display:none;">📋 Copy Link</button></div></div>
-        <div class="card collapsed" id="smartScanCard"><h3>📸 Smart Scan</h3><div class="card-content">
-            <label class="file-label"><input type="file" id="cameraInput" accept="image/*" capture="environment">📷 Camera</label>
-            <label class="file-label"><input type="file" id="galleryInput" accept="image/*">🖼️ Gallery</label>
-            <img id="scanPreview" style="display:none; max-width:200px; border-radius:8px; margin:0.5rem 0;">
-            <button id="scanExtractBtn" style="display:none;">Scan & Extract</button>
-            <div id="scanResults"></div>
-            <button id="addAllScanBtn" style="display:none;">Add All to Menu</button>
-        </div></div>
-        <div class="card collapsed" id="bulkAddCard"><h3>📝 Bulk Add</h3><div class="card-content"><textarea id="bulkTextarea" placeholder="Name,Price,Category"></textarea><button id="bulkAddBtn">Add All</button></div></div>
-        <div class="card collapsed" id="addItemCard"><h3>➕ Add Item</h3><div class="card-content">
-            <input type="hidden" id="editItemId">
-            <input id="itemName" placeholder="Name"><textarea id="itemDesc" placeholder="Description"></textarea><button id="aiDescBtn">✨ AI</button>
-            <input type="number" id="itemPrice" step="0.01"><input id="itemCategory" list="categoryList"><datalist id="categoryList"></datalist>
-            <input id="itemDiscount" placeholder="Discount">
-            <div id="variantsContainer"><div style="display:flex;gap:0.5rem;"><input class="var-name" placeholder="Size"><input class="var-price" type="number" step="0.01" placeholder="Price"><button class="remove-var">✕</button></div></div>
-            <button id="addVariantBtn">+ Variant</button>
-            <label><input type="checkbox" id="itemFeatured"> 🔥 Chef's Special</label>
-            <button id="submitItemBtn">Add Item</button>
-        </div></div>
-        <div class="card collapsed" id="menuItemsCard"><h3>📋 Menu Items</h3><div class="card-content" id="menuItemsList"></div></div>
+        <!-- RAPID ADD ITEM CARD -->
+        <div class="card" id="addItemCard">
+            <h3>➕ Add Item <span class="collapse-icon">▼</span></h3>
+            <div class="card-content">
+                <input type="hidden" id="editItemId">
+                <div class="flex-row" style="margin-bottom:0.5rem;">
+                    <input id="itemName" placeholder="Item name *" style="flex:2;">
+                    <input type="number" id="itemPrice" step="0.01" placeholder="Price ₹" style="width:120px;">
+                </div>
+                <div class="flex-row" style="margin-bottom:0.5rem;">
+                    <input id="itemCategory" list="categoryList" placeholder="Category" style="flex:1;">
+                    <datalist id="categoryList"></datalist>
+                    <input id="itemDiscount" placeholder="Discount (e.g. 10% off)" style="flex:1;">
+                </div>
+                <textarea id="itemDesc" placeholder="Description (optional)" rows="2" style="margin-bottom:0.5rem;"></textarea>
+                <div class="flex-row" style="margin-bottom:0.5rem;">
+                    <button id="aiDescBtn" class="btn-sm">✨ AI Desc</button>
+                    <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                        <input type="checkbox" id="itemFeatured"> 🔥 Chef's Special
+                    </label>
+                </div>
+                <div id="variantsContainer" style="margin-bottom:0.5rem;">
+                    <div class="flex-row" style="margin-bottom:0.3rem;">
+                        <input class="var-name" placeholder="Size" style="flex:1;">
+                        <input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;">
+                        <button class="remove-var btn-sm">✕</button>
+                    </div>
+                </div>
+                <button id="addVariantBtn" class="btn-sm">+ Add Variant</button>
+                <div class="flex-row" style="margin-top:0.8rem; gap:0.5rem;">
+                    <button id="submitItemBtn" style="flex:1;">Save Item</button>
+                    <button id="saveAndNextBtn" style="flex:1; background:var(--primary);">Save & Add Next</button>
+                </div>
+            </div>
+        </div>
+        <!-- MENU ITEMS LIST -->
+        <div class="card" id="menuItemsCard">
+            <h3>📋 Menu Items <span class="collapse-icon">▼</span></h3>
+            <div class="card-content" id="menuItemsList"></div>
+        </div>
     </div>
     <script>
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
@@ -124,18 +145,46 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        // Audio
+        // Audio + Notifications
         let audioCtx, audioReady = false;
-        document.getElementById('unmuteBtn').addEventListener('click', () => {
+        const unmuteBtn = document.getElementById('unmuteBtn');
+        const notifBtn = document.getElementById('notifBtn');
+
+        unmuteBtn.addEventListener('click', () => {
             try {
                 audioCtx = new (window.AudioContext||window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 audioReady = true;
-                document.getElementById('unmuteBtn').style.display = 'none';
+                unmuteBtn.style.display = 'none';
             } catch(e) { toast('Audio not supported', true); }
         });
+
         function beep() { if (!audioReady) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=800; g.gain.value=0.3; o.start(); o.stop(audioCtx.currentTime+0.15); }
 
+        // Notification setup
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                notifBtn.style.display = 'none';
+            } else if (Notification.permission === 'default') {
+                notifBtn.style.display = 'inline-flex';
+            } else {
+                // denied
+                notifBtn.style.display = 'none';
+            }
+            notifBtn.addEventListener('click', () => {
+                Notification.requestPermission().then(perm => {
+                    if (perm === 'granted') {
+                        notifBtn.style.display = 'none';
+                        toast('Alerts enabled!');
+                    } else {
+                        notifBtn.style.display = 'none';
+                        toast('Notifications disabled. You will still hear sound alerts.', true);
+                    }
+                });
+            });
+        }
+
+        // Logout, live preview
         document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='index.html'));
         document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
@@ -182,7 +231,7 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // ========== DATA LOADING ==========
+        // ========== DATA ==========
         async function loadStats() {
             if (!cafeData.id || cafeData._temp) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -243,7 +292,14 @@
         }
 
         function setupRealtime() {
-            _supabase.channel('orders-realtime').on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => { allOrders.unshift(payload.new); renderOrders(); beep(); loadStats(); if (Notification.permission==='granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' }); }).subscribe();
+            _supabase.channel('orders-realtime').on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
+                allOrders.unshift(payload.new);
+                renderOrders();
+                beep();
+                loadStats();
+                if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
+                else toast('New order received!', false);
+            }).subscribe();
         }
 
         async function loadAnalytics() {
@@ -257,6 +313,7 @@
             chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(days), datasets:[{ label:'Orders', data:Object.values(days), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
         }
 
+        // ========== ITEMS ==========
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -265,23 +322,25 @@
 
         function renderItems() {
             const list = document.getElementById('menuItemsList');
-            if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted);">No items yet.</p>'; return; }
+            if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted);">No items yet. Add your first one above!</p>'; return; }
             list.innerHTML = allItems.map(item => {
                 let badges = '';
                 if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
-                if (item.featured) badges += `<span class="badge badge-featured">🔥 Chef's Special</span>`;
+                if (item.featured) badges += `<span class="badge badge-featured">🔥</span>`;
                 const hasVariants = item.description?.startsWith('VAR::');
                 let variantInfo = '';
                 if (hasVariants) variantInfo = item.description.replace('VAR::','').split('|').map(v => { const [n,p]=v.split('='); return `<span style="font-size:0.7rem;">${n}:₹${p}</span>`; }).join(' ');
                 return `<div class="item-row">
-                    <div><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem;">${hasVariants?variantInfo:(item.description||'')}</div><div>${item.category} | ₹${item.price}</div></div>
+                    <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem;">${hasVariants?variantInfo:(item.description||'')}</div><div>${item.category} | ₹${item.price}</div></div>
                     <label class="toggle-switch"><input type="checkbox" ${item.available?'checked':''} data-id="${item.id}" class="toggle-avail"><span class="toggle-slider"></span></label>
-                    <button class="edit-item-btn" data-id="${item.id}">Edit</button>
-                    <button class="delete-item-btn" data-id="${item.id}" style="color:#f87171;">Delete</button>
+                    <button class="edit-item-btn btn-sm" data-id="${item.id}">Edit</button>
+                    <button class="copy-item-btn btn-sm" data-id="${item.id}" title="Duplicate">📋</button>
+                    <button class="delete-item-btn btn-sm" data-id="${item.id}" style="color:#f87171;">Delete</button>
                 </div>`;
             }).join('');
             document.querySelectorAll('.toggle-avail').forEach(cb => cb.addEventListener('change', async function(){ await _supabase.from('menu_items').update({available:this.checked}).eq('id',this.dataset.id); loadItems(); }));
             document.querySelectorAll('.edit-item-btn').forEach(b => b.addEventListener('click', ()=> editItem(b.dataset.id)));
+            document.querySelectorAll('.copy-item-btn').forEach(b => b.addEventListener('click', ()=> duplicateItem(b.dataset.id)));
             document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
         }
 
@@ -289,7 +348,6 @@
 
         function editItem(id) {
             const item = allItems.find(i=>i.id===id); if(!item) return;
-            document.getElementById('addItemCard').classList.remove('collapsed');
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
@@ -300,38 +358,69 @@
             if (item.description?.startsWith('VAR::')) {
                 item.description.replace('VAR::','').split('|').forEach(v => {
                     const [n,p]=v.split('=');
-                    const row = document.createElement('div'); row.style.display='flex'; row.style.gap='0.5rem'; row.innerHTML=`<input class="var-name" value="${n}" style="flex:1"><input class="var-price" type="number" step="0.01" value="${p}" style="flex:1"><button class="remove-var">✕</button>`;
+                    const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML=`<input class="var-name" value="${n}" style="flex:1"><input class="var-price" type="number" step="0.01" value="${p}" style="flex:1"><button class="remove-var btn-sm">✕</button>`;
                     document.getElementById('variantsContainer').appendChild(row);
                     row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
                 });
             } else {
-                const row = document.createElement('div'); row.style.display='flex'; row.style.gap='0.5rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var">✕</button>';
+                const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm">✕</button>';
                 document.getElementById('variantsContainer').appendChild(row);
                 row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
             }
             document.getElementById('itemDesc').value = item.description?.startsWith('VAR::') ? '' : (item.description||'');
             document.getElementById('submitItemBtn').textContent = 'Update Item';
-            document.getElementById('addItemCard').scrollIntoView({behavior:'smooth'});
+            document.getElementById('saveAndNextBtn').style.display = 'none';
+            document.getElementById('addItemCard').classList.remove('collapsed');
+            document.getElementById('itemName').focus();
         }
 
-        // Add variant, AI, submit item
+        function duplicateItem(id) {
+            const item = allItems.find(i=>i.id===id); if(!item) return;
+            document.getElementById('editItemId').value = '';
+            document.getElementById('itemName').value = item.name + ' (copy)';
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemCategory').value = item.category;
+            document.getElementById('itemDiscount').value = item.discount||'';
+            document.getElementById('itemFeatured').checked = item.featured||false;
+            document.getElementById('itemDesc').value = item.description?.startsWith('VAR::') ? '' : (item.description||'');
+            document.getElementById('variantsContainer').innerHTML = '';
+            if (item.description?.startsWith('VAR::')) {
+                item.description.replace('VAR::','').split('|').forEach(v => {
+                    const [n,p]=v.split('=');
+                    const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML=`<input class="var-name" value="${n}" style="flex:1"><input class="var-price" type="number" step="0.01" value="${p}" style="flex:1"><button class="remove-var btn-sm">✕</button>`;
+                    document.getElementById('variantsContainer').appendChild(row);
+                    row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
+                });
+            } else {
+                const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm">✕</button>';
+                document.getElementById('variantsContainer').appendChild(row);
+                row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
+            }
+            document.getElementById('submitItemBtn').textContent = 'Add Item';
+            document.getElementById('saveAndNextBtn').style.display = 'inline-flex';
+            document.getElementById('addItemCard').classList.remove('collapsed');
+            document.getElementById('itemName').focus();
+        }
+
+        // Add variant, AI, submit logic
         document.getElementById('addVariantBtn').addEventListener('click', ()=>{
-            const row = document.createElement('div'); row.style.display='flex'; row.style.gap='0.5rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var">✕</button>';
+            const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm">✕</button>';
             document.getElementById('variantsContainer').appendChild(row);
             row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
         });
         document.getElementById('aiDescBtn').addEventListener('click', ()=> document.getElementById('itemDesc').value = ['Rich and creamy.','A delightful blend.','Freshly prepared.','Our signature recipe.'][Math.floor(Math.random()*4)]);
-        document.getElementById('submitItemBtn').addEventListener('click', async ()=>{
+
+        async function saveItem(andClear = false) {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const editId = document.getElementById('editItemId').value;
             const name = document.getElementById('itemName').value.trim();
             if (!name) return toast('Name required', true);
-            const category = document.getElementById('itemCategory').value||'Uncategorized';
+            const category = document.getElementById('itemCategory').value.trim()||'Uncategorized';
             const price = parseFloat(document.getElementById('itemPrice').value)||0;
-            const discount = document.getElementById('itemDiscount').value;
+            const discount = document.getElementById('itemDiscount').value.trim();
             const featured = document.getElementById('itemFeatured').checked;
             const varRows = document.querySelectorAll('#variantsContainer > div');
-            let desc = document.getElementById('itemDesc').value;
+            let desc = document.getElementById('itemDesc').value.trim();
             let hasVariants = false, varParts = [];
             varRows.forEach(r => {
                 const vn = r.querySelector('.var-name')?.value.trim();
@@ -342,169 +431,36 @@
             const payload = { name, description: desc, price, category, discount, featured, cafe_id: cafeData.id };
             const { error } = editId ? await _supabase.from('menu_items').update(payload).eq('id', editId) : await _supabase.from('menu_items').insert(payload);
             if (error) { toast('Save failed', true); return; }
-            resetItemForm(); loadItems(); loadStats(); toast('Item saved!');
-        });
-        function resetItemForm() {
-            document.getElementById('editItemId').value=''; document.getElementById('itemName').value=''; document.getElementById('itemDesc').value=''; document.getElementById('itemPrice').value='0'; document.getElementById('itemCategory').value='Uncategorized'; document.getElementById('itemDiscount').value=''; document.getElementById('itemFeatured').checked=false; document.getElementById('submitItemBtn').textContent='Add Item';
-            document.getElementById('variantsContainer').innerHTML = '<div style="display:flex;gap:0.5rem;"><input class="var-name" placeholder="Size"><input class="var-price" type="number" step="0.01" placeholder="Price"><button class="remove-var">✕</button></div>';
-        }
-
-        // Bulk add
-        document.getElementById('bulkAddBtn').addEventListener('click', async ()=>{
-            if (!cafeData.id) return toast('Cafe not ready', true);
-            const text = document.getElementById('bulkTextarea').value.trim();
-            if (!text) return;
-            const lines = text.split('\n').filter(l=>l.trim());
-            const inserts = [];
-            lines.forEach(line => { const parts=line.split(','); if(parts.length>=2) inserts.push({ name:parts[0].trim(), price:parseFloat(parts[1].trim())||0, category:parts[2]?.trim()||'Uncategorized', cafe_id:cafeData.id }); });
-            if (inserts.length) { await _supabase.from('menu_items').insert(inserts); document.getElementById('bulkTextarea').value=''; loadItems(); loadStats(); toast('Added '+inserts.length+' items'); }
-        });
-
-        // ============ ENHANCED SMART SCAN ============
-        let extractedItems = [];
-        let currentCategory = 'Uncategorized';
-
-        function handleImageFile(file) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('scanPreview').src = e.target.result;
-                document.getElementById('scanPreview').style.display = 'block';
-                document.getElementById('scanExtractBtn').style.display = 'inline-block';
-            };
-            reader.readAsDataURL(file);
-        }
-        document.getElementById('cameraInput').addEventListener('change', e => handleImageFile(e.target.files[0]));
-        document.getElementById('galleryInput').addEventListener('change', e => handleImageFile(e.target.files[0]));
-
-        document.getElementById('scanExtractBtn').addEventListener('click', async () => {
-            const img = document.getElementById('scanPreview');
-            if (!img.src) return;
-            document.getElementById('scanExtractBtn').disabled = true;
-            document.getElementById('scanExtractBtn').textContent = 'Scanning...';
-            try {
-                const { data: { text } } = await Tesseract.recognize(img.src, 'eng+hin');
-                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                extractedItems = [];
-                currentCategory = 'Uncategorized';
-
-                // Improved category detection
-                function isCategoryLine(line) {
-                    const clean = line.replace(/:\s*$/g, '').trim();
-                    // If line contains a clear price pattern (₹, Rs, digits with decimal), it's NOT a category
-                    if (/[₹Rs]/.test(line) || /\d+\.\d{2}/.test(line)) return false;
-                    // If line is very short (1-3 words) and has no numbers, likely a category
-                    const wordCount = clean.split(/\s+/).length;
-                    if (wordCount <= 3 && !/\d/.test(clean)) return true;
-                    // If line ends with a colon (common in menu headings) – strip colon and treat as category
-                    if (/:$/.test(line)) return true;
-                    return false;
-                }
-
-                for (let line of lines) {
-                    line = line.replace(/^\W+|\W+$/g, '');
-                    if (!line) continue;
-
-                    if (isCategoryLine(line)) {
-                        currentCategory = line.replace(/:$/, '').trim();
-                        continue;
-                    }
-
-                    // Enhanced price extraction – requires ₹/Rs or a number that looks like a real price (>=10 with optional decimal, but not just a single digit)
-                    let price = null;
-                    let name = line;
-
-                    // Try to find a price with currency symbol
-                    const currencyMatch = line.match(/(?:₹|RS\.?\s*)\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/i);
-                    if (currencyMatch) {
-                        price = parseFloat(currencyMatch[1].replace(/,/g, ''));
-                        name = line.replace(currencyMatch[0], '').trim();
-                    } else {
-                        // Try to find a number that looks like a price (e.g., 150, 150.00, but not 1, 5, etc.)
-                        const numberMatch = line.match(/\b(\d+(?:\.\d{2})?)\b/g);
-                        if (numberMatch) {
-                            // Take the last number in the line (most likely the price)
-                            const lastNum = numberMatch[numberMatch.length - 1];
-                            const num = parseFloat(lastNum);
-                            // Only treat as price if it's >= 10 OR has a decimal part (e.g., 0.50) – filters out small integers like "1", "2" etc.
-                            if (num >= 10 || lastNum.includes('.')) {
-                                price = num;
-                                // Remove the price from the name (remove the last occurrence)
-                                const idx = line.lastIndexOf(lastNum);
-                                name = (line.substring(0, idx) + line.substring(idx + lastNum.length)).replace(/\s+/g, ' ').trim();
-                            }
-                        }
-                    }
-
-                    if (price !== null && price > 0) {
-                        // Clean name: remove leading/trailing non-word characters except Hindi
-                        name = name.replace(/^[^\w\u0900-\u097F]+|[^\w\u0900-\u097F]+$/g, '').trim();
-                        if (name) {
-                            extractedItems.push({ name, price, category: currentCategory });
-                        }
-                    }
-                }
-
-                const resultsDiv = document.getElementById('scanResults');
-                if (!extractedItems.length) {
-                    resultsDiv.innerHTML = '<p style="color:#f87171;">No items detected. Try a clearer image.</p>';
-                } else {
-                    const existingCats = [...new Set(allItems.map(i=>i.category).filter(Boolean))];
-                    let html = `<p style="color:#4ade80;">Found ${extractedItems.length} items. Edit if needed:</p>`;
-                    extractedItems.forEach((item, idx) => {
-                        html += `
-                        <div class="scan-row">
-                            <input value="${item.name}" data-idx="${idx}" class="scan-name" style="flex:2;">
-                            <span>₹</span>
-                            <input type="number" value="${item.price}" data-idx="${idx}" class="scan-price" step="0.01" style="width:100px;">
-                            <input list="catlist-${idx}" value="${item.category}" data-idx="${idx}" class="scan-cat" style="flex:1;" placeholder="Category">
-                            <datalist id="catlist-${idx}">
-                                ${existingCats.map(c => `<option value="${c}">`).join('')}
-                            </datalist>
-                        </div>`;
-                    });
-                    resultsDiv.innerHTML = html;
-                    document.getElementById('addAllScanBtn').style.display = 'inline-block';
-
-                    document.querySelectorAll('.scan-name').forEach(inp => inp.addEventListener('input', function() {
-                        extractedItems[this.dataset.idx].name = this.value;
-                    }));
-                    document.querySelectorAll('.scan-price').forEach(inp => inp.addEventListener('input', function() {
-                        extractedItems[this.dataset.idx].price = parseFloat(this.value) || 0;
-                    }));
-                    document.querySelectorAll('.scan-cat').forEach(inp => inp.addEventListener('input', function() {
-                        extractedItems[this.dataset.idx].category = this.value || 'Uncategorized';
-                    }));
-                }
-            } catch (err) {
-                toast('Scan failed. Ensure the image is clear.', true);
-            } finally {
-                document.getElementById('scanExtractBtn').disabled = false;
-                document.getElementById('scanExtractBtn').textContent = 'Scan & Extract';
-            }
-        });
-
-        document.getElementById('addAllScanBtn').addEventListener('click', async () => {
-            if (!cafeData.id) return toast('Cafe not ready', true);
-            const inserts = extractedItems.map(item => ({
-                name: item.name,
-                price: item.price,
-                category: item.category || 'Uncategorized',
-                cafe_id: cafeData.id
-            }));
-            if (inserts.length === 0) return;
-            const { error } = await _supabase.from('menu_items').insert(inserts);
-            if (error) { toast('Failed to add items', true); return; }
-            toast(`Added ${inserts.length} items with categories!`);
-            document.getElementById('scanResults').innerHTML = '';
-            document.getElementById('addAllScanBtn').style.display = 'none';
+            toast(editId ? 'Item updated!' : 'Item added!');
             loadItems(); loadStats();
-        });
+            if (andClear) {
+                resetItemForm();
+                document.getElementById('itemName').focus();
+            } else {
+                resetItemForm();
+            }
+        }
+
+        document.getElementById('submitItemBtn').addEventListener('click', (e) => { e.preventDefault(); saveItem(false); });
+        document.getElementById('saveAndNextBtn').addEventListener('click', (e) => { e.preventDefault(); saveItem(true); });
+
+        function resetItemForm() {
+            document.getElementById('editItemId').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemPrice').value = '0';
+            document.getElementById('itemCategory').value = 'Uncategorized';
+            document.getElementById('itemDiscount').value = '';
+            document.getElementById('itemFeatured').checked = false;
+            document.getElementById('itemDesc').value = '';
+            document.getElementById('variantsContainer').innerHTML = `<div class="flex-row" style="margin-bottom:0.3rem;"><input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm">✕</button></div>`;
+            document.getElementById('submitItemBtn').textContent = 'Save Item';
+            document.getElementById('saveAndNextBtn').style.display = 'inline-flex';
+            document.getElementById('addItemCard').classList.remove('collapsed');
+        }
 
         // Order tabs
         document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){ document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active')); this.classList.add('active'); activeOrderTab = this.dataset.tab; renderOrders(); }));
 
-        if ('Notification' in window && Notification.permission === 'default') document.addEventListener('click', () => Notification.requestPermission(), { once: true });
         init();
     </script>
 </body>
