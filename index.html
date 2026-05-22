@@ -7,7 +7,6 @@
     <meta name="theme-color" content="#FF6B35">
     
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
     
     <title>Cafe Boss – Free Digital QR Menus</title>
     <style>
@@ -52,7 +51,7 @@
     </div>
     
     <script>
-        // PWA Service Worker Registration - Updated to relative path
+        // PWA Service Worker Registration - Uses relative path
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
