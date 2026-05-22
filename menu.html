@@ -109,11 +109,8 @@
     </div>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/CafeBoss/sw.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW registration failed', err));
+            navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
         }
-
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -121,8 +118,8 @@
         const cafeId = urlParams.get('id');
 
         const t = {
-            en: { search:'Search menu…', table:'Table Number *', name:'Your name (optional)', place:'Place Order', orderPlaced:'Order placed!', waiting:'Waiting for confirmation…', accepted:'Your order has been accepted! 🎉', noItems:'No items match your search.', waiterCall:'Waiter called! Someone will come to your table.', cartEmpty:'Cart is empty', tableRequired:'Please enter your table number' },
-            hi: { search:'मेनू खोजें…', table:'टेबल नंबर *', name:'आपका नाम', place:'ऑर्डर करें', orderPlaced:'ऑर्डर रखा गया!', waiting:'पुष्टि की प्रतीक्षा…', accepted:'आपका ऑर्डर स्वीकार कर लिया गया! 🎉', noItems:'कोई आइटम नहीं मिला।', waiterCall:'वेटर बुलाया गया! कोई आपकी टेबल पर आएगा।', cartEmpty:'कार्ट खाली है', tableRequired:'कृपया टेबल नंबर दर्ज करें' }
+            en: { search:'Search menu…', table:'Table Number *', name:'Your name (optional)', place:'Place Order', orderPlaced:'Order placed!', waiting:'Waiting for confirmation…', accepted:'Your order has been accepted! 🎉', noItems:'No items match your search.', waiterCall:'Waiter called! Someone will come to your table.' },
+            hi: { search:'मेनू खोजें…', table:'टेबल नंबर *', name:'आपका नाम', place:'ऑर्डर करें', orderPlaced:'ऑर्डर रखा गया!', waiting:'पुष्टि की प्रतीक्षा…', accepted:'आपका ऑर्डर स्वीकार कर लिया गया! 🎉', noItems:'कोई आइटम नहीं मिला।', waiterCall:'वेटर बुलाया गया! कोई आपकी टेबल पर आएगा।' }
         };
         let lang = 'en';
         function tl(key) { return t[lang]?.[key] || key; }
@@ -265,9 +262,9 @@
         document.getElementById('floatingCart').addEventListener('click', ()=> document.getElementById('cartPanel').classList.toggle('open'));
         document.getElementById('closeCartBtn').addEventListener('click', ()=> document.getElementById('cartPanel').classList.remove('open'));
         document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
-            if (!cart.length) return alert(tl('cartEmpty'));
+            if (!cart.length) return alert('Cart is empty');
             const table = document.getElementById('tableNumber').value.trim();
-            if (!table) return alert(tl('tableRequired'));
+            if (!table) return alert('Please enter your table number');
             const name = document.getElementById('customerName').value.trim() || 'Guest';
             const total = cart.reduce((s,c)=>s+c.price*c.qty,0);
             const items = cart.map(c => ({ name: c.name + (c.variant?' ('+c.variant+')':''), price: c.price, qty: c.qty }));
