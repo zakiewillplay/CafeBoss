@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Cafe Boss - Free digital QR menus. Instant setup, easy ordering, your brand.">
     <meta name="keywords" content="QR menu, digital menu, cafe, restaurant">
+    <link rel="manifest" href="/CafeBoss/manifest.json">
     <title>Cafe Boss – Free Digital QR Menus</title>
     <style>
         :root {
@@ -52,6 +53,11 @@
         <footer>© 2026 Cafe Boss – 100% Free. Built with ☕</footer>
     </div>
     <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/CafeBoss/sw.js')
+                .then(reg => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed', err));
+        }
         const themeToggle = document.getElementById('themeToggle');
         function applyTheme() {
             const saved = localStorage.getItem('theme');
