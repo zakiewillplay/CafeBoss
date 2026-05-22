@@ -7,13 +7,8 @@
     <title>Cafe Boss – Welcome</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
-        :root {
-            --primary: #FF6B35; --bg: #0f0f13; --card: rgba(30,30,35,0.9);
-            --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #aaa; --input-bg: rgba(20,20,25,0.7);
-        }
-        body.light-mode {
-            --bg: #f2f1ed; --card: rgba(255,255,255,0.95); --border: rgba(0,0,0,0.15); --text: #1a1a1a; --muted: #555; --input-bg: #fff;
-        }
+        :root { --primary: #FF6B35; --bg: #0f0f13; --card: rgba(30,30,35,0.9); --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #aaa; --input-bg: rgba(20,20,25,0.7); }
+        body.light-mode { --bg: #f2f1ed; --card: rgba(255,255,255,0.95); --border: rgba(0,0,0,0.15); --text: #1a1a1a; --muted: #555; --input-bg: #fff; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; transition:0.4s; padding:1rem; }
         .auth-card { background:var(--card); backdrop-filter:blur(15px); border:1px solid var(--border); border-radius:28px; padding:3rem 2.5rem; width:100%; max-width:440px; }
@@ -47,22 +42,10 @@
             <button id="tabSignup">Sign Up</button>
         </div>
         <form id="authForm" autocomplete="off">
-            <div class="form-group" id="nameGroup" style="display:none;">
-                <label for="cafeName">Cafe Name</label>
-                <input type="text" id="cafeName" placeholder="My Cafe">
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" required placeholder="you@example.com">
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required placeholder="••••••••">
-            </div>
-            <div class="form-group" id="confirmGroup" style="display:none;">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" placeholder="••••••••">
-            </div>
+            <div class="form-group" id="nameGroup" style="display:none;"><label for="cafeName">Cafe Name</label><input type="text" id="cafeName" placeholder="My Cafe"></div>
+            <div class="form-group"><label for="email">Email</label><input type="email" id="email" required placeholder="you@example.com"></div>
+            <div class="form-group"><label for="password">Password</label><input type="password" id="password" required placeholder="••••••••"></div>
+            <div class="form-group" id="confirmGroup" style="display:none;"><label for="confirmPassword">Confirm Password</label><input type="password" id="confirmPassword" placeholder="••••••••"></div>
             <button type="submit" class="btn" id="submitBtn">Login</button>
         </form>
         <div class="alt-links">
@@ -74,9 +57,7 @@
     </div>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/CafeBoss/sw.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW registration failed', err));
+            navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
         }
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
@@ -84,7 +65,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isRecovery = urlParams.get('type') === 'recovery';
         let mode = isRecovery ? 'recovery' : 'login';
-
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
@@ -97,14 +77,12 @@
             else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.remove('light-mode');
             document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
         })();
-
         function showToast(msg, isErr=false) {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.className = 'toast ' + (isErr ? 'error' : '') + ' show';
             setTimeout(() => t.classList.remove('show'), 3000);
         }
-
         function updateUI() {
             document.getElementById('authTitle').textContent = { login:'Welcome Back', signup:'Create Your Cafe', forgot:'Reset Password', recovery:'Set New Password' }[mode];
             document.getElementById('tabsRow').style.display = (mode==='forgot'||mode==='recovery') ? 'none' : 'flex';
@@ -117,12 +95,10 @@
             document.getElementById('forgotLink').style.display = mode==='login' ? 'inline' : 'none';
             document.getElementById('submitBtn').textContent = { login:'Login', signup:'Sign Up', forgot:'Send Reset Link', recovery:'Update Password' }[mode];
         }
-
         document.getElementById('tabLogin').addEventListener('click', ()=>{ mode='login'; updateUI(); });
         document.getElementById('tabSignup').addEventListener('click', ()=>{ mode='signup'; updateUI(); });
         document.getElementById('toggleLink').addEventListener('click', ()=>{ mode = mode==='login'?'signup':'login'; updateUI(); });
         document.getElementById('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); mode='forgot'; updateUI(); });
-
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn'); btn.disabled = true;
@@ -162,7 +138,6 @@
                 }
             } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
         });
-
         if (isRecovery) mode = 'recovery';
         updateUI();
     </script>
