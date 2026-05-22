@@ -53,6 +53,9 @@
         .orders-toolbar { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; }
         .orders-toolbar input { flex:1; min-width:150px; }
         .menu-search { width: 100%; margin-bottom: 0.8rem; }
+        .realtime-indicator { font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:12px; margin-left:0.5rem; }
+        .connected { background:#27ae60; color:#fff; }
+        .disconnected { background:#c0392b; color:#fff; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; }
@@ -62,7 +65,7 @@
 <body class="light-mode">
     <div class="toast-container" id="toastContainer"></div>
     <header>
-        <div class="logo">☕ Cafe Boss</div>
+        <div class="logo">☕ Cafe Boss <span id="realtimeStatus" class="realtime-indicator disconnected">⚫ Offline</span></div>
         <div class="header-actions">
             <select id="langSelect"><option value="en">EN</option><option value="hi">हि</option></select>
             <button id="themeToggle">🌙</button>
@@ -92,13 +95,13 @@
         <div class="card" id="ordersCard">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
                 <h3 style="margin:0;">📋 Orders</h3>
-                <button id="refreshOrdersBtn" class="btn-sm" title="Refresh orders" style="margin-left:auto;">↻ Refresh</button>
+                <button id="refreshOrdersBtn" class="btn-sm" title="Refresh orders">↻ Refresh</button>
             </div>
             <div class="card-content">
                 <div class="orders-toolbar">
                     <input type="text" id="orderSearch" placeholder="🔍 Search table or customer...">
                     <button id="exportCsvBtn" class="btn-sm" title="Export to CSV">📥 CSV</button>
-                    <button id="printAllNewBtn" class="btn-sm" title="Print all new orders">🖨️ Print New</button>
+                    <button id="printTabBtn" class="btn-sm" title="Print all visible orders" style="display:none;">🖨️ Print All</button>
                 </div>
                 <div class="order-tabs">
                     <button class="active" data-tab="new">New</button>
@@ -189,6 +192,7 @@
         let audioCtx, audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
+        const realtimeStatus = document.getElementById('realtimeStatus');
 
         unmuteBtn.addEventListener('click', () => {
             try {
@@ -199,7 +203,21 @@
             } catch(e) { toast('Audio not supported', true); }
         });
 
-        function beep() { if (!audioReady) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=800; g.gain.value=0.3; o.start(); o.stop(audioCtx.currentTime+0.15); }
+        function beep() {
+            if (!audioReady) {
+                // Try to create audio context on demand (may need user gesture)
+                try {
+                    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+                    audioReady = true;
+                    unmuteBtn.style.display = 'none';
+                } catch(e) { return; }
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = 800; g.gain.value = 0.3;
+            o.start(); o.stop(audioCtx.currentTime + 0.15);
+        }
 
         // Notification setup
         if ('Notification' in window) {
@@ -248,6 +266,7 @@
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
 
         let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null, analyticsMode = 'week';
+        let realtimeChannel = null;
 
         async function getOrCreateCafe(uid) {
             const { data } = await _supabase.from('cafes').select('*').eq('owner_id', uid).maybeSingle();
@@ -283,7 +302,7 @@
             }
         }
 
-        // Refresh orders (no collapse)
+        // Refresh orders manually (still available)
         document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => {
             e.stopPropagation();
             loadOrders();
@@ -292,6 +311,20 @@
 
         // Order search
         document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
+
+        // Update print button visibility based on active tab
+        function updatePrintButton() {
+            const printTabBtn = document.getElementById('printTabBtn');
+            if (activeOrderTab === 'completed') {
+                printTabBtn.style.display = 'inline-flex';
+                printTabBtn.textContent = '🖨️ Print Completed';
+            } else if (activeOrderTab === 'new') {
+                printTabBtn.style.display = 'inline-flex';
+                printTabBtn.textContent = '🖨️ Print New';
+            } else {
+                printTabBtn.style.display = 'none';
+            }
+        }
 
         // Save settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
@@ -356,7 +389,7 @@
             document.querySelectorAll('[data-action="accept"]').forEach(b => b.addEventListener('click', async ()=>{ await _supabase.from('orders').update({status:'accepted'}).eq('id',b.dataset.id); loadOrders(); }));
             document.querySelectorAll('[data-action="deliver"]').forEach(b => b.addEventListener('click', async ()=>{ await _supabase.from('orders').update({status:'delivered'}).eq('id',b.dataset.id); loadOrders(); }));
             document.querySelectorAll('[data-action="pdf"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) downloadPDF(o); }));
-            document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) printOrder(o); }));
+            document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) printSingleOrder(o); }));
         }
 
         // Export CSV
@@ -380,12 +413,12 @@
         }
         document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
 
-        // Print all new orders
-        document.getElementById('printAllNewBtn').addEventListener('click', () => {
-            const newOrders = allOrders.filter(o => o.status === 'new');
-            if (!newOrders.length) { toast('No new orders to print', true); return; }
-            let html = `<html><body style="font-family:sans-serif; padding:20px;"><h2>All New Orders</h2>`;
-            newOrders.forEach(o => {
+        // Print all visible orders (completed or new based on tab)
+        document.getElementById('printTabBtn').addEventListener('click', () => {
+            const ordersToPrint = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
+            if (!ordersToPrint.length) { toast(`No ${activeOrderTab} orders to print`, true); return; }
+            let html = `<html><body style="font-family:sans-serif; padding:20px;"><h2>${activeOrderTab.charAt(0).toUpperCase()+activeOrderTab.slice(1)} Orders</h2>`;
+            ordersToPrint.forEach(o => {
                 const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
                 const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join(', ') : '';
                 html += `<div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;"><p>Table: ${o.table_number||'N/A'} | ${o.customer_name||'Guest'}</p><p>${itemStr}</p><p>Total: ₹${parseFloat(o.total).toFixed(2)}</p></div>`;
@@ -407,7 +440,7 @@
             doc.save(`bill_${order.id.slice(0,8)}.pdf`);
         }
 
-        function printOrder(order) {
+        function printSingleOrder(order) {
             const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
             let html = `<html><body style="font-family:sans-serif;padding:20px;"><h2>Cafe Boss - Bill</h2><p>Table: ${order.table_number||'N/A'} | Customer: ${order.customer_name||'Guest'}</p><p>Date: ${new Date(order.created_at).toLocaleString()}</p><hr>`;
             if (Array.isArray(items)) items.forEach(i => { html += `<p>${i.name} x${i.qty||1} - ₹${(i.price*(i.qty||1)).toFixed(2)}</p>`; });
@@ -415,8 +448,12 @@
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
         }
 
+        // ----- REALTIME (orders appear instantly) -----
         function setupRealtime() {
-            const channel = _supabase.channel('orders-realtime')
+            if (realtimeChannel) {
+                _supabase.removeChannel(realtimeChannel);
+            }
+            realtimeChannel = _supabase.channel('orders-realtime')
                 .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
                     allOrders.unshift(payload.new);
                     renderOrders();
@@ -426,8 +463,14 @@
                     else toast('New order received!', false);
                 })
                 .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') console.log('Realtime orders connected');
-                    else if (status === 'CHANNEL_ERROR') toast('Realtime connection error', true);
+                    if (status === 'SUBSCRIBED') {
+                        realtimeStatus.textContent = '🟢 Live';
+                        realtimeStatus.className = 'realtime-indicator connected';
+                    } else if (status === 'CHANNEL_ERROR') {
+                        realtimeStatus.textContent = '🔴 Offline';
+                        realtimeStatus.className = 'realtime-indicator disconnected';
+                        toast('Realtime connection error – refresh if orders don\'t appear', true);
+                    }
                 });
         }
 
@@ -506,7 +549,6 @@
             document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
         }
 
-        // Menu item search event
         document.getElementById('menuSearch').addEventListener('input', () => renderItems());
 
         function editItem(id) {
@@ -643,7 +685,15 @@
             document.getElementById('addItemCard').classList.remove('collapsed');
         }
 
-        document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){ document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active')); this.classList.add('active'); activeOrderTab = this.dataset.tab; renderOrders(); }));
+        // Tab switching
+        document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){
+            document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active'));
+            this.classList.add('active');
+            activeOrderTab = this.dataset.tab;
+            updatePrintButton();
+            renderOrders();
+        }));
+        updatePrintButton();
 
         init();
     </script>
