@@ -74,6 +74,7 @@
             <button id="notifBtn" style="display:none;">🔔</button>
             <button id="testAlertBtn" title="Test sound & notification">📢</button>
             <button id="livePreviewBtn">👁️</button>
+            <button id="installAppBtn" style="display:none; background:var(--primary); color:#fff; font-weight:600;">📲 Install App</button>
             <button id="logoutBtn" style="color:#f87171;">↪</button>
         </div>
     </header>
@@ -165,6 +166,29 @@
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW registration failed', err));
         }
+
+        // ====== PWA INSTALL PROMPT ======
+        let deferredPrompt;
+        const installBtn = document.getElementById('installAppBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'inline-flex';
+        });
+
+        installBtn.addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        toast('App installed!');
+                    }
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                });
+            }
+        });
 
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
