@@ -31,7 +31,7 @@
         .stat-card { background:var(--card); border-radius:14px; padding:1.2rem; text-align:center; }
         .stat-num { font-size:2rem; font-weight:700; color:var(--primary); }
         .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.2rem; }
-        .card h3 { cursor:pointer; display:flex; align-items:center; gap:0.5rem; font-size:1rem; }
+        .card h3 { cursor:pointer; display:flex; align-items:center; gap:0.5rem; font-size:1rem; user-select:none; }
         .collapsed .card-content { display:none; }
         .order-tabs { display:flex; margin-bottom:0.8rem; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
         .order-tabs button { flex:1; padding:0.5rem; border:none; background:transparent; color:var(--muted); font-weight:600; font-size:0.8rem; }
@@ -50,7 +50,8 @@
         .btn-sm { padding:0.35rem 0.8rem; font-size:0.75rem; }
         .flex-row { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
         .header-actions { display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; }
-        .refresh-btn { background: transparent; border: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; }
+        .orders-toolbar { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; }
+        .orders-toolbar input { flex:1; min-width:150px; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; }
@@ -66,6 +67,7 @@
             <button id="themeToggle">🌙</button>
             <button id="unmuteBtn">🔊</button>
             <button id="notifBtn" style="display:none;">🔔</button>
+            <button id="testAlertBtn" title="Test sound & notification">📢</button>
             <button id="livePreviewBtn">👁️</button>
             <button id="logoutBtn" style="color:#f87171;">↪</button>
         </div>
@@ -76,10 +78,27 @@
             <div class="stat-card"><div class="stat-num" id="statItems">0</div><div>Items</div></div>
             <div class="stat-card"><div class="stat-num" id="statOrders">0</div><div>Orders</div></div>
         </div>
-        <div class="card collapsed" id="analyticsCard"><h3>📊 Analytics <span>▼</span></h3><div class="card-content"><canvas id="ordersChart" height="200"></canvas></div></div>
-        <div class="card" id="ordersCard">
-            <h3>📋 Orders <button id="refreshOrdersBtn" class="refresh-btn" title="Refresh orders">↻</button></h3>
+        <div class="card collapsed" id="analyticsCard">
+            <h3>📊 Analytics <span>▼</span></h3>
             <div class="card-content">
+                <div class="flex-row" style="margin-bottom:0.5rem;">
+                    <button id="weekBtn" class="btn-sm active" style="background:var(--primary);">Week</button>
+                    <button id="monthBtn" class="btn-sm">Month</button>
+                </div>
+                <canvas id="ordersChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="card" id="ordersCard">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                <h3 style="margin:0;">📋 Orders</h3>
+                <button id="refreshOrdersBtn" class="btn-sm" title="Refresh orders" style="margin-left:auto;">↻ Refresh</button>
+            </div>
+            <div class="card-content">
+                <div class="orders-toolbar">
+                    <input type="text" id="orderSearch" placeholder="🔍 Search table or customer...">
+                    <button id="exportCsvBtn" class="btn-sm" title="Export to CSV">📥 CSV</button>
+                    <button id="printAllNewBtn" class="btn-sm" title="Print all new orders">🖨️ Print New</button>
+                </div>
                 <div class="order-tabs">
                     <button class="active" data-tab="new">New</button>
                     <button data-tab="accepted">Accepted</button>
@@ -139,6 +158,7 @@
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const jsPDF = window.jspdf?.jsPDF || window.jspdf;
 
+        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast ' + (err ? 'error' : '') + ' show';
@@ -147,6 +167,7 @@
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
+        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -160,6 +181,7 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
+        // Audio
         let audioCtx, audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
@@ -175,6 +197,7 @@
 
         function beep() { if (!audioReady) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=800; g.gain.value=0.3; o.start(); o.stop(audioCtx.currentTime+0.15); }
 
+        // Notification setup
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
@@ -205,11 +228,22 @@
             }
         }
 
+        // Test alert button
+        document.getElementById('testAlertBtn').addEventListener('click', () => {
+            beep();
+            if (Notification.permission === 'granted') {
+                new Notification('Test Alert', { body:'Sound and notifications are working!', icon:'☕' });
+            } else {
+                toast('Notification permission not granted. Enable alerts first.', true);
+            }
+            toast('Test beep played!');
+        });
+
         document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='index.html'));
         document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
 
-        let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null;
+        let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null, analyticsMode = 'week';
 
         async function getOrCreateCafe(uid) {
             const { data } = await _supabase.from('cafes').select('*').eq('owner_id', uid).maybeSingle();
@@ -245,8 +279,17 @@
             }
         }
 
-        document.getElementById('refreshOrdersBtn').addEventListener('click', () => { loadOrders(); toast('Orders refreshed'); });
+        // Refresh orders button (outside h3, so no collapse)
+        document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            loadOrders();
+            toast('Orders refreshed');
+        });
 
+        // Order search
+        document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
+
+        // Save settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { cafe_name: document.getElementById('setCafeName').value.trim(), whatsapp: document.getElementById('setWhatsapp').value.trim(), description: document.getElementById('setDesc').value.trim(), primary_color: document.getElementById('setPrimary').value, accent_color: document.getElementById('setAccent').value };
@@ -255,6 +298,7 @@
             else { Object.assign(cafeData, u); toast('Settings saved'); }
         });
 
+        // QR
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
@@ -264,6 +308,7 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
+        // ========== DATA ==========
         async function loadStats() {
             if (!cafeData.id || cafeData._temp) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -284,9 +329,16 @@
         }
 
         function renderOrders() {
-            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
+            const searchTerm = document.getElementById('orderSearch')?.value.toLowerCase() || '';
+            let filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
+            if (searchTerm) {
+                filtered = filtered.filter(o => 
+                    (o.table_number||'').toLowerCase().includes(searchTerm) || 
+                    (o.customer_name||'').toLowerCase().includes(searchTerm)
+                );
+            }
             const list = document.getElementById('ordersList');
-            if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders yet.</p>'; return; }
+            if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders found.</p>'; return; }
             list.innerHTML = filtered.map(o => {
                 const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
                 const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join(', ') : '';
@@ -302,6 +354,41 @@
             document.querySelectorAll('[data-action="pdf"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) downloadPDF(o); }));
             document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => { const o = allOrders.find(o=>o.id===b.dataset.id); if(o) printOrder(o); }));
         }
+
+        // Export CSV
+        function exportCSV() {
+            const ordersToExport = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
+            if (!ordersToExport.length) { toast('No orders to export', true); return; }
+            let csv = 'Date,Time,Table,Customer,Items,Total,Status\n';
+            ordersToExport.forEach(o => {
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+                const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join('; ') : '';
+                const date = new Date(o.created_at).toLocaleDateString('en-IN');
+                const time = new Date(o.created_at).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+                csv += `"${date}","${time}","${o.table_number||''}","${o.customer_name||''}","${itemStr}","${o.total}","${o.status}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+            URL.revokeObjectURL(url);
+            toast('CSV exported!');
+        }
+        document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+
+        // Print all new orders
+        document.getElementById('printAllNewBtn').addEventListener('click', () => {
+            const newOrders = allOrders.filter(o => o.status === 'new');
+            if (!newOrders.length) { toast('No new orders to print', true); return; }
+            let html = `<html><body style="font-family:sans-serif; padding:20px;"><h2>All New Orders</h2>`;
+            newOrders.forEach(o => {
+                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+                const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join(', ') : '';
+                html += `<div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;"><p>Table: ${o.table_number||'N/A'} | ${o.customer_name||'Guest'}</p><p>${itemStr}</p><p>Total: ₹${parseFloat(o.total).toFixed(2)}</p></div>`;
+            });
+            html += `</body></html>`;
+            const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
+        });
 
         function downloadPDF(order) {
             if (!jsPDF) return toast('PDF library not loaded', true);
@@ -340,17 +427,34 @@
                 });
         }
 
+        // Analytics with week/month toggle
         async function loadAnalytics() {
             if (!cafeData.id) return;
-            const sevenDaysAgo = new Date(Date.now()-7*86400000).toISOString();
-            const { data } = await _supabase.from('orders').select('created_at').eq('cafe_id', cafeData.id).gte('created_at', sevenDaysAgo).order('created_at');
-            const days = {}; for (let i=6; i>=0; i--) { const d = new Date(Date.now()-i*86400000); days[d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})] = 0; }
-            (data||[]).forEach(o => { const k = new Date(o.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); if (days[k]!==undefined) days[k]++; });
+            const days = analyticsMode === 'week' ? 7 : 30;
+            const startDate = new Date(Date.now()-days*86400000).toISOString();
+            const { data } = await _supabase.from('orders').select('created_at').eq('cafe_id', cafeData.id).gte('created_at', startDate).order('created_at');
+            const labels = {};
+            for (let i=days-1; i>=0; i--) { const d = new Date(Date.now()-i*86400000); labels[d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})] = 0; }
+            (data||[]).forEach(o => { const k = new Date(o.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); if (labels[k]!==undefined) labels[k]++; });
             const ctx = document.getElementById('ordersChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(days), datasets:[{ label:'Orders', data:Object.values(days), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
+            chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(labels), datasets:[{ label:'Orders', data:Object.values(labels), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
         }
 
+        document.getElementById('weekBtn').addEventListener('click', () => {
+            analyticsMode = 'week';
+            document.getElementById('weekBtn').style.background = 'var(--primary)';
+            document.getElementById('monthBtn').style.background = '';
+            loadAnalytics();
+        });
+        document.getElementById('monthBtn').addEventListener('click', () => {
+            analyticsMode = 'month';
+            document.getElementById('monthBtn').style.background = 'var(--primary)';
+            document.getElementById('weekBtn').style.background = '';
+            loadAnalytics();
+        });
+
+        // ========== ITEMS (unchanged, fully functional) ==========
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
