@@ -10,12 +10,12 @@
   "theme_color": "#FF6B35",
   "icons": [
     {
-      "src": "/CafeBoss/icon-192.png",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAhQAGQkAMvgAAAAASUVORK5CYII=",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/CafeBoss/icon-512.png",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAhQAGQkAMvgAAAAASUVORK5CYII=",
       "sizes": "512x512",
       "type": "image/png"
     }
