@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cafeboss-v2';
+const CACHE_NAME = 'cafeboss-v4';
 const ASSETS_TO_CACHE = [
   '/CafeBoss/',
   '/CafeBoss/index.html',
@@ -7,6 +7,8 @@ const ASSETS_TO_CACHE = [
   '/CafeBoss/menu.html',
   '/CafeBoss/admin.html',
   '/CafeBoss/manifest.json',
+  '/CafeBoss/icon-192.png',
+  '/CafeBoss/icon-512.png',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
