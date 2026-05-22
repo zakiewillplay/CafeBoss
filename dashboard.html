@@ -160,10 +160,9 @@
         </div>
     </div>
     <script>
+        // Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/CafeBoss/sw.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW registration failed', err));
+            navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
         }
 
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
