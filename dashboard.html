@@ -52,6 +52,7 @@
         .header-actions { display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; }
         .orders-toolbar { display:flex; gap:0.5rem; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; }
         .orders-toolbar input { flex:1; min-width:150px; }
+        .menu-search { width: 100%; margin-bottom: 0.8rem; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; }
@@ -148,7 +149,10 @@
         </div>
         <div class="card" id="menuItemsCard">
             <h3>📋 Menu Items <span>▼</span></h3>
-            <div class="card-content" id="menuItemsList"></div>
+            <div class="card-content">
+                <input type="text" id="menuSearch" class="menu-search" placeholder="🔍 Search items by name, category, or description...">
+                <div id="menuItemsList"></div>
+            </div>
         </div>
     </div>
     <script>
@@ -181,7 +185,7 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        // Audio
+        // Audio + Notifications
         let audioCtx, audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
@@ -279,7 +283,7 @@
             }
         }
 
-        // Refresh orders button (outside h3, so no collapse)
+        // Refresh orders (no collapse)
         document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => {
             e.stopPropagation();
             loadOrders();
@@ -427,7 +431,7 @@
                 });
         }
 
-        // Analytics with week/month toggle
+        // Analytics
         async function loadAnalytics() {
             if (!cafeData.id) return;
             const days = analyticsMode === 'week' ? 7 : 30;
@@ -454,7 +458,7 @@
             loadAnalytics();
         });
 
-        // ========== ITEMS (unchanged, fully functional) ==========
+        // ========== ITEMS WITH SEARCH ==========
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -472,9 +476,16 @@
         }
 
         function renderItems() {
+            const searchTerm = document.getElementById('menuSearch')?.value.toLowerCase() || '';
+            const filtered = allItems.filter(item =>
+                !searchTerm ||
+                item.name.toLowerCase().includes(searchTerm) ||
+                item.category.toLowerCase().includes(searchTerm) ||
+                (item.description||'').toLowerCase().includes(searchTerm)
+            );
             const list = document.getElementById('menuItemsList');
-            if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted);">No items yet.</p>'; return; }
-            list.innerHTML = allItems.map(item => {
+            if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted);">No items match your search.</p>'; return; }
+            list.innerHTML = filtered.map(item => {
                 let badges = '';
                 if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
                 if (item.featured) badges += `<span class="badge badge-featured">🔥</span>`;
@@ -494,6 +505,9 @@
             document.querySelectorAll('.copy-item-btn').forEach(b => b.addEventListener('click', ()=> duplicateItem(b.dataset.id)));
             document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
         }
+
+        // Menu item search event
+        document.getElementById('menuSearch').addEventListener('input', () => renderItems());
 
         function editItem(id) {
             const item = allItems.find(i=>i.id===id); if(!item) return;
