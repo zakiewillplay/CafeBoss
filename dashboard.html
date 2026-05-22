@@ -74,7 +74,6 @@
             <button id="notifBtn" style="display:none;">🔔</button>
             <button id="testAlertBtn" title="Test sound & notification">📢</button>
             <button id="livePreviewBtn">👁️</button>
-            <button id="installAppBtn" style="background:var(--primary); color:#fff; font-weight:600; display:inline-flex;">📲 Add to Phone</button>
             <button id="logoutBtn" style="color:#f87171;">↪</button>
         </div>
     </header>
@@ -166,30 +165,6 @@
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW registration failed', err));
         }
-
-        // ====== RELIABLE INSTALL LOGIC ======
-        const installBtn = document.getElementById('installAppBtn');
-        let deferredPrompt = null;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.textContent = '📲 Install App';
-        });
-
-        installBtn.addEventListener('click', () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        toast('App installed successfully!');
-                    }
-                    deferredPrompt = null;
-                });
-            } else {
-                alert('To install Cafe Boss:\n\n1. Tap the three‑dot menu (⋮) in Chrome.\n2. Select “Install app” or “Add to Home screen”.\n\nIf you only see “Create shortcut”, visit the dashboard a few more times – the install option will appear soon.');
-            }
-        });
 
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
