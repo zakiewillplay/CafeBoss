@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Cafe Boss - Free digital QR menus.">
     <meta name="theme-color" content="#FF6B35">
-    <link rel="manifest" href="/CafeBoss/manifest.json">
-    <link rel="apple-touch-icon" href="/CafeBoss/icon-192.png">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <title>Cafe Boss – Free Digital QR Menus</title>
     <style>
         :root { --primary: #FF6B35; --bg: #0f0f13; --text: #f0f0f0; --muted: #a0a0b0; --card-bg: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.08); }
@@ -50,10 +52,10 @@
     </div>
     
     <script>
-        // PWA Service Worker Registration
+        // PWA Service Worker Registration - Updated to relative path
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/CafeBoss/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then(registration => {
                         console.log('Service Worker registered with scope:', registration.scope);
                     })
