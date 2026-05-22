@@ -17,39 +17,44 @@
             --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { width: 100%; overflow-x: hidden; }
         body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; }
         .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
         .toast { background:#27ae60; color:#fff; padding:0.9rem 1.5rem; border-radius:12px; transform:translateX(120%); transition:0.3s; }
         .toast.show { transform:translateX(0); } .toast.error { background:#c0392b; }
-        header { background:var(--card); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
-        .logo { font-weight:700; font-size:1.3rem; color:var(--primary); }
-        button, select, input, textarea { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.2s; }
+        header { background:var(--card); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; }
+        .logo { font-weight:700; font-size:1.3rem; color:var(--primary); white-space: nowrap; }
+        button, select, input, textarea { padding:0.5rem 0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.2s; }
         button:hover { border-color:var(--primary); }
-        .container { max-width:1200px; margin:2rem auto; padding:0 1.5rem; display:grid; gap:1.8rem; }
-        .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; }
-        .stat-card { background:var(--card); border-radius:16px; padding:1.5rem; text-align:center; }
-        .stat-num { font-size:2.2rem; font-weight:700; color:var(--primary); }
-        .card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:1.5rem; }
-        .card h3 { cursor:pointer; display:flex; align-items:center; gap:0.5rem; }
+        .container { width: 100%; max-width:1200px; margin:1.5rem auto; padding:0 1rem; display:grid; gap:1.5rem; }
+        .stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:1rem; }
+        .stat-card { background:var(--card); border-radius:14px; padding:1.2rem; text-align:center; }
+        .stat-num { font-size:2rem; font-weight:700; color:var(--primary); }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.2rem; }
+        .card h3 { cursor:pointer; display:flex; align-items:center; gap:0.5rem; font-size:1rem; }
         .collapsed .card-content { display:none; }
-        .order-tabs { display:flex; margin-bottom:1rem; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
-        .order-tabs button { flex:1; padding:0.7rem; border:none; background:transparent; color:var(--muted); font-weight:600; }
+        .order-tabs { display:flex; margin-bottom:0.8rem; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
+        .order-tabs button { flex:1; padding:0.5rem; border:none; background:transparent; color:var(--muted); font-weight:600; font-size:0.8rem; }
         .order-tabs button.active { background:var(--primary); color:#fff; }
-        .order-card { background:rgba(0,0,0,0.2); border-radius:12px; padding:1rem; margin-bottom:0.8rem; }
-        .item-row { display:flex; align-items:center; gap:1rem; background:rgba(0,0,0,0.2); padding:0.8rem; border-radius:8px; margin-bottom:0.5rem; flex-wrap:wrap; }
-        .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; }
+        .order-card { background:rgba(0,0,0,0.2); border-radius:10px; padding:0.8rem; margin-bottom:0.6rem; }
+        .item-row { display:flex; align-items:center; gap:0.8rem; background:rgba(0,0,0,0.2); padding:0.6rem; border-radius:8px; margin-bottom:0.4rem; flex-wrap:wrap; }
+        .badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:0.65rem; }
         .badge-discount { background:#c0392b; color:#fff; } .badge-featured { background:#f39c12; color:#000; }
-        .toggle-switch { position:relative; width:44px; height:24px; }
+        .toggle-switch { position:relative; width:40px; height:22px; }
         .toggle-switch input { opacity:0; width:0; height:0; }
-        .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:24px; transition:0.3s; }
-        .toggle-slider:before { content:""; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+        .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:22px; transition:0.3s; }
+        .toggle-slider:before { content:""; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
         input:checked+.toggle-slider { background:#27ae60; }
-        input:checked+.toggle-slider:before { transform:translateX(20px); }
+        input:checked+.toggle-slider:before { transform:translateX(18px); }
         .qr-display img { border-radius:12px; background:#fff; padding:0.5rem; }
-        .btn-sm { padding:0.4rem 1rem; font-size:0.8rem; }
-        .flex-row { display:flex; gap:0.5rem; align-items:center; }
-        .header-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
-        .select-cat { flex:1; }
+        .btn-sm { padding:0.35rem 0.8rem; font-size:0.75rem; }
+        .flex-row { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+        .header-actions { display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; }
+        .refresh-btn { background: transparent; border: 1px solid var(--border); cursor: pointer; font-size: 0.9rem; }
+        @media (max-width: 500px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .container { padding: 0 0.8rem; }
+        }
     </style>
 </head>
 <body class="light-mode">
@@ -57,12 +62,12 @@
     <header>
         <div class="logo">☕ Cafe Boss</div>
         <div class="header-actions">
-            <select id="langSelect"><option value="en">English</option><option value="hi">हिन्दी</option></select>
-            <button id="themeToggle">🌙 Dark</button>
-            <button id="unmuteBtn">🔊 Unmute</button>
-            <button id="notifBtn" style="display:none;">🔔 Enable Alerts</button>
-            <button id="livePreviewBtn">👁️ Live Menu</button>
-            <button id="logoutBtn" style="color:#f87171;">Logout</button>
+            <select id="langSelect"><option value="en">EN</option><option value="hi">हि</option></select>
+            <button id="themeToggle">🌙</button>
+            <button id="unmuteBtn">🔊</button>
+            <button id="notifBtn" style="display:none;">🔔</button>
+            <button id="livePreviewBtn">👁️</button>
+            <button id="logoutBtn" style="color:#f87171;">↪</button>
         </div>
     </header>
     <div class="container">
@@ -71,21 +76,30 @@
             <div class="stat-card"><div class="stat-num" id="statItems">0</div><div>Items</div></div>
             <div class="stat-card"><div class="stat-num" id="statOrders">0</div><div>Orders</div></div>
         </div>
-        <div class="card" id="analyticsCard"><h3>📊 Analytics <span>▼</span></h3><div class="card-content"><canvas id="ordersChart" height="200"></canvas></div></div>
-        <div class="card" id="ordersCard"><h3>📋 Orders</h3><div class="card-content"><div class="order-tabs"><button class="active" data-tab="new">New</button><button data-tab="accepted">Accepted</button><button data-tab="completed">Completed</button></div><div id="ordersList"></div></div></div>
-        <div class="card collapsed" id="settingsCard"><h3>⚙️ Settings</h3><div class="card-content"><input id="setCafeName" placeholder="Cafe name"><input id="setWhatsapp" placeholder="WhatsApp"><textarea id="setDesc"></textarea><input type="color" id="setPrimary" value="#FF6B35"><input type="color" id="setAccent" value="#2F3E46"><button id="saveSettingsBtn">Save</button></div></div>
-        <div class="card collapsed" id="qrCard"><h3>📱 QR Code</h3><div class="card-content"><button id="generateQrBtn">Generate QR</button><div id="qrDisplay" class="qr-display"></div><p id="qrUrl"></p><button id="copyQrLink" style="display:none;">📋 Copy Link</button></div></div>
-        <!-- RAPID ADD ITEM CARD with category dropdown -->
+        <div class="card collapsed" id="analyticsCard"><h3>📊 Analytics <span>▼</span></h3><div class="card-content"><canvas id="ordersChart" height="200"></canvas></div></div>
+        <div class="card" id="ordersCard">
+            <h3>📋 Orders <button id="refreshOrdersBtn" class="refresh-btn" title="Refresh orders">↻</button></h3>
+            <div class="card-content">
+                <div class="order-tabs">
+                    <button class="active" data-tab="new">New</button>
+                    <button data-tab="accepted">Accepted</button>
+                    <button data-tab="completed">Completed</button>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+        </div>
+        <div class="card collapsed" id="settingsCard"><h3>⚙️ Settings</h3><div class="card-content"><input id="setCafeName" placeholder="Cafe name"><input id="setWhatsapp" placeholder="WhatsApp"><textarea id="setDesc" rows="2"></textarea><div class="flex-row"><input type="color" id="setPrimary" value="#FF6B35"><input type="color" id="setAccent" value="#2F3E46"></div><button id="saveSettingsBtn">Save</button></div></div>
+        <div class="card collapsed" id="qrCard"><h3>📱 QR Code</h3><div class="card-content"><button id="generateQrBtn">Generate QR</button><div id="qrDisplay" class="qr-display"></div><p id="qrUrl" style="word-break:break-all; font-size:0.8rem;"></p><button id="copyQrLink" style="display:none;">📋 Copy Link</button></div></div>
         <div class="card" id="addItemCard">
-            <h3>➕ Add Item <span class="collapse-icon">▼</span></h3>
+            <h3>➕ Add Item <span>▼</span></h3>
             <div class="card-content">
                 <input type="hidden" id="editItemId">
                 <div class="flex-row" style="margin-bottom:0.5rem;">
                     <input id="itemName" placeholder="Item name *" style="flex:2;">
-                    <input type="number" id="itemPrice" step="0.01" placeholder="Price ₹" style="width:120px;">
+                    <input type="number" id="itemPrice" step="0.01" placeholder="Price ₹" style="width:100px;">
                 </div>
                 <div class="flex-row" style="margin-bottom:0.5rem;">
-                    <select id="itemCategorySelect" class="select-cat">
+                    <select id="itemCategorySelect" class="select-cat" style="flex:1;">
                         <option value="Uncategorized">Uncategorized</option>
                         <option value="__new__">+ Add new…</option>
                     </select>
@@ -94,8 +108,8 @@
                 <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:0.5rem;">
                 <textarea id="itemDesc" placeholder="Description (optional)" rows="2" style="margin-bottom:0.5rem;"></textarea>
                 <div class="flex-row" style="margin-bottom:0.5rem;">
-                    <button id="aiDescBtn" class="btn-sm">✨ AI Desc</button>
-                    <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                    <button id="aiDescBtn" class="btn-sm">✨ AI</button>
+                    <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer; font-size:0.85rem;">
                         <input type="checkbox" id="itemFeatured"> 🔥 Chef's Special
                     </label>
                 </div>
@@ -106,7 +120,7 @@
                         <button class="remove-var btn-sm">✕</button>
                     </div>
                 </div>
-                <button id="addVariantBtn" class="btn-sm">+ Add Variant</button>
+                <button id="addVariantBtn" class="btn-sm">+ Variant</button>
                 <div class="flex-row" style="margin-top:0.8rem; gap:0.5rem;">
                     <button id="submitItemBtn" style="flex:1;">Save Item</button>
                     <button id="saveAndNextBtn" style="flex:1; background:var(--primary);">Save & Add Next</button>
@@ -114,7 +128,7 @@
             </div>
         </div>
         <div class="card" id="menuItemsCard">
-            <h3>📋 Menu Items <span class="collapse-icon">▼</span></h3>
+            <h3>📋 Menu Items <span>▼</span></h3>
             <div class="card-content" id="menuItemsList"></div>
         </div>
     </div>
@@ -125,7 +139,6 @@
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const jsPDF = window.jspdf?.jsPDF || window.jspdf;
 
-        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast ' + (err ? 'error' : '') + ' show';
@@ -134,21 +147,19 @@
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
-        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.body.classList.remove('light-mode');
-                document.getElementById('themeToggle').textContent = '☀️ Light';
+                document.getElementById('themeToggle').textContent = '☀️';
             } else {
                 document.body.classList.add('light-mode');
-                document.getElementById('themeToggle').textContent = '🌙 Dark';
+                document.getElementById('themeToggle').textContent = '🌙';
             }
         }
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        // Audio + Notifications
         let audioCtx, audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
@@ -164,27 +175,33 @@
 
         function beep() { if (!audioReady) return; const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.connect(g); g.connect(audioCtx.destination); o.frequency.value=800; g.gain.value=0.3; o.start(); o.stop(audioCtx.currentTime+0.15); }
 
-        // Notification button logic
         if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-                notifBtn.style.display = 'none';
-            } else {
+            const requestNotif = () => {
+                if (Notification.permission === 'default') {
+                    Notification.requestPermission().then(perm => {
+                        if (perm === 'granted') {
+                            notifBtn.style.display = 'none';
+                            toast('Alerts enabled!');
+                        } else {
+                            notifBtn.style.display = 'inline-flex';
+                            notifBtn.textContent = '🔕';
+                            toast('Notifications denied.', true);
+                        }
+                    });
+                } else if (Notification.permission === 'denied') {
+                    notifBtn.style.display = 'inline-flex';
+                    notifBtn.textContent = '🔕';
+                } else if (Notification.permission === 'granted') {
+                    notifBtn.style.display = 'none';
+                }
+            };
+            notifBtn.addEventListener('click', requestNotif);
+            document.addEventListener('click', function once() {
+                if (Notification.permission === 'default') requestNotif();
+            }, { once: true });
+            if (Notification.permission !== 'granted') {
                 notifBtn.style.display = 'inline-flex';
-                notifBtn.addEventListener('click', () => {
-                    if (Notification.permission === 'denied') {
-                        toast('Notifications blocked. Enable in browser settings.', true);
-                    } else {
-                        Notification.requestPermission().then(perm => {
-                            if (perm === 'granted') {
-                                notifBtn.style.display = 'none';
-                                toast('Alerts enabled!');
-                            } else {
-                                notifBtn.textContent = '🔕 Alerts blocked';
-                                toast('Notifications denied. You will still hear sound.', true);
-                            }
-                        });
-                    }
-                });
+                notifBtn.textContent = Notification.permission === 'denied' ? '🔕' : '🔔';
             }
         }
 
@@ -205,17 +222,31 @@
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) { window.location.href='auth.html'; return; }
             cafeData = await getOrCreateCafe(user.id);
-            if (cafeData._temp) toast('Cafe profile not ready. Re‑login.', true);
+            if (cafeData._temp) toast('Cafe profile not ready. Please reload.', true);
             document.getElementById('setCafeName').value = cafeData.cafe_name||'';
             document.getElementById('setWhatsapp').value = cafeData.whatsapp||'';
             document.getElementById('setDesc').value = cafeData.description||'';
             document.getElementById('setPrimary').value = cafeData.primary_color||'#FF6B35';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
-            loadStats(); loadOrders(); loadItems(); loadAnalytics();
-            if (cafeData.id && !cafeData._temp) setupRealtime();
+            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics()]);
+            if (cafeData.id && !cafeData._temp) {
+                setupRealtime();
+            } else {
+                setTimeout(async () => {
+                    if (!cafeData.id || cafeData._temp) {
+                        cafeData = await getOrCreateCafe(user.id);
+                        if (cafeData.id && !cafeData._temp) {
+                            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics()]);
+                            setupRealtime();
+                            toast('Cafe profile ready!', false);
+                        }
+                    }
+                }, 2000);
+            }
         }
 
-        // Save settings
+        document.getElementById('refreshOrdersBtn').addEventListener('click', () => { loadOrders(); toast('Orders refreshed'); });
+
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { cafe_name: document.getElementById('setCafeName').value.trim(), whatsapp: document.getElementById('setWhatsapp').value.trim(), description: document.getElementById('setDesc').value.trim(), primary_color: document.getElementById('setPrimary').value, accent_color: document.getElementById('setAccent').value };
@@ -224,7 +255,6 @@
             else { Object.assign(cafeData, u); toast('Settings saved'); }
         });
 
-        // QR
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
@@ -234,7 +264,6 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // ========== DATA ==========
         async function loadStats() {
             if (!cafeData.id || cafeData._temp) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -249,7 +278,8 @@
 
         async function loadOrders() {
             if (!cafeData.id) return;
-            const { data } = await _supabase.from('orders').select('*').eq('cafe_id', cafeData.id).order('created_at', { ascending: false });
+            const { data, error } = await _supabase.from('orders').select('*').eq('cafe_id', cafeData.id).order('created_at', { ascending: false });
+            if (error) { toast('Failed to load orders', true); return; }
             allOrders = data||[]; renderOrders();
         }
 
@@ -295,14 +325,19 @@
         }
 
         function setupRealtime() {
-            _supabase.channel('orders-realtime').on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
-                allOrders.unshift(payload.new);
-                renderOrders();
-                beep();
-                loadStats();
-                if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
-                else toast('New order received!', false);
-            }).subscribe();
+            const channel = _supabase.channel('orders-realtime')
+                .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
+                    allOrders.unshift(payload.new);
+                    renderOrders();
+                    beep();
+                    loadStats();
+                    if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
+                    else toast('New order received!', false);
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') console.log('Realtime orders connected');
+                    else if (status === 'CHANNEL_ERROR') toast('Realtime connection error', true);
+                });
         }
 
         async function loadAnalytics() {
@@ -316,7 +351,6 @@
             chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(days), datasets:[{ label:'Orders', data:Object.values(days), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
         }
 
-        // ========== ITEMS WITH CATEGORY DROPDOWN ==========
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -329,14 +363,13 @@
             select.innerHTML = '<option value="Uncategorized">Uncategorized</option>' +
                 cats.map(c => `<option value="${c}">${c}</option>`).join('') +
                 '<option value="__new__">+ Add new…</option>';
-            // Set default to Uncategorized
             select.value = 'Uncategorized';
             document.getElementById('itemCategoryInput').style.display = 'none';
         }
 
         function renderItems() {
             const list = document.getElementById('menuItemsList');
-            if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted);">No items yet. Add your first one above!</p>'; return; }
+            if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted);">No items yet.</p>'; return; }
             list.innerHTML = allItems.map(item => {
                 let badges = '';
                 if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
@@ -345,11 +378,11 @@
                 let variantInfo = '';
                 if (hasVariants) variantInfo = item.description.replace('VAR::','').split('|').map(v => { const [n,p]=v.split('='); return `<span style="font-size:0.7rem;">${n}:₹${p}</span>`; }).join(' ');
                 return `<div class="item-row">
-                    <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem;">${hasVariants?variantInfo:(item.description||'')}</div><div>${item.category} | ₹${item.price}</div></div>
+                    <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.75rem;">${hasVariants?variantInfo:(item.description||'')}</div><div style="font-size:0.8rem;">${item.category} | ₹${item.price}</div></div>
                     <label class="toggle-switch"><input type="checkbox" ${item.available?'checked':''} data-id="${item.id}" class="toggle-avail"><span class="toggle-slider"></span></label>
                     <button class="edit-item-btn btn-sm" data-id="${item.id}">Edit</button>
                     <button class="copy-item-btn btn-sm" data-id="${item.id}" title="Duplicate">📋</button>
-                    <button class="delete-item-btn btn-sm" data-id="${item.id}" style="color:#f87171;">Delete</button>
+                    <button class="delete-item-btn btn-sm" data-id="${item.id}" style="color:#f87171;">Del</button>
                 </div>`;
             }).join('');
             document.querySelectorAll('.toggle-avail').forEach(cb => cb.addEventListener('change', async function(){ await _supabase.from('menu_items').update({available:this.checked}).eq('id',this.dataset.id); loadItems(); }));
@@ -363,7 +396,6 @@
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
-            // category select
             const select = document.getElementById('itemCategorySelect');
             const input = document.getElementById('itemCategoryInput');
             if ([...select.options].some(opt => opt.value === item.category)) {
@@ -431,24 +463,18 @@
             document.getElementById('addItemCard').classList.remove('collapsed');
         }
 
-        // Category select change handler
         document.getElementById('itemCategorySelect').addEventListener('change', function() {
             const input = document.getElementById('itemCategoryInput');
-            if (this.value === '__new__') {
-                input.style.display = 'block';
-                input.value = '';
-                input.focus();
-            } else {
-                input.style.display = 'none';
-            }
+            if (this.value === '__new__') { input.style.display = 'block'; input.value = ''; input.focus(); }
+            else input.style.display = 'none';
         });
 
-        // Add variant, AI, submit logic
         document.getElementById('addVariantBtn').addEventListener('click', ()=>{
             const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.3rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm">✕</button>';
             document.getElementById('variantsContainer').appendChild(row);
             row.querySelector('.remove-var').addEventListener('click', ()=>row.remove());
         });
+
         document.getElementById('aiDescBtn').addEventListener('click', ()=> document.getElementById('itemDesc').value = ['Rich and creamy.','A delightful blend.','Freshly prepared.','Our signature recipe.'][Math.floor(Math.random()*4)]);
 
         async function saveItem(andClear = false) {
@@ -456,12 +482,9 @@
             const editId = document.getElementById('editItemId').value;
             const name = document.getElementById('itemName').value.trim();
             if (!name) return toast('Name required', true);
-            // category
             const select = document.getElementById('itemCategorySelect');
             let category = select.value;
-            if (category === '__new__') {
-                category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
-            }
+            if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
             const price = parseFloat(document.getElementById('itemPrice').value)||0;
             const discount = document.getElementById('itemDiscount').value.trim();
             const featured = document.getElementById('itemFeatured').checked;
@@ -479,12 +502,8 @@
             if (error) { toast('Save failed', true); return; }
             toast(editId ? 'Item updated!' : 'Item added!');
             loadItems(); loadStats();
-            if (andClear) {
-                resetItemForm();
-                document.getElementById('itemName').focus();
-            } else {
-                resetItemForm();
-            }
+            if (andClear) { resetItemForm(); document.getElementById('itemName').focus(); }
+            else resetItemForm();
         }
 
         document.getElementById('submitItemBtn').addEventListener('click', (e) => { e.preventDefault(); saveItem(false); });
@@ -506,7 +525,6 @@
             document.getElementById('addItemCard').classList.remove('collapsed');
         }
 
-        // Order tabs
         document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){ document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active')); this.classList.add('active'); activeOrderTab = this.dataset.tab; renderOrders(); }));
 
         init();
