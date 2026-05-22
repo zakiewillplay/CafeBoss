@@ -71,16 +71,33 @@
         <div class="card" id="ordersCard"><h3>📋 Orders</h3><div class="card-content"><div class="order-tabs"><button class="active" data-tab="new">New</button><button data-tab="accepted">Accepted</button><button data-tab="completed">Completed</button></div><div id="ordersList"></div></div></div>
         <div class="card collapsed" id="settingsCard"><h3>⚙️ Settings</h3><div class="card-content"><input id="setCafeName" placeholder="Cafe name"><input id="setWhatsapp" placeholder="WhatsApp"><textarea id="setDesc"></textarea><input type="color" id="setPrimary" value="#FF6B35"><input type="color" id="setAccent" value="#2F3E46"><button id="saveSettingsBtn">Save</button></div></div>
         <div class="card collapsed" id="qrCard"><h3>📱 QR Code</h3><div class="card-content"><button id="generateQrBtn">Generate QR</button><div id="qrDisplay" class="qr-display"></div><p id="qrUrl"></p><button id="copyQrLink" style="display:none;">📋 Copy Link</button></div></div>
-        <div class="card collapsed" id="smartScanCard"><h3>📸 Smart Scan</h3><div class="card-content"><label class="file-label"><input type="file" id="cameraInput" accept="image/*" capture="environment">📷 Camera</label><label class="file-label"><input type="file" id="galleryInput" accept="image/*">🖼️ Gallery</label><img id="scanPreview" style="display:none; max-width:200px; border-radius:8px;"><button id="scanExtractBtn" style="display:none;">Scan & Extract</button><div id="scanResults"></div><button id="addAllScanBtn" style="display:none;">Add All</button></div></div>
+        <div class="card collapsed" id="smartScanCard"><h3>📸 Smart Scan</h3><div class="card-content">
+            <label class="file-label"><input type="file" id="cameraInput" accept="image/*" capture="environment">📷 Camera</label>
+            <label class="file-label"><input type="file" id="galleryInput" accept="image/*">🖼️ Gallery</label>
+            <img id="scanPreview" style="display:none; max-width:200px; border-radius:8px; margin:0.5rem 0;">
+            <button id="scanExtractBtn" style="display:none;">Scan & Extract</button>
+            <div id="scanResults"></div>
+            <button id="addAllScanBtn" style="display:none;">Add All to Menu</button>
+        </div></div>
         <div class="card collapsed" id="bulkAddCard"><h3>📝 Bulk Add</h3><div class="card-content"><textarea id="bulkTextarea" placeholder="Name,Price,Category"></textarea><button id="bulkAddBtn">Add All</button></div></div>
-        <div class="card collapsed" id="addItemCard"><h3>➕ Add Item</h3><div class="card-content"><input type="hidden" id="editItemId"><input id="itemName" placeholder="Name"><textarea id="itemDesc" placeholder="Description"></textarea><button id="aiDescBtn">✨ AI</button><input type="number" id="itemPrice" step="0.01"><input id="itemCategory" list="categoryList"><datalist id="categoryList"></datalist><input id="itemDiscount" placeholder="Discount"><div id="variantsContainer"><div style="display:flex;gap:0.5rem;"><input class="var-name" placeholder="Size"><input class="var-price" type="number" step="0.01" placeholder="Price"><button class="remove-var">✕</button></div></div><button id="addVariantBtn">+ Variant</button><label><input type="checkbox" id="itemFeatured"> 🔥 Chef's Special</label><button id="submitItemBtn">Add Item</button></div></div>
+        <div class="card collapsed" id="addItemCard"><h3>➕ Add Item</h3><div class="card-content">
+            <input type="hidden" id="editItemId">
+            <input id="itemName" placeholder="Name"><textarea id="itemDesc" placeholder="Description"></textarea><button id="aiDescBtn">✨ AI</button>
+            <input type="number" id="itemPrice" step="0.01"><input id="itemCategory" list="categoryList"><datalist id="categoryList"></datalist>
+            <input id="itemDiscount" placeholder="Discount">
+            <div id="variantsContainer"><div style="display:flex;gap:0.5rem;"><input class="var-name" placeholder="Size"><input class="var-price" type="number" step="0.01" placeholder="Price"><button class="remove-var">✕</button></div></div>
+            <button id="addVariantBtn">+ Variant</button>
+            <label><input type="checkbox" id="itemFeatured"> 🔥 Chef's Special</label>
+            <button id="submitItemBtn">Add Item</button>
+        </div></div>
         <div class="card collapsed" id="menuItemsCard"><h3>📋 Menu Items</h3><div class="card-content" id="menuItemsList"></div></div>
     </div>
     <script>
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss.io/menu.html?id=';
+        // CORRECTED BASE URL – matches your actual GitHub Pages path
+        const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const jsPDF = window.jspdf?.jsPDF || window.jspdf;
 
         function toast(msg, err=false) {
@@ -144,6 +161,7 @@
             if (cafeData.id && !cafeData._temp) setupRealtime();
         }
 
+        // Save settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { cafe_name: document.getElementById('setCafeName').value.trim(), whatsapp: document.getElementById('setWhatsapp').value.trim(), description: document.getElementById('setDesc').value.trim(), primary_color: document.getElementById('setPrimary').value, accent_color: document.getElementById('setAccent').value };
@@ -152,6 +170,7 @@
             else { Object.assign(cafeData, u); toast('Settings saved'); }
         });
 
+        // QR Code
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
@@ -161,8 +180,8 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // Full order/item management (same robust functions as before, using _supabase and toast)
-        // ... (I'll include the essential functions below to keep the file complete)
+        // ... (analytics, orders, items functions are identical to previous complete version, using _supabase)
+        // I'll include the key functions to ensure completeness.
         async function loadStats() {
             if (!cafeData.id || cafeData._temp) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -202,17 +221,17 @@
             if (!jsPDF) return toast('PDF library not loaded', true);
             const doc = new jsPDF();
             const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-            doc.text('Cafe Boss - Bill', 20, 20);
-            doc.text(`Table: ${order.table_number||'N/A'}  Customer: ${order.customer_name||'Guest'}`, 20, 30);
+            doc.setFontSize(16); doc.text('Cafe Boss - Bill', 20, 20);
+            doc.setFontSize(11); doc.text(`Table: ${order.table_number||'N/A'}  Customer: ${order.customer_name||'Guest'}`, 20, 30);
             let y=50;
             if (Array.isArray(items)) items.forEach(i => { doc.text(`${i.name} x${i.qty||1} - ₹${(i.price*(i.qty||1)).toFixed(2)}`, 20, y); y+=8; });
             doc.line(20, y, 190, y); y+=8;
-            doc.text(`Total: ₹${parseFloat(order.total).toFixed(2)}`, 20, y);
+            doc.setFontSize(13); doc.text(`Total: ₹${parseFloat(order.total).toFixed(2)}`, 20, y);
             doc.save(`bill_${order.id.slice(0,8)}.pdf`);
         }
         function printOrder(order) {
             const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-            let html = `<html><body><h2>Cafe Boss - Bill</h2><p>Table: ${order.table_number||'N/A'} | ${order.customer_name||'Guest'}</p><hr>`;
+            let html = `<html><body style="font-family:sans-serif;padding:20px;"><h2>Cafe Boss - Bill</h2><p>Table: ${order.table_number||'N/A'} | Customer: ${order.customer_name||'Guest'}</p><p>Date: ${new Date(order.created_at).toLocaleString()}</p><hr>`;
             if (Array.isArray(items)) items.forEach(i => { html += `<p>${i.name} x${i.qty||1} - ₹${(i.price*(i.qty||1)).toFixed(2)}</p>`; });
             html += `<hr><h3>Total: ₹${parseFloat(order.total).toFixed(2)}</h3></body></html>`;
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
@@ -220,8 +239,6 @@
         function setupRealtime() {
             _supabase.channel('orders-realtime').on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => { allOrders.unshift(payload.new); renderOrders(); beep(); loadStats(); if (Notification.permission==='granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' }); }).subscribe();
         }
-        // ... (rest of analytics, items, bulk, scan functions exactly as before, using _supabase)
-        // I'll add the crucial ones so the file is complete.
         async function loadAnalytics() {
             if (!cafeData.id) return;
             const sevenDaysAgo = new Date(Date.now()-7*86400000).toISOString();
@@ -230,7 +247,7 @@
             (data||[]).forEach(o => { const k = new Date(o.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); if (days[k]!==undefined) days[k]++; });
             const ctx = document.getElementById('ordersChart').getContext('2d');
             if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(days), datasets:[{ label:'Orders', data:Object.values(days), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
+            chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(days), datasets:[{ label:'Orders', data:Object.values(days), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] }, options:{ responsive:true } });
         }
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
@@ -285,8 +302,7 @@
             document.getElementById('submitItemBtn').textContent = 'Update Item';
             document.getElementById('addItemCard').scrollIntoView({behavior:'smooth'});
         }
-        // Add variant, AI, submit item, bulk, scan (identical to previous complete version, using _supabase)
-        // I'll include short versions of the remaining event listeners.
+        // Add variant, AI, submit item, bulk, smart scan
         document.getElementById('addVariantBtn').addEventListener('click', ()=>{
             const row = document.createElement('div'); row.style.display='flex'; row.style.gap='0.5rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var">✕</button>';
             document.getElementById('variantsContainer').appendChild(row);
@@ -302,7 +318,7 @@
             const price = parseFloat(document.getElementById('itemPrice').value)||0;
             const discount = document.getElementById('itemDiscount').value;
             const featured = document.getElementById('itemFeatured').checked;
-            const varRows = document.querySelectorAll('#variantsContainer .variant-row, #variantsContainer > div');
+            const varRows = document.querySelectorAll('#variantsContainer > div');
             let desc = document.getElementById('itemDesc').value;
             let hasVariants = false, varParts = [];
             varRows.forEach(r => {
@@ -320,6 +336,7 @@
             document.getElementById('editItemId').value=''; document.getElementById('itemName').value=''; document.getElementById('itemDesc').value=''; document.getElementById('itemPrice').value='0'; document.getElementById('itemCategory').value='Uncategorized'; document.getElementById('itemDiscount').value=''; document.getElementById('itemFeatured').checked=false; document.getElementById('submitItemBtn').textContent='Add Item';
             document.getElementById('variantsContainer').innerHTML = '<div style="display:flex;gap:0.5rem;"><input class="var-name" placeholder="Size"><input class="var-price" type="number" step="0.01" placeholder="Price"><button class="remove-var">✕</button></div>';
         }
+        // Bulk add
         document.getElementById('bulkAddBtn').addEventListener('click', async ()=>{
             if (!cafeData.id) return toast('Cafe not ready', true);
             const text = document.getElementById('bulkTextarea').value.trim();
@@ -329,49 +346,131 @@
             lines.forEach(line => { const parts=line.split(','); if(parts.length>=2) inserts.push({ name:parts[0].trim(), price:parseFloat(parts[1].trim())||0, category:parts[2]?.trim()||'Uncategorized', cafe_id:cafeData.id }); });
             if (inserts.length) { await _supabase.from('menu_items').insert(inserts); document.getElementById('bulkTextarea').value=''; loadItems(); loadStats(); toast('Added '+inserts.length+' items'); }
         });
-        // Scan functions (same as before)
+
+        // ------------------ ENHANCED SMART SCAN WITH CATEGORY DETECTION ------------------
         let extractedItems = [];
+        let currentCategory = 'Uncategorized';
+
         function handleImageFile(file) {
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = e => { document.getElementById('scanPreview').src = e.target.result; document.getElementById('scanPreview').style.display='block'; document.getElementById('scanExtractBtn').style.display='inline-block'; };
+            reader.onload = e => {
+                document.getElementById('scanPreview').src = e.target.result;
+                document.getElementById('scanPreview').style.display = 'block';
+                document.getElementById('scanExtractBtn').style.display = 'inline-block';
+            };
             reader.readAsDataURL(file);
         }
         document.getElementById('cameraInput').addEventListener('change', e => handleImageFile(e.target.files[0]));
         document.getElementById('galleryInput').addEventListener('change', e => handleImageFile(e.target.files[0]));
-        document.getElementById('scanExtractBtn').addEventListener('click', async ()=>{
+
+        document.getElementById('scanExtractBtn').addEventListener('click', async () => {
             const img = document.getElementById('scanPreview');
             if (!img.src) return;
             document.getElementById('scanExtractBtn').disabled = true;
             document.getElementById('scanExtractBtn').textContent = 'Scanning...';
             try {
                 const { data: { text } } = await Tesseract.recognize(img.src, 'eng+hin');
-                const lines = text.split('\n').filter(l=>l.trim());
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 extractedItems = [];
-                lines.forEach(line => {
-                    const priceMatch = line.match(/(₹?\s*\d+\.?\d*)/);
-                    if (priceMatch) {
-                        const price = parseFloat(priceMatch[1].replace(/[₹\s]/g,''));
-                        const name = line.replace(priceMatch[0],'').replace(/[:\-–]/g,'').trim();
-                        if (name && price>0) extractedItems.push({ name, price, category: 'Uncategorized' });
-                    }
-                });
-                const resultsDiv = document.getElementById('scanResults');
-                if (!extractedItems.length) { resultsDiv.innerHTML = '<p style="color:#f87171;">No items detected.</p>'; }
-                else {
-                    resultsDiv.innerHTML = '<p style="color:#4ade80;">Found '+extractedItems.length+' items:</p>' + extractedItems.map((item,i) => `<div><input value="${item.name}" data-idx="${i}"> ₹<input type="number" value="${item.price}" data-idx="${i}" step="0.01"></div>`).join('');
-                    document.getElementById('addAllScanBtn').style.display = 'inline-block';
+                currentCategory = 'Uncategorized';
+
+                // Helper: check if a line looks like a category heading (no price, fewer than 4 words, maybe ends with colon)
+                function isCategoryLine(line) {
+                    // Remove any trailing colon
+                    const clean = line.replace(/:\s*$/, '');
+                    // Check if there's no price-like pattern
+                    const hasPrice = /₹?\s*\d+(?:,\d{3})*(?:\.\d+)?/.test(line);
+                    if (hasPrice) return false;
+                    // If line is short (1-3 words) and doesn't contain common item indicators, treat as category
+                    const wordCount = clean.split(/\s+/).length;
+                    return wordCount <= 3 && !/\d/.test(clean);
                 }
-            } catch (err) { toast('Scan failed', true); }
-            finally { document.getElementById('scanExtractBtn').disabled = false; document.getElementById('scanExtractBtn').textContent = 'Scan & Extract'; }
+
+                for (let line of lines) {
+                    // Remove common OCR noise
+                    line = line.replace(/^\W+|\W+$/g, '');
+                    if (!line) continue;
+
+                    if (isCategoryLine(line)) {
+                        currentCategory = line;
+                        continue;
+                    }
+
+                    // Try to extract price using improved regex (handles ₹, Rs, commas, decimals)
+                    const priceMatch = line.match(/(?:₹|RS\.?\s*)?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*$/i);
+                    if (priceMatch) {
+                        const priceStr = priceMatch[1].replace(/,/g, '');
+                        const price = parseFloat(priceStr);
+                        if (isNaN(price) || price <= 0) continue;
+
+                        // Extract name by removing the price part and any trailing non-word characters
+                        let name = line.replace(priceMatch[0], '').replace(/[:\-–]\s*$/, '').trim();
+                        // Remove leading/trailing special chars
+                        name = name.replace(/^[^\w\u0900-\u097F]+|[^\w\u0900-\u097F]+$/g, '').trim();
+                        if (name) {
+                            extractedItems.push({ name, price, category: currentCategory });
+                        }
+                    }
+                }
+
+                const resultsDiv = document.getElementById('scanResults');
+                if (!extractedItems.length) {
+                    resultsDiv.innerHTML = '<p style="color:#f87171;">No items detected. Try a clearer image.</p>';
+                } else {
+                    let html = `<p style="color:#4ade80;">Found ${extractedItems.length} items:</p>`;
+                    extractedItems.forEach((item, idx) => {
+                        html += `
+                        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.4rem; flex-wrap:wrap;">
+                            <input value="${item.name}" data-idx="${idx}" class="scan-name" style="flex:2;">
+                            <span>₹</span>
+                            <input type="number" value="${item.price}" data-idx="${idx}" class="scan-price" step="0.01" style="width:100px;">
+                            <input value="${item.category}" data-idx="${idx}" class="scan-cat" style="flex:1;" placeholder="Category">
+                        </div>`;
+                    });
+                    resultsDiv.innerHTML = html;
+                    document.getElementById('addAllScanBtn').style.display = 'inline-block';
+
+                    // Update categories when user edits category field
+                    document.querySelectorAll('.scan-cat').forEach(inp => inp.addEventListener('input', function() {
+                        extractedItems[this.dataset.idx].category = this.value || 'Uncategorized';
+                    }));
+                    document.querySelectorAll('.scan-name').forEach(inp => inp.addEventListener('input', function() {
+                        extractedItems[this.dataset.idx].name = this.value;
+                    }));
+                    document.querySelectorAll('.scan-price').forEach(inp => inp.addEventListener('input', function() {
+                        extractedItems[this.dataset.idx].price = parseFloat(this.value) || 0;
+                    }));
+                }
+            } catch (err) {
+                toast('Scan failed. Ensure the image is clear.', true);
+            } finally {
+                document.getElementById('scanExtractBtn').disabled = false;
+                document.getElementById('scanExtractBtn').textContent = 'Scan & Extract';
+            }
         });
-        document.getElementById('addAllScanBtn').addEventListener('click', async ()=>{
+
+        document.getElementById('addAllScanBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
-            const inserts = extractedItems.map(i => ({ ...i, cafe_id: cafeData.id }));
-            await _supabase.from('menu_items').insert(inserts);
-            toast('All items added!'); document.getElementById('scanResults').innerHTML = ''; document.getElementById('addAllScanBtn').style.display='none'; loadItems(); loadStats();
+            const inserts = extractedItems.map(item => ({
+                name: item.name,
+                price: item.price,
+                category: item.category || 'Uncategorized',
+                cafe_id: cafeData.id
+            }));
+            if (inserts.length === 0) return;
+            const { error } = await _supabase.from('menu_items').insert(inserts);
+            if (error) { toast('Failed to add items', true); return; }
+            toast(`Added ${inserts.length} items with categories!`);
+            document.getElementById('scanResults').innerHTML = '';
+            document.getElementById('addAllScanBtn').style.display = 'none';
+            loadItems();
+            loadStats();
         });
+
+        // Order tabs
         document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){ document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active')); this.classList.add('active'); activeOrderTab = this.dataset.tab; renderOrders(); }));
+
         if ('Notification' in window && Notification.permission === 'default') document.addEventListener('click', () => Notification.requestPermission(), { once: true });
         init();
     </script>
