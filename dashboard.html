@@ -210,7 +210,7 @@
             }
         });
 
-        // New notification chime – two-tone ding-dong
+        // NEW notification chime – two-tone ding-dong
         function beep() {
             if (!audioReady) return;
             try {
@@ -224,7 +224,6 @@
                 gain1.connect(audioCtx.destination);
                 osc1.frequency.value = 880;
                 osc1.type = 'sine';
-                gain1.gain.value = 0.25;
                 gain1.gain.setValueAtTime(0.25, now);
                 gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
                 osc1.start(now);
@@ -237,7 +236,6 @@
                 gain2.connect(audioCtx.destination);
                 osc2.frequency.value = 660;
                 osc2.type = 'sine';
-                gain2.gain.value = 0.25;
                 gain2.gain.setValueAtTime(0.25, now + 0.1);
                 gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
                 osc2.start(now + 0.1);
