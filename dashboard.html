@@ -210,36 +210,29 @@
             }
         });
 
-        // NEW notification chime – two-tone ding-dong
+        // LOUD 3‑BEEP ALARM (square wave, 1000 Hz, gain 0.4)
         function beep() {
             if (!audioReady) return;
             try {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
+                const beepDuration = 0.1;
+                const gap = 0.1;
+                const freq = 1000;
+                const gainValue = 0.4; // loud
 
-                // First tone: 880 Hz, 0.1 sec
-                const osc1 = audioCtx.createOscillator();
-                const gain1 = audioCtx.createGain();
-                osc1.connect(gain1);
-                gain1.connect(audioCtx.destination);
-                osc1.frequency.value = 880;
-                osc1.type = 'sine';
-                gain1.gain.setValueAtTime(0.25, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-                osc1.start(now);
-                osc1.stop(now + 0.1);
-
-                // Second tone: 660 Hz, 0.15 sec, slightly delayed
-                const osc2 = audioCtx.createOscillator();
-                const gain2 = audioCtx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.frequency.value = 660;
-                osc2.type = 'sine';
-                gain2.gain.setValueAtTime(0.25, now + 0.1);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-                osc2.start(now + 0.1);
-                osc2.stop(now + 0.25);
+                for (let i = 0; i < 3; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'square';       // harsh and piercing
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(gainValue, now + i * (beepDuration + gap));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * (beepDuration + gap) + beepDuration);
+                    osc.start(now + i * (beepDuration + gap));
+                    osc.stop(now + i * (beepDuration + gap) + beepDuration);
+                }
             } catch(e) { /* ignore */ }
         }
 
