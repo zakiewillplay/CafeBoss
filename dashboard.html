@@ -211,7 +211,7 @@
         });
 
         function beep() {
-            if (!audioReady) return; // user hasn't clicked unmute
+            if (!audioReady) return;
             try {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator();
@@ -445,11 +445,12 @@
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
         }
 
-        // ---------- FIXED REALTIME (no more refresh required) ----------
+        // ---------- FIXED REALTIME ----------
         function setupRealtime() {
             if (realtimeChannel) {
                 _supabase.removeChannel(realtimeChannel).then(() => {}).catch(() => {});
             }
+            console.log('Setting up realtime for cafe:', cafeData.id);
             realtimeChannel = _supabase.channel('orders-realtime-' + cafeData.id)
                 .on('postgres_changes', {
                     event: 'INSERT',
@@ -457,6 +458,7 @@
                     table: 'orders',
                     filter: `cafe_id=eq.${cafeData.id}`
                 }, payload => {
+                    console.log('Realtime order received!', payload);
                     allOrders.unshift(payload.new);
                     renderOrders();
                     beep();
@@ -468,6 +470,7 @@
                     }
                 })
                 .subscribe((status) => {
+                    console.log('Realtime status:', status);
                     if (status === 'SUBSCRIBED') {
                         realtimeStatus.textContent = '🟢 Live';
                         realtimeStatus.className = 'realtime-indicator connected';
