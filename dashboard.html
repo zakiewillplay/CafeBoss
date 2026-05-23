@@ -210,18 +210,38 @@
             }
         });
 
+        // New notification chime – two-tone ding-dong
         function beep() {
             if (!audioReady) return;
             try {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.frequency.value = 800;
-                gain.gain.value = 0.3;
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.15);
+                const now = audioCtx.currentTime;
+
+                // First tone: 880 Hz, 0.1 sec
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.frequency.value = 880;
+                osc1.type = 'sine';
+                gain1.gain.value = 0.25;
+                gain1.gain.setValueAtTime(0.25, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc1.start(now);
+                osc1.stop(now + 0.1);
+
+                // Second tone: 660 Hz, 0.15 sec, slightly delayed
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.frequency.value = 660;
+                osc2.type = 'sine';
+                gain2.gain.value = 0.25;
+                gain2.gain.setValueAtTime(0.25, now + 0.1);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc2.start(now + 0.1);
+                osc2.stop(now + 0.25);
             } catch(e) { /* ignore */ }
         }
 
