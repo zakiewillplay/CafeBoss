@@ -70,7 +70,7 @@
         <div class="header-actions">
             <select id="langSelect"><option value="en">EN</option><option value="hi">हि</option></select>
             <button id="themeToggle">🌙</button>
-            <button id="unmuteBtn">🔊</button>
+            <button id="unmuteBtn">🔊 Unmute</button>
             <button id="notifBtn" style="display:none;">🔔</button>
             <button id="testAlertBtn" title="Test sound & notification">📢</button>
             <button id="livePreviewBtn">👁️</button>
@@ -160,7 +160,6 @@
         </div>
     </div>
     <script>
-        // Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
         }
@@ -192,31 +191,41 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        let audioCtx, audioReady = false;
+        let audioCtx = null;
+        let audioReady = false;
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
         const realtimeStatus = document.getElementById('realtimeStatus');
 
+        // Unmute button – must be clicked before sound works (browser policy)
         unmuteBtn.addEventListener('click', () => {
             try {
-                audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 audioReady = true;
                 unmuteBtn.style.display = 'none';
-            } catch(e) { toast('Audio not supported', true); }
+                toast('Sound enabled!');
+            } catch(e) {
+                toast('Audio not supported', true);
+            }
         });
 
         function beep() {
-            if (!audioReady) {
-                try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); audioReady = true; unmuteBtn.style.display = 'none'; } catch(e) { return; }
-            }
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.connect(g); g.connect(audioCtx.destination);
-            o.frequency.value = 800; g.gain.value = 0.3;
-            o.start(); o.stop(audioCtx.currentTime + 0.15);
+            if (!audioReady) return; // user hasn't clicked unmute
+            try {
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 800;
+                gain.gain.value = 0.3;
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch(e) { /* ignore */ }
         }
 
+        // Notifications
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
@@ -436,18 +445,27 @@
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
         }
 
+        // ---------- FIXED REALTIME (no more refresh required) ----------
         function setupRealtime() {
             if (realtimeChannel) {
-                _supabase.removeChannel(realtimeChannel);
+                _supabase.removeChannel(realtimeChannel).then(() => {}).catch(() => {});
             }
-            realtimeChannel = _supabase.channel('orders-realtime')
-                .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
+            realtimeChannel = _supabase.channel('orders-realtime-' + cafeData.id)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `cafe_id=eq.${cafeData.id}`
+                }, payload => {
                     allOrders.unshift(payload.new);
                     renderOrders();
                     beep();
                     loadStats();
-                    if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
-                    else toast('New order received!', false);
+                    if (Notification.permission === 'granted') {
+                        new Notification('New Order!', { body: 'A new order has been placed.', icon: '☕' });
+                    } else {
+                        toast('New order received!', false);
+                    }
                 })
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
@@ -457,6 +475,9 @@
                         realtimeStatus.textContent = '🔴 Offline';
                         realtimeStatus.className = 'realtime-indicator disconnected';
                         toast('Realtime connection error – refresh if orders don\'t appear', true);
+                    } else if (status === 'TIMED_OUT') {
+                        realtimeStatus.textContent = '⏱️ Timeout';
+                        realtimeStatus.className = 'realtime-indicator disconnected';
                     }
                 });
         }
