@@ -57,6 +57,8 @@
         .realtime-indicator { font-size:0.7rem; padding:0.2rem 0.5rem; border-radius:12px; margin-left:0.5rem; }
         .connected { background:#27ae60; color:#fff; }
         .disconnected { background:#c0392b; color:#fff; }
+        .subscription-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.2rem; text-align:center; }
+        .subscription-box input { margin:0.5rem 0; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; }
@@ -78,6 +80,7 @@
         </div>
     </header>
     <div class="container">
+        <div id="subscriptionBoxContainer"></div>
         <div class="stats-row">
             <div class="stat-card"><div class="stat-num" id="statViews">0</div><div>Views</div></div>
             <div class="stat-card"><div class="stat-num" id="statItems">0</div><div>Items</div></div>
@@ -191,92 +194,62 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
+        // Unmute forever
         let audioCtx = null;
-        let audioReady = false;
+        let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
         const notifBtn = document.getElementById('notifBtn');
         const realtimeStatus = document.getElementById('realtimeStatus');
 
-        // Unmute button – must be clicked before sound works (browser policy)
+        if (audioReady) unmuteBtn.style.display = 'none';
+
         unmuteBtn.addEventListener('click', () => {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 audioReady = true;
+                localStorage.setItem('cafeboss_unmuted', 'true');
                 unmuteBtn.style.display = 'none';
-                toast('Sound enabled!');
-            } catch(e) {
-                toast('Audio not supported', true);
-            }
+                toast('Sound enabled forever!');
+            } catch(e) { toast('Audio not supported', true); }
         });
 
-        // LOUD 3‑BEEP ALARM (square wave, 1000 Hz, gain 0.4)
         function beep() {
             if (!audioReady) return;
             try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 const now = audioCtx.currentTime;
-                const beepDuration = 0.1;
-                const gap = 0.1;
-                const freq = 1000;
-                const gainValue = 0.4; // loud
-
                 for (let i = 0; i < 3; i++) {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.type = 'square';       // harsh and piercing
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(gainValue, now + i * (beepDuration + gap));
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * (beepDuration + gap) + beepDuration);
-                    osc.start(now + i * (beepDuration + gap));
-                    osc.stop(now + i * (beepDuration + gap) + beepDuration);
+                    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'square'; osc.frequency.value = 1000;
+                    gain.gain.setValueAtTime(0.4, now + i * 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.2 + 0.1);
+                    osc.start(now + i * 0.2); osc.stop(now + i * 0.2 + 0.1);
                 }
-            } catch(e) { /* ignore */ }
+            } catch(e) {}
         }
 
-        // Notifications
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
                     Notification.requestPermission().then(perm => {
-                        if (perm === 'granted') {
-                            notifBtn.style.display = 'none';
-                            toast('Alerts enabled!');
-                        } else {
-                            notifBtn.style.display = 'inline-flex';
-                            notifBtn.textContent = '🔕';
-                            toast('Notifications denied.', true);
-                        }
+                        if (perm === 'granted') { notifBtn.style.display = 'none'; toast('Alerts enabled!'); }
+                        else { notifBtn.style.display = 'inline-flex'; notifBtn.textContent = '🔕'; toast('Notifications denied.', true); }
                     });
-                } else if (Notification.permission === 'denied') {
-                    notifBtn.style.display = 'inline-flex';
-                    notifBtn.textContent = '🔕';
-                } else if (Notification.permission === 'granted') {
-                    notifBtn.style.display = 'none';
-                }
+                } else if (Notification.permission === 'denied') { notifBtn.style.display = 'inline-flex'; notifBtn.textContent = '🔕'; }
+                else if (Notification.permission === 'granted') { notifBtn.style.display = 'none'; }
             };
             notifBtn.addEventListener('click', requestNotif);
-            document.addEventListener('click', function once() {
-                if (Notification.permission === 'default') requestNotif();
-            }, { once: true });
+            document.addEventListener('click', () => { if (Notification.permission === 'default') requestNotif(); }, { once: true });
             if (Notification.permission !== 'granted') {
                 notifBtn.style.display = 'inline-flex';
                 notifBtn.textContent = Notification.permission === 'denied' ? '🔕' : '🔔';
             }
         }
 
-        document.getElementById('testAlertBtn').addEventListener('click', () => {
-            beep();
-            if (Notification.permission === 'granted') {
-                new Notification('Test Alert', { body:'Sound and notifications are working!', icon:'☕' });
-            } else {
-                toast('Notification permission not granted. Enable alerts first.', true);
-            }
-            toast('Test beep played!');
-        });
-
+        document.getElementById('testAlertBtn').addEventListener('click', () => { beep(); if (Notification.permission === 'granted') new Notification('Test Alert', { body:'Working!', icon:'☕' }); toast('Test beep played!'); });
         document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='index.html'));
         document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
@@ -295,21 +268,20 @@
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) { window.location.href='auth.html'; return; }
             cafeData = await getOrCreateCafe(user.id);
-            if (cafeData._temp) toast('Cafe profile not ready. Please reload.', true);
+            if (cafeData._temp) toast('Cafe profile not ready.', true);
             document.getElementById('setCafeName').value = cafeData.cafe_name||'';
             document.getElementById('setWhatsapp').value = cafeData.whatsapp||'';
             document.getElementById('setDesc').value = cafeData.description||'';
             document.getElementById('setPrimary').value = cafeData.primary_color||'#FF6B35';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
-            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics()]);
-            if (cafeData.id && !cafeData._temp) {
-                setupRealtime();
-            } else {
+            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics(), loadSubscriptionInfo()]);
+            if (cafeData.id && !cafeData._temp) setupRealtime();
+            else {
                 setTimeout(async () => {
                     if (!cafeData.id || cafeData._temp) {
                         cafeData = await getOrCreateCafe(user.id);
                         if (cafeData.id && !cafeData._temp) {
-                            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics()]);
+                            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics(), loadSubscriptionInfo()]);
                             setupRealtime();
                             toast('Cafe profile ready!', false);
                         }
@@ -318,25 +290,77 @@
             }
         }
 
-        document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            loadOrders();
-            toast('Orders refreshed');
-        });
+        // ---------- SUBSCRIPTION / PAYMENT ----------
+        async function loadSubscriptionInfo() {
+            const container = document.getElementById('subscriptionBoxContainer');
+            if (!cafeData || !cafeData.id || cafeData._temp) return;
 
+            const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
+            if (!settings || !settings.subscription_price || settings.subscription_price <= 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const cafe = cafeData;
+            const isPaid = cafe.subscription_paid;
+            const paymentStatus = cafe.payment_status || 'pending';
+            const transactionId = cafe.transaction_id || '';
+
+            if (isPaid) {
+                container.innerHTML = `<div class="subscription-box"><p style="color:#27ae60;">✅ Subscription Active</p></div>`;
+                return;
+            }
+
+            let html = `<div class="subscription-box">
+                <h3 style="color:var(--primary);">🔒 Subscribe to unlock your menu</h3>
+                <p>${settings.subscription_message || 'Pay via UPI and enter your Transaction ID below.'}</p>
+                <p><strong>UPI ID:</strong> ${settings.upi_id || '—'}</p>
+                <p><strong>Amount:</strong> ₹${settings.subscription_price}/month</p>`;
+
+            if (paymentStatus === 'pending') {
+                html += `<p style="color:#f39c12;">⏳ Payment pending approval. Transaction ID: ${transactionId || 'N/A'}</p>`;
+            } else if (paymentStatus === 'rejected') {
+                html += `<p style="color:#c0392b;">❌ Previous payment rejected. Please try again.</p>
+                <input type="text" id="transactionIdInput" placeholder="Enter UPI Transaction ID">
+                <button id="submitPaymentBtn" class="btn-sm" style="margin-top:0.5rem;">Submit for Approval</button>`;
+            } else {
+                html += `<input type="text" id="transactionIdInput" placeholder="Enter UPI Transaction ID">
+                <button id="submitPaymentBtn" class="btn-sm" style="margin-top:0.5rem;">Submit for Approval</button>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            const submitBtn = document.getElementById('submitPaymentBtn');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', async () => {
+                    const transId = document.getElementById('transactionIdInput').value.trim();
+                    if (!transId) return toast('Please enter the transaction ID', true);
+                    const { error } = await _supabase.from('cafes').update({
+                        transaction_id: transId,
+                        payment_status: 'pending'
+                    }).eq('id', cafeData.id);
+                    if (error) {
+                        toast('Failed to submit. Please try again.', true);
+                    } else {
+                        toast('Payment submitted! Waiting for admin approval.');
+                        cafeData.transaction_id = transId;
+                        cafeData.payment_status = 'pending';
+                        loadSubscriptionInfo();
+                    }
+                });
+            }
+        }
+
+        // Refresh orders (no collapse)
+        document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => { e.stopPropagation(); loadOrders(); toast('Orders refreshed'); });
         document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
 
         function updatePrintButton() {
             const printTabBtn = document.getElementById('printTabBtn');
-            if (activeOrderTab === 'completed') {
-                printTabBtn.style.display = 'inline-flex';
-                printTabBtn.textContent = '🖨️ Print Completed';
-            } else if (activeOrderTab === 'new') {
-                printTabBtn.style.display = 'inline-flex';
-                printTabBtn.textContent = '🖨️ Print New';
-            } else {
-                printTabBtn.style.display = 'none';
-            }
+            if (activeOrderTab === 'completed') { printTabBtn.style.display = 'inline-flex'; printTabBtn.textContent = '🖨️ Print Completed'; }
+            else if (activeOrderTab === 'new') { printTabBtn.style.display = 'inline-flex'; printTabBtn.textContent = '🖨️ Print New'; }
+            else { printTabBtn.style.display = 'none'; }
         }
 
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
@@ -379,10 +403,7 @@
             const searchTerm = document.getElementById('orderSearch')?.value.toLowerCase() || '';
             let filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
             if (searchTerm) {
-                filtered = filtered.filter(o => 
-                    (o.table_number||'').toLowerCase().includes(searchTerm) || 
-                    (o.customer_name||'').toLowerCase().includes(searchTerm)
-                );
+                filtered = filtered.filter(o => (o.table_number||'').toLowerCase().includes(searchTerm) || (o.customer_name||'').toLowerCase().includes(searchTerm));
             }
             const list = document.getElementById('ordersList');
             if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders found.</p>'; return; }
@@ -456,43 +477,21 @@
             const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.focus(); w.print();
         }
 
-        // ---------- FIXED REALTIME ----------
         function setupRealtime() {
-            if (realtimeChannel) {
-                _supabase.removeChannel(realtimeChannel).then(() => {}).catch(() => {});
-            }
-            console.log('Setting up realtime for cafe:', cafeData.id);
+            if (realtimeChannel) { _supabase.removeChannel(realtimeChannel).then(() => {}).catch(() => {}); }
             realtimeChannel = _supabase.channel('orders-realtime-' + cafeData.id)
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'orders',
-                    filter: `cafe_id=eq.${cafeData.id}`
-                }, payload => {
-                    console.log('Realtime order received!', payload);
+                .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
                     allOrders.unshift(payload.new);
                     renderOrders();
                     beep();
                     loadStats();
-                    if (Notification.permission === 'granted') {
-                        new Notification('New Order!', { body: 'A new order has been placed.', icon: '☕' });
-                    } else {
-                        toast('New order received!', false);
-                    }
+                    if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
+                    else toast('New order received!', false);
                 })
                 .subscribe((status) => {
-                    console.log('Realtime status:', status);
-                    if (status === 'SUBSCRIBED') {
-                        realtimeStatus.textContent = '🟢 Live';
-                        realtimeStatus.className = 'realtime-indicator connected';
-                    } else if (status === 'CHANNEL_ERROR') {
-                        realtimeStatus.textContent = '🔴 Offline';
-                        realtimeStatus.className = 'realtime-indicator disconnected';
-                        toast('Realtime connection error – refresh if orders don\'t appear', true);
-                    } else if (status === 'TIMED_OUT') {
-                        realtimeStatus.textContent = '⏱️ Timeout';
-                        realtimeStatus.className = 'realtime-indicator disconnected';
-                    }
+                    if (status === 'SUBSCRIBED') { realtimeStatus.textContent = '🟢 Live'; realtimeStatus.className = 'realtime-indicator connected'; }
+                    else if (status === 'CHANNEL_ERROR') { realtimeStatus.textContent = '🔴 Offline'; realtimeStatus.className = 'realtime-indicator disconnected'; toast('Realtime connection error', true); }
+                    else if (status === 'TIMED_OUT') { realtimeStatus.textContent = '⏱️ Timeout'; realtimeStatus.className = 'realtime-indicator disconnected'; }
                 });
         }
 
@@ -509,20 +508,10 @@
             chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(labels), datasets:[{ label:'Orders', data:Object.values(labels), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] } });
         }
 
-        document.getElementById('weekBtn').addEventListener('click', () => {
-            analyticsMode = 'week';
-            document.getElementById('weekBtn').style.background = 'var(--primary)';
-            document.getElementById('monthBtn').style.background = '';
-            loadAnalytics();
-        });
-        document.getElementById('monthBtn').addEventListener('click', () => {
-            analyticsMode = 'month';
-            document.getElementById('monthBtn').style.background = 'var(--primary)';
-            document.getElementById('weekBtn').style.background = '';
-            loadAnalytics();
-        });
+        document.getElementById('weekBtn').addEventListener('click', () => { analyticsMode = 'week'; document.getElementById('weekBtn').style.background = 'var(--primary)'; document.getElementById('monthBtn').style.background = ''; loadAnalytics(); });
+        document.getElementById('monthBtn').addEventListener('click', () => { analyticsMode = 'month'; document.getElementById('monthBtn').style.background = 'var(--primary)'; document.getElementById('weekBtn').style.background = ''; loadAnalytics(); });
 
-        // ========== ITEMS WITH SEARCH ==========
+        // ========== ITEMS ==========
         async function loadItems() {
             if (!cafeData.id) { allItems=[]; renderItems(); return; }
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
