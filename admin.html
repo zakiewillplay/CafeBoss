@@ -10,26 +10,75 @@
         :root { --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #a0a0b0; }
         body.light-mode { --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555; }
         body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; padding:2rem; }
-        .container { max-width:800px; margin:0 auto; }
-        .stats { display:flex; gap:1rem; margin-bottom:2rem; }
-        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center; flex:1; }
-        table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; }
-        th, td { padding:0.8rem; border-bottom:1px solid var(--border); }
+        .container { max-width:1000px; margin:0 auto; }
+        h1 { color:var(--primary); }
+        h2 { color:var(--primary); margin-top:2rem; }
+        .stats { display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; }
+        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center; flex:1; min-width:140px; }
+        table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; margin-bottom:2rem; }
+        th, td { padding:0.8rem; border-bottom:1px solid var(--border); text-align:left; }
         th { color:var(--muted); }
-        button { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; }
+        input, textarea, button, select { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; margin:0.3rem 0; width:100%; }
+        button { background:var(--primary); color:#fff; border:none; }
+        button:hover { opacity:0.9; }
+        .settings-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:2rem; }
+        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:1rem 1.5rem; border-radius:12px; z-index:999; display:none; }
+        .toast.error { background:#c0392b; }
+        .hidden { display:none; }
+        #denied { text-align:center; padding:3rem; color:#c0392b; }
+        .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; }
+        .badge-paid { background:#27ae60; color:#fff; }
+        .badge-unpaid { background:#c0392b; color:#fff; }
+        .badge-pending { background:#f39c12; color:#000; }
+        .badge-rejected { background:#e74c3c; color:#fff; }
+        .btn-sm { width:auto; padding:0.35rem 0.8rem; font-size:0.75rem; }
+        .flex-row { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
     </style>
 </head>
 <body class="light-mode">
     <div class="container">
         <h1>☕ Cafe Boss Admin</h1>
-        <button id="themeToggle" style="float:right;">🌙 Dark</button>
-        <div class="stats">
-            <div class="stat-card"><h2 id="totalCafes">-</h2><p>Total Cafes</p></div>
-            <div class="stat-card"><h2 id="totalOrders">-</h2><p>Total Orders</p></div>
+        <button id="themeToggle" style="float:right; width:auto;">🌙 Dark</button>
+        <div id="loading">🔐 Checking access…</div>
+        <div id="denied" class="hidden">
+            <h2>⛔ Access Denied</h2>
+            <p>Only the platform owner can view this page.</p>
+            <p><a href="auth.html" style="color:var(--primary);">Login with the admin account</a></p>
+            <button id="deniedLogout" style="width:auto; margin-top:1rem;">↪ Logout</button>
         </div>
-        <h2>Recent Orders</h2>
-        <table><thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTbody"></tbody></table>
+        <div id="adminContent" class="hidden">
+            <div class="stats">
+                <div class="stat-card"><h2 id="totalCafes">-</h2><p>Total Cafes</p></div>
+                <div class="stat-card"><h2 id="totalOrders">-</h2><p>Total Orders</p></div>
+                <div class="stat-card"><h2 id="totalRevenue">-</h2><p>Total Revenue</p></div>
+            </div>
+
+            <div class="settings-card">
+                <h2>⚙️ Subscription & Payment Settings</h2>
+                <label>Subscription Price (₹/month)</label>
+                <input type="number" id="subPrice" placeholder="e.g. 499">
+                <label>UPI ID</label>
+                <input type="text" id="upiId" placeholder="yourupi@bank">
+                <label>Message to show on paywall</label>
+                <textarea id="subMsg" rows="2" placeholder="Please pay the subscription to access this menu."></textarea>
+                <button id="saveSettings" style="margin-top:0.5rem;">💾 Save Settings</button>
+            </div>
+
+            <h2>🏪 Cafe Owners & Payment Approvals</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Cafe</th><th>Owner Email</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="cafesTbody"></tbody>
+                </table>
+            </div>
+
+            <h2>📋 Recent Orders (Last 20)</h2>
+            <table><thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Table</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTbody"></tbody></table>
+
+            <button id="logoutBtn" style="width:auto; margin-top:1rem;">↪ Logout</button>
+        </div>
     </div>
+    <div id="toast" class="toast"></div>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
@@ -37,17 +86,144 @@
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        (async ()=>{
-            const [{count:cafeCount},{count:orderCount},{data:orders}] = await Promise.all([
-                _supabase.from('cafes').select('*',{count:'exact',head:true}),
-                _supabase.from('orders').select('*',{count:'exact',head:true}),
-                _supabase.from('orders').select('*,cafes(cafe_name)').order('created_at',{ascending:false}).limit(20)
+        const ADMIN_EMAIL = 'zakiewillplay@gmail.com';
+
+        function showToast(msg, err=false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast' + (err ? ' error' : '');
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function checkAccess() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user || user.email !== ADMIN_EMAIL) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('denied').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('adminContent').classList.remove('hidden');
+            loadAllData();
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadStats(), loadOrders(), loadCafes(), loadSettings()]);
+        }
+
+        async function loadStats() {
+            const [{ count: cafeCount }, { count: orderCount }, { data: orders }] = await Promise.all([
+                _supabase.from('cafes').select('*', { count:'exact', head:true }),
+                _supabase.from('orders').select('*', { count:'exact', head:true }),
+                _supabase.from('orders').select('total')
             ]);
-            document.getElementById('totalCafes').textContent = cafeCount||0;
-            document.getElementById('totalOrders').textContent = orderCount||0;
-            document.getElementById('ordersTbody').innerHTML = (orders||[]).map(o => `<tr><td>${new Date(o.created_at).toLocaleString()}</td><td>${o.cafes?.cafe_name||'?'}</td><td>${o.customer_name||'Guest'}</td><td>₹${o.total}</td><td>${o.status}</td></tr>`).join('');
-        })();
-        document.getElementById('themeToggle').addEventListener('click', ()=>{ document.body.classList.toggle('light-mode'); document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light'; });
+            document.getElementById('totalCafes').textContent = cafeCount || 0;
+            document.getElementById('totalOrders').textContent = orderCount || 0;
+            const total = (orders || []).reduce((s, o) => s + parseFloat(o.total || 0), 0);
+            document.getElementById('totalRevenue').textContent = '₹' + total.toFixed(2);
+        }
+
+        async function loadOrders() {
+            const { data } = await _supabase.from('orders').select('*, cafes(cafe_name)').order('created_at', { ascending: false }).limit(20);
+            document.getElementById('ordersTbody').innerHTML = (data || []).map(o => {
+                const time = new Date(o.created_at).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+                return `<tr><td>${time}</td><td>${o.cafes?.cafe_name || '?'}</td><td>${o.customer_name || 'Guest'}</td><td>${o.table_number || '—'}</td><td>₹${parseFloat(o.total).toFixed(2)}</td><td>${o.status}</td></tr>`;
+            }).join('');
+        }
+
+        async function loadCafes() {
+            const { data: cafes } = await _supabase.from('cafes').select('*').order('created_at', { ascending: false });
+            // Get owner emails (this uses the anon key, which may not have admin privileges – we'll use a workaround)
+            // For now, we'll show owner_id and the user can cross-reference. To get emails, you can use a Supabase Edge Function or just rely on the cafe name.
+            document.getElementById('cafesTbody').innerHTML = (cafes || []).map(c => {
+                const status = c.payment_status || 'pending';
+                const paid = c.subscription_paid;
+                let statusBadge = '';
+                if (paid) statusBadge = '<span class="badge badge-paid">✅ Paid</span>';
+                else if (status === 'pending') statusBadge = '<span class="badge badge-pending">⏳ Pending</span>';
+                else if (status === 'rejected') statusBadge = '<span class="badge badge-rejected">❌ Rejected</span>';
+                else statusBadge = '<span class="badge badge-unpaid">⚠️ Unpaid</span>';
+
+                let actions = '';
+                if (!paid && status === 'pending') {
+                    actions = `<button class="btn-sm" onclick="approvePayment('${c.id}')" style="margin-right:0.3rem;">✅ Approve</button>
+                               <button class="btn-sm" onclick="rejectPayment('${c.id}')" style="background:#c0392b;">❌ Reject</button>`;
+                } else if (paid) {
+                    actions = `<button class="btn-sm" onclick="markUnpaid('${c.id}')">Mark Unpaid</button>`;
+                } else if (status === 'rejected') {
+                    actions = `<span style="font-size:0.8rem;">Awaiting resubmission</span>`;
+                }
+
+                return `<tr>
+                    <td>${c.cafe_name || 'My Cafe'}</td>
+                    <td>${c.owner_id}</td>
+                    <td>${c.whatsapp || '—'}</td>
+                    <td>${c.transaction_id || '—'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actions}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        window.approvePayment = async (cafeId) => {
+            const { error } = await _supabase.from('cafes').update({
+                subscription_paid: true,
+                payment_status: 'approved'
+            }).eq('id', cafeId);
+            if (error) showToast('Approval failed', true);
+            else { showToast('Payment approved!'); loadCafes(); }
+        };
+
+        window.rejectPayment = async (cafeId) => {
+            const { error } = await _supabase.from('cafes').update({
+                subscription_paid: false,
+                payment_status: 'rejected'
+            }).eq('id', cafeId);
+            if (error) showToast('Rejection failed', true);
+            else { showToast('Payment rejected.'); loadCafes(); }
+        };
+
+        window.markUnpaid = async (cafeId) => {
+            const { error } = await _supabase.from('cafes').update({
+                subscription_paid: false,
+                payment_status: 'pending'
+            }).eq('id', cafeId);
+            if (error) showToast('Update failed', true);
+            else { showToast('Marked as unpaid.'); loadCafes(); }
+        };
+
+        async function loadSettings() {
+            const { data } = await _supabase.from('app_settings').select('*').maybeSingle();
+            if (data) {
+                document.getElementById('subPrice').value = data.subscription_price || '';
+                document.getElementById('upiId').value = data.upi_id || '';
+                document.getElementById('subMsg').value = data.subscription_message || '';
+            }
+        }
+
+        document.getElementById('saveSettings').addEventListener('click', async () => {
+            const price = parseFloat(document.getElementById('subPrice').value) || 0;
+            const upi = document.getElementById('upiId').value.trim();
+            const msg = document.getElementById('subMsg').value.trim();
+            const { error } = await _supabase.from('app_settings').upsert({
+                id: 1,
+                subscription_price: price,
+                upi_id: upi,
+                subscription_message: msg
+            });
+            if (error) showToast('Save failed', true);
+            else showToast('Settings saved!');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
+        document.getElementById('deniedLogout').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
+        });
+
+        checkAccess();
     </script>
 </body>
-</html>
+</html> 
