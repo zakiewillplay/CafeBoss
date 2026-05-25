@@ -89,9 +89,8 @@
         </div>
         <div id="paywallBox" class="paywall-box" style="display:none;">
             <h2>🔒 Menu Unavailable</h2>
-            <p id="paywallMsg"></p>
-            <p style="font-weight:600;">UPI: <span id="paywallUpi"></span></p>
-            <p style="font-weight:600;">Price: ₹<span id="paywallPrice"></span>/month</p>
+            <p style="font-size:1.1rem; color:var(--text-color);">Under Maintenance</p>
+            <p style="font-size:0.9rem; opacity:0.7;">Please check back later.</p>
         </div>
         <div id="menuVisible">
             <header class="menu-header">
@@ -156,14 +155,12 @@
             document.documentElement.style.setProperty('--gold', cafe.primary_color || '#E5C158');
             document.title = cafe.cafe_name + ' – Menu';
 
-            // Check subscription
+            // Check subscription – show maintenance message if unpaid
             const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
             if (settings && settings.subscription_price > 0 && !cafe.subscription_paid) {
                 document.getElementById('paywallBox').style.display = 'block';
                 document.getElementById('menuVisible').style.display = 'none';
-                document.getElementById('paywallMsg').textContent = settings.subscription_message || 'Please pay the subscription to access this menu.';
-                document.getElementById('paywallUpi').textContent = settings.upi_id || '—';
-                document.getElementById('paywallPrice').textContent = settings.subscription_price || '0';
+                // No UPI/payment details shown – just maintenance message
                 return;
             }
 
