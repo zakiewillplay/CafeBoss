@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +18,7 @@
         table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; margin-bottom:2rem; }
         th, td { padding:0.8rem; border-bottom:1px solid var(--border); text-align:left; }
         th { color:var(--muted); }
-        input, textarea, button, select { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; margin:0.3rem 0; width:100%; }
+        input, textarea, button { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; margin:0.3rem 0; width:100%; }
         button { background:var(--primary); color:#fff; border:none; }
         button:hover { opacity:0.9; }
         .settings-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:2rem; }
@@ -68,13 +67,16 @@
             <h2>🏪 Cafe Owners & Payment Approvals</h2>
             <div style="overflow-x:auto;">
                 <table>
-                    <thead><tr><th>Cafe</th><th>Owner Email</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="cafesTbody"></tbody>
+                    <thead><tr><th>Cafe</th><th>Owner</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="cafesTbody"><tr><td colspan="6" style="text-align:center;">Loading…</td></tr></tbody>
                 </table>
             </div>
 
             <h2>📋 Recent Orders (Last 20)</h2>
-            <table><thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Table</th><th>Total</th><th>Status</th></tr></thead><tbody id="ordersTbody"></tbody></table>
+            <table>
+                <thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Table</th><th>Total</th><th>Status</th></tr></thead>
+                <tbody id="ordersTbody"><tr><td colspan="6" style="text-align:center;">Loading…</td></tr></tbody>
+            </table>
 
             <button id="logoutBtn" style="width:auto; margin-top:1rem;">↪ Logout</button>
         </div>
@@ -110,7 +112,11 @@
         }
 
         async function loadAllData() {
-            await Promise.all([loadStats(), loadOrders(), loadCafes(), loadSettings()]);
+            // Each function catches its own errors so one failure doesn't break the rest
+            loadStats().catch(() => {});
+            loadOrders().catch(() => {});
+            loadCafes().catch(() => {});
+            loadSettings().catch(() => {});
         }
 
         async function loadStats() {
@@ -127,7 +133,12 @@
 
         async function loadOrders() {
             const { data } = await _supabase.from('orders').select('*, cafes(cafe_name)').order('created_at', { ascending: false }).limit(20);
-            document.getElementById('ordersTbody').innerHTML = (data || []).map(o => {
+            const tbody = document.getElementById('ordersTbody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No orders yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(o => {
                 const time = new Date(o.created_at).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
                 return `<tr><td>${time}</td><td>${o.cafes?.cafe_name || '?'}</td><td>${o.customer_name || 'Guest'}</td><td>${o.table_number || '—'}</td><td>₹${parseFloat(o.total).toFixed(2)}</td><td>${o.status}</td></tr>`;
             }).join('');
@@ -135,9 +146,12 @@
 
         async function loadCafes() {
             const { data: cafes } = await _supabase.from('cafes').select('*').order('created_at', { ascending: false });
-            // Get owner emails (this uses the anon key, which may not have admin privileges – we'll use a workaround)
-            // For now, we'll show owner_id and the user can cross-reference. To get emails, you can use a Supabase Edge Function or just rely on the cafe name.
-            document.getElementById('cafesTbody').innerHTML = (cafes || []).map(c => {
+            const tbody = document.getElementById('cafesTbody');
+            if (!cafes || cafes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No cafes registered</td></tr>';
+                return;
+            }
+            tbody.innerHTML = cafes.map(c => {
                 const status = c.payment_status || 'pending';
                 const paid = c.subscription_paid;
                 let statusBadge = '';
@@ -158,7 +172,7 @@
 
                 return `<tr>
                     <td>${c.cafe_name || 'My Cafe'}</td>
-                    <td>${c.owner_id}</td>
+                    <td>${c.owner_id || '—'}</td>
                     <td>${c.whatsapp || '—'}</td>
                     <td>${c.transaction_id || '—'}</td>
                     <td>${statusBadge}</td>
@@ -168,28 +182,17 @@
         }
 
         window.approvePayment = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({
-                subscription_paid: true,
-                payment_status: 'approved'
-            }).eq('id', cafeId);
+            const { error } = await _supabase.from('cafes').update({ subscription_paid: true, payment_status: 'approved' }).eq('id', cafeId);
             if (error) showToast('Approval failed', true);
             else { showToast('Payment approved!'); loadCafes(); }
         };
-
         window.rejectPayment = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({
-                subscription_paid: false,
-                payment_status: 'rejected'
-            }).eq('id', cafeId);
+            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'rejected' }).eq('id', cafeId);
             if (error) showToast('Rejection failed', true);
             else { showToast('Payment rejected.'); loadCafes(); }
         };
-
         window.markUnpaid = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({
-                subscription_paid: false,
-                payment_status: 'pending'
-            }).eq('id', cafeId);
+            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'pending' }).eq('id', cafeId);
             if (error) showToast('Update failed', true);
             else { showToast('Marked as unpaid.'); loadCafes(); }
         };
@@ -207,14 +210,9 @@
             const price = parseFloat(document.getElementById('subPrice').value) || 0;
             const upi = document.getElementById('upiId').value.trim();
             const msg = document.getElementById('subMsg').value.trim();
-            const { error } = await _supabase.from('app_settings').upsert({
-                id: 1,
-                subscription_price: price,
-                upi_id: upi,
-                subscription_message: msg
-            });
+            const { error } = await _supabase.from('app_settings').upsert({ id: 1, subscription_price: price, upi_id: upi, subscription_message: msg });
             if (error) showToast('Save failed', true);
-            else showToast('Settings saved!');
+            else showToast('Subscription settings saved!');
         });
 
         document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
