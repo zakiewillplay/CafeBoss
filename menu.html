@@ -256,7 +256,7 @@
             document.documentElement.style.setProperty('--gold', cafe.primary_color || '#E5C158');
             document.title = cafe.cafe_name + ' – Menu';
 
-            // Subscription check – only activates if price > 0 and unpaid (currently disabled)
+            // Subscription check – only activates if price > 0 and unpaid
             const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
             if (settings && settings.subscription_price > 0 && !cafe.subscription_paid) {
                 document.getElementById('paywallBox').style.display = 'block';
@@ -446,6 +446,16 @@
         });
 
         if ('Notification' in window && Notification.permission==='default') document.addEventListener('click', ()=> Notification.requestPermission(), { once:true });
+
+        // FORCEFULLY close the cart panel after everything loads
+        window.addEventListener('load', () => {
+            const panel = document.getElementById('cartPanel');
+            if (panel) {
+                panel.classList.remove('open');
+                panel.style.transform = 'translateY(100%)';
+            }
+        });
+
         loadMenu();
     </script>
 </body>
