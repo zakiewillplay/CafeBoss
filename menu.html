@@ -127,11 +127,22 @@
         .qty-controls button:active { transform: scale(1.15); }
         .qty-num { font-weight: 700; font-size: 1.1rem; min-width: 24px; text-align: center; }
 
-        .floating-cart { position:fixed; bottom:30px; right:30px; width:65px; height:65px; border-radius: 50%; background: var(--gold); color:#000; font-size:1.6rem; border:none; cursor:pointer; z-index:49; box-shadow: 0 10px 30px rgba(229,193,88,0.5); display:flex; align-items:center; justify-content:center; transition: transform 0.3s; }
+        /* Modified styling for draggable floating cart */
+        .floating-cart { 
+            position:fixed; bottom:30px; right:30px; 
+            width:65px; height:65px; border-radius: 50%; 
+            background: var(--gold); color:#000; font-size:1.6rem; 
+            border:none; cursor:pointer; z-index:49; 
+            box-shadow: 0 10px 30px rgba(229,193,88,0.5); 
+            display:flex; align-items:center; justify-content:center; 
+            transition: transform 0.3s; /* Transition kept only for pulse, not position */
+            touch-action: none; /* Helps prevent default browser touch behaviors on the button */
+        }
         .floating-cart.pulse { animation: cartPulse 0.5s ease; }
         @keyframes cartPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.2); } }
         .cart-badge { position:absolute; top:-8px; right:-8px; background:#c0392b; color:#fff; width:26px; height:26px; border-radius:50%; font-size:0.8rem; display:none; align-items:center; justify-content:center; font-weight:700; }
 
+        /* Cart panel fully hidden with visibility and opacity to prevent leaking */
         .cart-panel {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--glass); backdrop-filter: blur(30px);
@@ -200,6 +211,7 @@
             <div id="menuSections"></div>
         </div>
     </div>
+    
     <button class="floating-cart" id="floatingCart">🛒<span class="cart-badge" id="cartBadge">0</span></button>
     <button class="waiter-btn" id="waiterBtn" title="Call Waiter">👋</button>
     
@@ -354,7 +366,6 @@
         }
 
         function attachEvents() {
-            // variant pills
             document.querySelectorAll('.variant-pill').forEach(p => p.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 itemEl.querySelectorAll('.variant-pill').forEach(b => b.classList.remove('selected'));
@@ -363,7 +374,6 @@
                 itemEl.dataset.basePrice = this.dataset.price;
             }));
 
-            // minus button
             document.querySelectorAll('.qty-minus').forEach(b => b.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 const id = itemEl.dataset.id;
@@ -381,7 +391,6 @@
                 numEl.textContent = current ? current.qty : 0;
             }));
 
-            // plus button (direct add to cart)
             document.querySelectorAll('.qty-plus').forEach(b => b.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 const id = itemEl.dataset.id;
@@ -418,15 +427,84 @@
             ).join('');
         }
 
-        // cart toggle – only opens when floating cart button is clicked
-        document.getElementById('floatingCart').addEventListener('click', ()=> {
+        // --- Draggable Floating Cart Logic ---
+        const cartBtn = document.getElementById('floatingCart');
+        let isDragging = false;
+        let hasDragged = false;
+        let startX, startY, initialX, initialY;
+
+        const dragStart = (e) => {
+            const event = e.type.includes('mouse') ? e : e.touches;
+            startX = event.clientX;
+            startY = event.clientY;
+            
+            const rect = cartBtn.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            
+            isDragging = true;
+            hasDragged = false;
+            cartBtn.style.transition = 'none'; // Disable pulse transition during drag
+        };
+
+        const dragMove = (e) => {
+            if (!isDragging) return;
+            const event = e.type.includes('mouse') ? e : e.touches;
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+
+            // If moved more than 5px, it's a drag
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                hasDragged = true;
+                if (e.cancelable) e.preventDefault(); // Prevent scrolling while dragging
+            }
+
+            if (hasDragged) {
+                let newX = initialX + dx;
+                let newY = initialY + dy;
+                
+                // Keep inside screen bounds
+                const maxX = window.innerWidth - cartBtn.offsetWidth;
+                const maxY = window.innerHeight - cartBtn.offsetHeight;
+                
+                cartBtn.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+                cartBtn.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
+                cartBtn.style.bottom = 'auto'; 
+                cartBtn.style.right = 'auto';  
+            }
+        };
+
+        const dragEnd = () => {
+            if (isDragging) {
+                isDragging = false;
+                cartBtn.style.transition = 'transform 0.3s'; // Restore animation transition
+            }
+        };
+
+        // Desktop Drag
+        cartBtn.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', dragMove, { passive: false });
+        document.addEventListener('mouseup', dragEnd);
+
+        // Mobile Drag
+        cartBtn.addEventListener('touchstart', dragStart, { passive: false });
+        document.addEventListener('touchmove', dragMove, { passive: false });
+        document.addEventListener('touchend', dragEnd);
+
+        // Cart toggle - updated to ignore drag drops
+        cartBtn.addEventListener('click', (e) => {
+            if (hasDragged) {
+                e.preventDefault();
+                return;
+            }
             document.getElementById('cartPanel').classList.toggle('open');
         });
+
         document.getElementById('closeCartBtn').addEventListener('click', ()=> {
             document.getElementById('cartPanel').classList.remove('open');
         });
 
-        // place order
+        // Place order
         document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
             if (!cart.length) return alert(tl('cartEmpty'));
             const table = document.getElementById('tableNumber').value.trim();
@@ -458,7 +536,7 @@
             }, 5000);
         }
 
-        // waiter call
+        // Waiter call
         document.getElementById('waiterBtn').addEventListener('click', async () => {
             const table = prompt(tl('table'));
             if (!table) return;
@@ -478,10 +556,8 @@
             setTimeout(() => overlay.classList.remove('show'), 3000);
         });
 
-        // notification permission
         if ('Notification' in window && Notification.permission==='default') document.addEventListener('click', ()=> Notification.requestPermission(), { once:true });
 
-        // force cart hidden on load
         window.addEventListener('load', () => {
             const panel = document.getElementById('cartPanel');
             if (panel) {
