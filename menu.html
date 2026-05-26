@@ -58,8 +58,6 @@
         .qty-controls button { width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg); color:var(--text-color); cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
         .qty-controls button:active { transform:scale(1.2); }
         .qty-num { font-weight:600; min-width:20px; text-align:center; }
-        .add-btn { padding:0.6rem 1.2rem; border-radius:25px; background:var(--gold); color:#000; border:none; cursor:pointer; font-weight:600; font-size:0.85rem; transition:0.2s; }
-        .add-btn:active { transform:scale(0.95); }
         .floating-cart { position:fixed; bottom:24px; right:24px; width:60px; height:60px; border-radius:50%; background:var(--gold); color:#000; font-size:1.5rem; border:none; cursor:pointer; z-index:49; box-shadow:0 8px 24px rgba(229,193,88,0.4); display:flex; align-items:center; justify-content:center; }
         .floating-cart.pulse { animation:cartPulse 0.5s ease; }
         @keyframes cartPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.2); } }
@@ -77,7 +75,6 @@
         .paywall-box { text-align:center; padding:3rem 1rem; }
         .paywall-box h2 { color:var(--gold); margin-bottom:1rem; }
         .paywall-box p { margin-bottom:0.5rem; }
-        /* larger image */
         .menu-item-img { width:100px; height:100px; border-radius:10px; object-fit:cover; }
     </style>
 </head>
@@ -208,6 +205,7 @@
                             variantHTML = `<div class="variant-pills">${variants.map((v,i)=>`<button class="variant-pill${i===0?' selected':''}" data-price="${v.price}" data-vname="${v.name}">${v.name} ₹${v.price}</button>`).join('')}</div>`;
                         }
                         const imageHTML = item.image_url ? `<img src="${item.image_url}" class="menu-item-img">` : '';
+                        // removed the add-btn
                         html += `
                         <div class="menu-item" data-id="${item.id}" data-name="${item.name}" data-base-price="${priceDisplay}">
                             ${imageHTML}
@@ -225,7 +223,6 @@
                                 <button class="qty-minus">−</button>
                                 <span class="qty-num">0</span>
                                 <button class="qty-plus">+</button>
-                                <button class="add-btn">Add</button>
                             </div>
                         </div>`;
                     });
@@ -238,6 +235,7 @@
         }
 
         function attachEvents() {
+            // variant pills remain unchanged
             document.querySelectorAll('.variant-pill').forEach(p => p.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 itemEl.querySelectorAll('.variant-pill').forEach(b => b.classList.remove('selected'));
@@ -245,31 +243,56 @@
                 itemEl.querySelector('.active-price').textContent = parseFloat(this.dataset.price).toFixed(2);
                 itemEl.dataset.basePrice = this.dataset.price;
             }));
+
+            // minus button
             document.querySelectorAll('.qty-minus').forEach(b => b.addEventListener('click', function(){
-                const num = this.parentElement.querySelector('.qty-num');
-                let val = parseInt(num.textContent); if (val>0) { val--; num.textContent = val; }
-            }));
-            document.querySelectorAll('.qty-plus').forEach(b => b.addEventListener('click', function(){
-                const num = this.parentElement.querySelector('.qty-num');
-                num.textContent = parseInt(num.textContent) + 1;
-            }));
-            document.querySelectorAll('.add-btn').forEach(b => b.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
-                const qty = parseInt(itemEl.querySelector('.qty-num').textContent);
-                if (qty<=0) return;
+                const id = itemEl.dataset.id;
+                const selectedPill = itemEl.querySelector('.variant-pill.selected');
+                const variant = selectedPill ? selectedPill.dataset.vname : null;
+                const cartKey = variant ? `${id}__${variant}` : id;
+                const existing = cart.find(c => c.cartKey === cartKey);
+                if (existing) {
+                    existing.qty--;
+                    if (existing.qty <= 0) {
+                        cart = cart.filter(c => c.cartKey !== cartKey);
+                    }
+                }
+                updateCartUI();
+                // update the displayed qty for this item
+                const numEl = itemEl.querySelector('.qty-num');
+                const current = cart.find(c => c.cartKey === cartKey);
+                numEl.textContent = current ? current.qty : 0;
+            }));
+
+            // plus button – directly adds to cart
+            document.querySelectorAll('.qty-plus').forEach(b => b.addEventListener('click', function(){
+                const itemEl = this.closest('.menu-item');
+                const id = itemEl.dataset.id;
                 const name = itemEl.dataset.name;
                 const price = parseFloat(itemEl.dataset.basePrice);
                 const selectedPill = itemEl.querySelector('.variant-pill.selected');
                 const variant = selectedPill ? selectedPill.dataset.vname : null;
-                const cartKey = variant ? `${itemEl.dataset.id}__${variant}` : itemEl.dataset.id;
+                const cartKey = variant ? `${id}__${variant}` : id;
+
                 const existing = cart.find(c => c.cartKey === cartKey);
-                if (existing) existing.qty += qty;
-                else cart.push({ cartKey, id: itemEl.dataset.id, name, price, qty, variant });
-                itemEl.querySelector('.qty-num').textContent = '0';
+                if (existing) {
+                    existing.qty++;
+                } else {
+                    cart.push({ cartKey, id, name, price, qty: 1, variant });
+                }
                 updateCartUI();
+                const numEl = itemEl.querySelector('.qty-num');
+                numEl.textContent = existing ? existing.qty : 1;
+
+                // pulse the floating cart
                 const floatBtn = document.getElementById('floatingCart');
-                floatBtn.classList.remove('pulse'); void floatBtn.offsetWidth; floatBtn.classList.add('pulse');
+                floatBtn.classList.remove('pulse');
+                void floatBtn.offsetWidth;
+                floatBtn.classList.add('pulse');
             }));
+
+            // no add-btn listener needed
         }
 
         function updateCartUI() {
