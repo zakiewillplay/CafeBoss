@@ -50,12 +50,10 @@
         }
         h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 
-        /* floating particles unchanged */
         .bg-particles { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index:0; }
         .bg-particles span { position: absolute; display: block; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; opacity: 0; animation: floatUp 8s infinite; }
         @keyframes floatUp { 0% { transform: translateY(100vh) scale(0); opacity: 0; } 10% { opacity: 0.4; } 90% { opacity: 0.4; } 100% { transform: translateY(-10vh) scale(1.5); opacity: 0; } }
 
-        /* cloche unchanged */
         .cloche-overlay { position: fixed; inset:0; z-index:1000; background:#0a0806; display: flex; align-items:center; justify-content:center; flex-direction:column; animation: clocheFadeOut 0.6s ease 2.5s forwards; pointer-events:none; }
         @keyframes clocheFadeOut { to { opacity:0; visibility:hidden; } }
         .cloche { width:180px; height:180px; border-radius:50% 50% 0 0; background: radial-gradient(circle at 30% 30%, #c0c0c0, #707070); position:relative; animation: liftCloche 2.5s ease forwards; box-shadow:0 8px 40px rgba(0,0,0,0.5), inset 0 -4px 8px rgba(0,0,0,0.3); }
@@ -86,7 +84,6 @@
 
         .category-section h3 { font-size: 2rem; font-weight: 700; margin:2rem 0 1rem; color: var(--gold); letter-spacing: -0.5px; padding-bottom: 0.5rem; border-bottom: 2px solid var(--glass-border); text-shadow: 0 2px 10px rgba(229,193,88,0.3); }
 
-        /* 3D card – improved layout */
         .menu-item {
             display:flex; gap:1.5rem; align-items:center;
             background: var(--card-bg); backdrop-filter: blur(20px);
@@ -98,7 +95,7 @@
             transform: perspective(800px) rotateY(0deg) scale(1);
             position: relative;
             overflow: hidden;
-            flex-wrap: wrap;          /* allow items to wrap on small screens */
+            flex-wrap: wrap;
         }
         .menu-item::before {
             content: ''; position: absolute; top: -50%; left: -50%;
@@ -112,15 +109,10 @@
         }
         .menu-item:hover::before { opacity: 1; }
 
-        .menu-item-img {
-            width: 120px; height: 120px; border-radius: 16px;
-            object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            transition: transform 0.4s;
-            flex-shrink: 0;           /* prevent image from shrinking */
-        }
+        .menu-item-img { width: 120px; height: 120px; border-radius: 16px; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transition: transform 0.4s; flex-shrink: 0; }
         .menu-item:hover .menu-item-img { transform: scale(1.05) rotateZ(-1deg); }
 
-        .item-details { flex: 1; min-width: 0; }    /* prevent text overflow */
+        .item-details { flex: 1; min-width: 0; }
         .item-name { font-weight: 700; font-size: 1.3rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem; flex-wrap: wrap; }
         .item-desc { font-size:0.9rem; color: var(--muted); margin-top:0.2rem; line-height:1.5; word-break: break-word; }
         .badge-discount { background: #c0392b; color:#fff; padding:3px 10px; border-radius: 20px; font-size:0.75rem; font-weight:700; display:inline-block; letter-spacing:0.5px; }
@@ -130,31 +122,12 @@
         .variant-pill.selected { background: var(--gold); color:#000; border-color:var(--gold); }
         .item-price { font-weight: 800; font-size: 1.4rem; color: var(--gold); margin-top:0.6rem; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 
-        .qty-controls {
-            display:flex; align-items:center; gap:0.8rem;
-            margin-left: auto;
-            flex-shrink: 0;           /* keep buttons on the same line */
-        }
-        .qty-controls button {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 2px solid var(--glass-border); background: var(--glass);
-            backdrop-filter: blur(10px); color: var(--text-color);
-            cursor:pointer; font-size:1.3rem; font-weight:600;
-            display:flex; align-items:center; justify-content:center;
-            transition: all 0.2s;
-        }
+        .qty-controls { display:flex; align-items:center; gap:0.8rem; margin-left: auto; flex-shrink: 0; }
+        .qty-controls button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glass-border); background: var(--glass); backdrop-filter: blur(10px); color: var(--text-color); cursor:pointer; font-size:1.3rem; font-weight:600; display:flex; align-items:center; justify-content:center; transition: all 0.2s; }
         .qty-controls button:active { transform: scale(1.15); }
         .qty-num { font-weight: 700; font-size: 1.1rem; min-width: 24px; text-align: center; }
 
-        /* floating cart & panel (unchanged except explicit hidden state) */
-        .floating-cart {
-            position:fixed; bottom:30px; right:30px; width:65px; height:65px;
-            border-radius: 50%; background: var(--gold); color:#000;
-            font-size:1.6rem; border:none; cursor:pointer; z-index:49;
-            box-shadow: 0 10px 30px rgba(229,193,88,0.5);
-            display:flex; align-items:center; justify-content:center;
-            transition: transform 0.3s;
-        }
+        .floating-cart { position:fixed; bottom:30px; right:30px; width:65px; height:65px; border-radius: 50%; background: var(--gold); color:#000; font-size:1.6rem; border:none; cursor:pointer; z-index:49; box-shadow: 0 10px 30px rgba(229,193,88,0.5); display:flex; align-items:center; justify-content:center; transition: transform 0.3s; }
         .floating-cart.pulse { animation: cartPulse 0.5s ease; }
         @keyframes cartPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.2); } }
         .cart-badge { position:absolute; top:-8px; right:-8px; background:#c0392b; color:#fff; width:26px; height:26px; border-radius:50%; font-size:0.8rem; display:none; align-items:center; justify-content:center; font-weight:700; }
@@ -176,11 +149,12 @@
         .success-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:60; display:flex; align-items:center; justify-content:center; flex-direction:column; opacity:0; pointer-events:none; transition:0.4s; }
         .success-overlay.show { opacity:1; pointer-events:auto; }
         .waiter-btn { position:fixed; bottom:30px; left:30px; width:65px; height:65px; border-radius:50%; background:#c0392b; color:#fff; font-size:1.8rem; border:none; cursor:pointer; z-index:48; box-shadow: 0 10px 30px rgba(192,57,43,0.5); display:flex; align-items:center; justify-content:center; }
-        .paywall-box { text-align:center; padding:4rem 2rem; }
+
+        /* Paywall (hidden by default) */
+        .paywall-box { text-align:center; padding:4rem 2rem; display:none; }
         .paywall-box h2 { color:var(--gold); margin-bottom:1rem; font-size:2rem; }
         .paywall-box p { margin-bottom:0.5rem; font-size:1.1rem; }
 
-        /* mobile adjustments */
         @media (max-width: 600px) {
             .menu-item { gap: 1rem; padding: 1rem; }
             .menu-item-img { width: 80px; height: 80px; }
@@ -204,7 +178,7 @@
             <select id="langToggle"><option value="en">English</option><option value="hi">हिन्दी</option></select>
             <button id="shareBtn">📤 Share</button>
         </div>
-        <div id="paywallBox" class="paywall-box" style="display:none;">
+        <div id="paywallBox" class="paywall-box">
             <h2>🔒 Menu Unavailable</h2>
             <p style="font-size:1.1rem; color:var(--text-color);">Under Maintenance</p>
             <p style="font-size:0.9rem; opacity:0.7;">Please check back later.</p>
@@ -221,7 +195,7 @@
     </div>
     <button class="floating-cart" id="floatingCart">🛒<span class="cart-badge" id="cartBadge">0</span></button>
     <button class="waiter-btn" id="waiterBtn" title="Call Waiter">👋</button>
-    <div class="cart-panel" id="cartPanel">
+    <div class="cart-panel" id="cartPanel" style="transform: translateY(100%);">
         <h3>Your Order</h3>
         <div id="cartItemsList"></div>
         <p style="font-weight:700; margin:0.5rem 0;">Total: ₹<span id="cartTotal">0</span></p>
@@ -255,8 +229,8 @@
         const cafeId = urlParams.get('id');
 
         const t = {
-            en: { search:'Search menu…', table:'Table Number *', name:'Your name (optional)', place:'Place Order', orderPlaced:'Order placed!', waiting:'Waiting for confirmation…', accepted:'Your order has been accepted! 🎉', noItems:'No items match your search.', waiterCall:'Waiter called! Someone will come to your table.', cartEmpty:'Cart is empty', tableRequired:'Please enter your table number' },
-            hi: { search:'मेनू खोजें…', table:'टेबल नंबर *', name:'आपका नाम', place:'ऑर्डर करें', orderPlaced:'ऑर्डर रखा गया!', waiting:'पुष्टि की प्रतीक्षा…', accepted:'आपका ऑर्डर स्वीकार कर लिया गया! 🎉', noItems:'कोई आइटम नहीं मिला।', waiterCall:'वेटर बुलाया गया! कोई आपकी टेबल पर आएगा।', cartEmpty:'कार्ट खाली है', tableRequired:'कृपया टेबल नंबर दर्ज करें' }
+            en: { search:'Search menu…', table:'Table Number *', name:'Your name (optional)', place:'Place Order', orderPlaced:'Order placed!', waiting:'Waiting for confirmation…', accepted:'Your order has been accepted! 🎉', noItems:'No items match your search.', waiterCall:'Waiter called!', cartEmpty:'Cart is empty', tableRequired:'Please enter your table number' },
+            hi: { search:'मेनू खोजें…', table:'टेबल नंबर *', name:'आपका नाम', place:'ऑर्डर करें', orderPlaced:'ऑर्डर रखा गया!', waiting:'पुष्टि की प्रतीक्षा…', accepted:'आपका ऑर्डर स्वीकार कर लिया गया! 🎉', noItems:'कोई आइटम नहीं मिला।', waiterCall:'वेटर बुलाया गया!', cartEmpty:'कार्ट खाली है', tableRequired:'कृपया टेबल नंबर दर्ज करें' }
         };
         let lang = 'en';
         function tl(key) { return t[lang]?.[key] || key; }
@@ -282,6 +256,7 @@
             document.documentElement.style.setProperty('--gold', cafe.primary_color || '#E5C158');
             document.title = cafe.cafe_name + ' – Menu';
 
+            // Subscription check – only activates if price > 0 and unpaid (currently disabled)
             const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
             if (settings && settings.subscription_price > 0 && !cafe.subscription_paid) {
                 document.getElementById('paywallBox').style.display = 'block';
@@ -369,8 +344,6 @@
                 itemEl.querySelector('.active-price').textContent = parseFloat(this.dataset.price).toFixed(2);
                 itemEl.dataset.basePrice = this.dataset.price;
             }));
-
-            // minus
             document.querySelectorAll('.qty-minus').forEach(b => b.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 const id = itemEl.dataset.id;
@@ -387,8 +360,6 @@
                 const current = cart.find(c => c.cartKey === cartKey);
                 numEl.textContent = current ? current.qty : 0;
             }));
-
-            // plus – direct add
             document.querySelectorAll('.qty-plus').forEach(b => b.addEventListener('click', function(){
                 const itemEl = this.closest('.menu-item');
                 const id = itemEl.dataset.id;
@@ -397,14 +368,12 @@
                 const selectedPill = itemEl.querySelector('.variant-pill.selected');
                 const variant = selectedPill ? selectedPill.dataset.vname : null;
                 const cartKey = variant ? `${id}__${variant}` : id;
-
                 const existing = cart.find(c => c.cartKey === cartKey);
                 if (existing) existing.qty++;
                 else cart.push({ cartKey, id, name, price, qty: 1, variant });
                 updateCartUI();
                 const numEl = itemEl.querySelector('.qty-num');
                 numEl.textContent = existing ? existing.qty : 1;
-
                 const floatBtn = document.getElementById('floatingCart');
                 floatBtn.classList.remove('pulse');
                 void floatBtn.offsetWidth;
