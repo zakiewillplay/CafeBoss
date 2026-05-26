@@ -77,6 +77,7 @@
         .paywall-box { text-align:center; padding:3rem 1rem; }
         .paywall-box h2 { color:var(--gold); margin-bottom:1rem; }
         .paywall-box p { margin-bottom:0.5rem; }
+        .menu-item-img { width:60px; height:60px; border-radius:8px; object-fit:cover; }
     </style>
 </head>
 <body class="light-mode">
@@ -160,7 +161,6 @@
             if (settings && settings.subscription_price > 0 && !cafe.subscription_paid) {
                 document.getElementById('paywallBox').style.display = 'block';
                 document.getElementById('menuVisible').style.display = 'none';
-                // No UPI/payment details shown – just maintenance message
                 return;
             }
 
@@ -207,8 +207,11 @@
                         if (variants.length) {
                             variantHTML = `<div class="variant-pills">${variants.map((v,i)=>`<button class="variant-pill${i===0?' selected':''}" data-price="${v.price}" data-vname="${v.name}">${v.name} ₹${v.price}</button>`).join('')}</div>`;
                         }
+                        // ---------- IMAGE DISPLAY ----------
+                        const imageHTML = item.image_url ? `<img src="${item.image_url}" class="menu-item-img">` : '';
                         html += `
                         <div class="menu-item" data-id="${item.id}" data-name="${item.name}" data-base-price="${priceDisplay}">
+                            ${imageHTML}
                             <div class="item-details">
                                 <div class="item-name">
                                     ${item.name}
