@@ -1,4 +1,3 @@
-<!-- fresh-deploy-v3 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,14 +133,21 @@
         .cart-badge { position:absolute; top:-8px; right:-8px; background:#c0392b; color:#fff; width:26px; height:26px; border-radius:50%; font-size:0.8rem; display:none; align-items:center; justify-content:center; font-weight:700; }
 
         .cart-panel {
-            position:fixed; bottom:0; left:0; right:0;
+            position: fixed; bottom: 0; left: 0; right: 0;
             background: var(--glass); backdrop-filter: blur(30px);
-            border-radius: 30px 30px 0 0; padding:2rem;
-            transform: translateY(100%); transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            z-index:50; max-height:75vh; overflow-y:auto;
+            border-radius: 30px 30px 0 0; padding: 2rem;
+            transform: translateY(100%);
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50; max-height: 75vh; overflow-y: auto;
             box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
         }
-        .cart-panel.open { transform: translateY(0); }
+        .cart-panel.open {
+            transform: translateY(0);
+            visibility: visible;
+            opacity: 1;
+        }
         .cart-panel h3 { color:var(--gold); margin-bottom:1.5rem; font-size:1.8rem; }
         .cart-item-row { display:flex; justify-content:space-between; padding:0.6rem 0; border-bottom:1px solid var(--glass-border); }
         .cart-panel input { width:100%; padding:0.9rem; border-radius:15px; border:1px solid var(--glass-border); background:var(--card-bg); color:var(--text-color); margin-top:0.8rem; }
@@ -196,8 +202,8 @@
     </div>
     <button class="floating-cart" id="floatingCart">🛒<span class="cart-badge" id="cartBadge">0</span></button>
     <button class="waiter-btn" id="waiterBtn" title="Call Waiter">👋</button>
-    <!-- cart panel hidden by default, only opens with .open class -->
-    <div class="cart-panel" id="cartPanel" style="transform: translateY(100%);">
+    
+    <div class="cart-panel" id="cartPanel">
         <h3>Your Order</h3>
         <div id="cartItemsList"></div>
         <p style="font-weight:700; margin:0.5rem 0;">Total: ₹<span id="cartTotal">0</span></p>
@@ -206,6 +212,7 @@
         <button class="place-order-btn" id="placeOrderBtn">Place Order</button>
         <button class="close-btn" id="closeCartBtn">Close</button>
     </div>
+    
     <div class="success-overlay" id="successOverlay">
         <div class="check">✅</div>
         <p id="successMsg">Order placed!<br>Waiting for confirmation...</p>
@@ -311,7 +318,7 @@
                         if (hasVariants) {
                             const vStr = item.description.replace('VAR::','');
                             variants = vStr.split('|').map(v => { const [n,p]=v.split('='); return { name:n, price:parseFloat(p) }; });
-                            if (variants.length) priceDisplay = variants[0].price;
+                            if (variants.length) priceDisplay = variants.price;
                         }
                         let variantHTML = '';
                         if (variants.length) {
@@ -479,7 +486,6 @@
             const panel = document.getElementById('cartPanel');
             if (panel) {
                 panel.classList.remove('open');
-                panel.style.transform = 'translateY(100%)';
             }
         });
 
