@@ -7,78 +7,165 @@
     <title>Cafe Boss – Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
-        :root { --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.1); --text: #f0f0f0; --muted: #a0a0b0; }
-        body.light-mode { --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555; }
-        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; padding:2rem; }
-        .container { max-width:1000px; margin:0 auto; }
-        h1 { color:var(--primary); }
-        h2 { color:var(--primary); margin-top:2rem; }
-        .stats { display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; }
-        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center; flex:1; min-width:140px; }
-        table { width:100%; border-collapse:collapse; background:var(--card); border-radius:12px; overflow:hidden; margin-bottom:2rem; }
-        th, td { padding:0.8rem; border-bottom:1px solid var(--border); text-align:left; }
-        th { color:var(--muted); }
-        input, textarea, button { padding:0.5rem 1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; margin:0.3rem 0; width:100%; }
-        button { background:var(--primary); color:#fff; border:none; }
-        button:hover { opacity:0.9; }
-        .settings-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:2rem; }
-        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:1rem 1.5rem; border-radius:12px; z-index:999; display:none; }
-        .toast.error { background:#c0392b; }
-        .hidden { display:none; }
-        #denied { text-align:center; padding:3rem; color:#c0392b; }
-        .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; }
-        .badge-paid { background:#27ae60; color:#fff; }
-        .badge-unpaid { background:#c0392b; color:#fff; }
-        .badge-pending { background:#f39c12; color:#000; }
-        .badge-rejected { background:#e74c3c; color:#fff; }
-        .btn-sm { width:auto; padding:0.35rem 0.8rem; font-size:0.75rem; }
-        .flex-row { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+        :root {
+            --primary: #FF6B35;
+            --primary-glow: #FF8C5A;
+            --bg: #0f0f13;
+            --card-bg: rgba(25, 25, 30, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f0f0f0;
+            --muted: #a0a0b0;
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            --glass: blur(15px);
+        }
+        body.light-mode {
+            --bg: #f8f7f4;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --border: rgba(0, 0, 0, 0.1);
+            --text: #1a1a1a;
+            --muted: #555;
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.4s, color 0.4s;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+        }
+        .container { max-width: 950px; margin: 0 auto; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+        h1 {
+            font-size: 2.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        .theme-toggle {
+            background: var(--card-bg); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); color: var(--text);
+            padding: 0.5rem 1.2rem; border-radius: 50px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; transition: all 0.3s;
+        }
+        .theme-toggle:hover { border-color: var(--primary); }
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.2rem; margin-bottom: 2.5rem;
+        }
+        .stat-card {
+            background: var(--card-bg); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 2rem 1.5rem; text-align: center;
+            box-shadow: var(--shadow); transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-num { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
+        .stat-label { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card {
+            background: var(--card-bg); backdrop-filter: var(--glass);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);
+        }
+        .card h2 {
+            font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem;
+            color: var(--primary); display: flex; align-items: center; gap: 0.5rem;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 0.9rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; }
+        th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        tr:last-child td { border-bottom: none; }
+        input, textarea {
+            width: 100%; padding: 0.9rem 1rem; border-radius: 14px;
+            border: 1px solid var(--border); background: rgba(0,0,0,0.2);
+            color: var(--text); font-size: 0.95rem; font-family: inherit;
+            margin-bottom: 1rem; transition: border 0.3s;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        .btn {
+            background: linear-gradient(135deg, #FF6B35, #FF8C5A);
+            color: #fff; border: none; padding: 0.9rem 1.5rem; border-radius: 14px;
+            font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s;
+            width: auto; display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255,107,53,0.4); }
+        .btn-outline {
+            background: transparent; border: 1px solid var(--border); color: var(--text);
+            padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer; font-weight: 600;
+            font-size: 0.8rem; transition: all 0.3s;
+        }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .badge {
+            display: inline-block; padding: 0.3rem 0.9rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .badge-paid { background: rgba(39, 174, 96, 0.2); color: #2ecc71; }
+        .badge-unpaid { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f1c40f; }
+        .badge-rejected { background: rgba(192, 57, 43, 0.2); color: #c0392b; }
+        .toast {
+            position: fixed; top: 20px; right: 20px; background: #27ae60; color: #fff;
+            padding: 1rem 1.8rem; border-radius: 14px; z-index: 999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); display: none; font-weight: 600;
+        }
+        .toast.error { background: #c0392b; }
+        .hidden { display: none !important; }
+        #denied { text-align: center; padding: 4rem 2rem; color: #e74c3c; }
+        #denied h2 { font-size: 2rem; margin-bottom: 1rem; }
+        .action-btns { display: flex; gap: 0.5rem; }
+        @media (max-width: 600px) {
+            .header { flex-direction: column; align-items: flex-start; }
+            .stats { grid-template-columns: 1fr; }
+            table { font-size: 0.8rem; }
+        }
     </style>
 </head>
 <body class="light-mode">
     <div class="container">
-        <h1>☕ Cafe Boss Admin</h1>
-        <button id="themeToggle" style="float:right; width:auto;">🌙 Dark</button>
+        <div class="header">
+            <h1>☕ Cafe Boss</h1>
+            <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
+        </div>
         <div id="loading">🔐 Checking access…</div>
         <div id="denied" class="hidden">
             <h2>⛔ Access Denied</h2>
             <p>Only the platform owner can view this page.</p>
-            <p><a href="auth.html" style="color:var(--primary);">Login with the admin account</a></p>
-            <button id="deniedLogout" style="width:auto; margin-top:1rem;">↪ Logout</button>
+            <a href="auth.html" class="btn" style="margin-top:1rem;">Login</a>
         </div>
         <div id="adminContent" class="hidden">
             <div class="stats">
-                <div class="stat-card"><h2 id="totalCafes">-</h2><p>Total Cafes</p></div>
-                <div class="stat-card"><h2 id="totalOrders">-</h2><p>Total Orders</p></div>
-                <div class="stat-card"><h2 id="totalRevenue">-</h2><p>Total Revenue</p></div>
+                <div class="stat-card"><div class="stat-num" id="totalCafes">-</div><div class="stat-label">Total Cafes</div></div>
+                <div class="stat-card"><div class="stat-num" id="totalOrders">-</div><div class="stat-label">Total Orders</div></div>
             </div>
 
-            <div class="settings-card">
-                <h2>⚙️ Subscription & Payment Settings</h2>
-                <label>Subscription Price (₹/month)</label>
+            <div class="card">
+                <h2>⚙️ Subscription Settings</h2>
+                <label>Price (₹/month)</label>
                 <input type="number" id="subPrice" placeholder="e.g. 499">
                 <label>UPI ID</label>
                 <input type="text" id="upiId" placeholder="yourupi@bank">
-                <label>Message to show on paywall</label>
+                <label>Paywall Message</label>
                 <textarea id="subMsg" rows="2" placeholder="Please pay the subscription to access this menu."></textarea>
-                <button id="saveSettings" style="margin-top:0.5rem;">💾 Save Settings</button>
+                <button class="btn" id="saveSettings">💾 Save Settings</button>
             </div>
 
-            <h2>🏪 Cafe Owners & Payment Approvals</h2>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead><tr><th>Cafe</th><th>Owner</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="cafesTbody"><tr><td colspan="6" style="text-align:center;">Loading…</td></tr></tbody>
-                </table>
+            <div class="card">
+                <h2>🏪 Cafe Owners & Payments</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead><tr><th>Cafe</th><th>Owner</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="cafesTbody"><tr><td colspan="6">Loading…</td></tr></tbody>
+                    </table>
+                </div>
             </div>
 
-            <h2>📋 Recent Orders (Last 20)</h2>
-            <table>
-                <thead><tr><th>Time</th><th>Cafe</th><th>Customer</th><th>Table</th><th>Total</th><th>Status</th></tr></thead>
-                <tbody id="ordersTbody"><tr><td colspan="6" style="text-align:center;">Loading…</td></tr></tbody>
-            </table>
-
-            <button id="logoutBtn" style="width:auto; margin-top:1rem;">↪ Logout</button>
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn-outline" id="logoutBtn">↪ Logout</button>
+            </div>
         </div>
     </div>
     <div id="toast" class="toast"></div>
@@ -112,70 +199,53 @@
         }
 
         async function loadAllData() {
-            // Each function catches its own errors so one failure doesn't break the rest
             loadStats().catch(() => {});
-            loadOrders().catch(() => {});
             loadCafes().catch(() => {});
             loadSettings().catch(() => {});
         }
 
         async function loadStats() {
-            const [{ count: cafeCount }, { count: orderCount }, { data: orders }] = await Promise.all([
+            const [{ count: cafeCount }, { count: orderCount }] = await Promise.all([
                 _supabase.from('cafes').select('*', { count:'exact', head:true }),
-                _supabase.from('orders').select('*', { count:'exact', head:true }),
-                _supabase.from('orders').select('total')
+                _supabase.from('orders').select('*', { count:'exact', head:true })
             ]);
             document.getElementById('totalCafes').textContent = cafeCount || 0;
             document.getElementById('totalOrders').textContent = orderCount || 0;
-            const total = (orders || []).reduce((s, o) => s + parseFloat(o.total || 0), 0);
-            document.getElementById('totalRevenue').textContent = '₹' + total.toFixed(2);
-        }
-
-        async function loadOrders() {
-            const { data } = await _supabase.from('orders').select('*, cafes(cafe_name)').order('created_at', { ascending: false }).limit(20);
-            const tbody = document.getElementById('ordersTbody');
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No orders yet</td></tr>';
-                return;
-            }
-            tbody.innerHTML = data.map(o => {
-                const time = new Date(o.created_at).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
-                return `<tr><td>${time}</td><td>${o.cafes?.cafe_name || '?'}</td><td>${o.customer_name || 'Guest'}</td><td>${o.table_number || '—'}</td><td>₹${parseFloat(o.total).toFixed(2)}</td><td>${o.status}</td></tr>`;
-            }).join('');
         }
 
         async function loadCafes() {
             const { data: cafes } = await _supabase.from('cafes').select('*').order('created_at', { ascending: false });
             const tbody = document.getElementById('cafesTbody');
             if (!cafes || cafes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No cafes registered</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No cafes registered yet</td></tr>';
                 return;
             }
             tbody.innerHTML = cafes.map(c => {
                 const status = c.payment_status || 'pending';
                 const paid = c.subscription_paid;
-                let statusBadge = '';
-                if (paid) statusBadge = '<span class="badge badge-paid">✅ Paid</span>';
-                else if (status === 'pending') statusBadge = '<span class="badge badge-pending">⏳ Pending</span>';
-                else if (status === 'rejected') statusBadge = '<span class="badge badge-rejected">❌ Rejected</span>';
-                else statusBadge = '<span class="badge badge-unpaid">⚠️ Unpaid</span>';
+                let badgeClass = 'badge-unpaid', badgeText = '⚠️ Unpaid';
+                if (paid) { badgeClass = 'badge-paid'; badgeText = '✅ Paid'; }
+                else if (status === 'pending') { badgeClass = 'badge-pending'; badgeText = '⏳ Pending'; }
+                else if (status === 'rejected') { badgeClass = 'badge-rejected'; badgeText = '❌ Rejected'; }
 
                 let actions = '';
                 if (!paid && status === 'pending') {
-                    actions = `<button class="btn-sm" onclick="approvePayment('${c.id}')" style="margin-right:0.3rem;">✅ Approve</button>
-                               <button class="btn-sm" onclick="rejectPayment('${c.id}')" style="background:#c0392b;">❌ Reject</button>`;
+                    actions = `<div class="action-btns">
+                        <button class="btn-outline" onclick="approvePayment('${c.id}')">✅ Approve</button>
+                        <button class="btn-outline" onclick="rejectPayment('${c.id}')" style="color:#e74c3c;">❌ Reject</button>
+                    </div>`;
                 } else if (paid) {
-                    actions = `<button class="btn-sm" onclick="markUnpaid('${c.id}')">Mark Unpaid</button>`;
+                    actions = `<button class="btn-outline" onclick="markUnpaid('${c.id}')">Mark Unpaid</button>`;
                 } else if (status === 'rejected') {
-                    actions = `<span style="font-size:0.8rem;">Awaiting resubmission</span>`;
+                    actions = `<span style="font-size:0.8rem; color:var(--muted);">Awaiting resubmission</span>`;
                 }
 
                 return `<tr>
-                    <td>${c.cafe_name || 'My Cafe'}</td>
-                    <td>${c.owner_id || '—'}</td>
+                    <td><strong>${c.cafe_name || 'My Cafe'}</strong></td>
+                    <td>${c.owner_id?.slice(0,8) || '—'}…</td>
                     <td>${c.whatsapp || '—'}</td>
                     <td>${c.transaction_id || '—'}</td>
-                    <td>${statusBadge}</td>
+                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
                     <td>${actions}</td>
                 </tr>`;
             }).join('');
@@ -192,7 +262,7 @@
             else { showToast('Payment rejected.'); loadCafes(); }
         };
         window.markUnpaid = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'pending' }).eq('id', cafeId);
+            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'unpaid' }).eq('id', cafeId);
             if (error) showToast('Update failed', true);
             else { showToast('Marked as unpaid.'); loadCafes(); }
         };
@@ -216,7 +286,6 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
-        document.getElementById('deniedLogout').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
