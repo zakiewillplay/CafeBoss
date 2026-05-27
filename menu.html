@@ -1,3 +1,4 @@
+<!-- speed-optimized-v1 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,8 +47,7 @@
             color: var(--text-color);
             transition: background 0.4s, color 0.4s;
             overflow-x: hidden;
-            min-height: 100vh; /* Ensures background always fills the screen */
-            /* perspective: 1200px;  <- REMOVED: This was causing the position: fixed bug */
+            min-height: 100vh;
         }
         h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
 
@@ -93,7 +93,7 @@
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: var(--shadow-3d);
             transform-style: preserve-3d;
-            transform: perspective(800px) rotateY(0deg) scale(1); /* 3D perspective is kept safely on the items */
+            transform: perspective(800px) rotateY(0deg) scale(1);
             position: relative;
             overflow: hidden;
             flex-wrap: wrap;
@@ -149,7 +149,7 @@
             border:none; cursor:pointer; z-index:48; 
             box-shadow: 0 10px 30px rgba(192,57,43,0.5); 
             display:flex; align-items:center; justify-content:center;
-            touch-action: none; /* Prevents dragging from scrolling screen */
+            touch-action: none;
         }
 
         .cart-panel {
@@ -343,7 +343,10 @@
                         if (variants.length) {
                             variantHTML = `<div class="variant-pills">${variants.map((v,i)=>`<button class="variant-pill${i===0?' selected':''}" data-price="${v.price}" data-vname="${v.name}">${v.name} ₹${v.price}</button>`).join('')}</div>`;
                         }
-                        const imageHTML = item.image_url ? `<img src="${item.image_url}" class="menu-item-img">` : '';
+                        // ---------- LAZY LOADING IMAGES ----------
+                        const imageHTML = item.image_url
+                            ? `<img src="${item.image_url}" class="menu-item-img" loading="lazy" decoding="async">`
+                            : '';
                         html += `
                         <div class="menu-item" data-id="${item.id}" data-name="${item.name}" data-base-price="${priceDisplay}">
                             ${imageHTML}
@@ -434,86 +437,57 @@
             ).join('');
         }
 
-        // --- Reusable Drag Logic for BOTH Buttons ---
+        // Draggable buttons
         function makeDraggable(btnElement, onClickCallback) {
-            let isDragging = false;
-            let hasDragged = false;
-            let startX, startY, initialX, initialY;
+            let isDragging = false, hasDragged = false, startX, startY, initialX, initialY;
 
             const dragStart = (e) => {
-                const event = e.type.includes('mouse') ? e : e.touches;
-                startX = event.clientX;
-                startY = event.clientY;
-                
+                const event = e.type.includes('mouse') ? e : e.touches[0];
+                startX = event.clientX; startY = event.clientY;
                 const rect = btnElement.getBoundingClientRect();
-                initialX = rect.left;
-                initialY = rect.top;
-                
-                isDragging = true;
-                hasDragged = false;
-                btnElement.style.transition = 'none'; // Disable transition during drag
+                initialX = rect.left; initialY = rect.top;
+                isDragging = true; hasDragged = false;
+                btnElement.style.transition = 'none';
             };
 
             const dragMove = (e) => {
                 if (!isDragging) return;
-                const event = e.type.includes('mouse') ? e : e.touches;
-                const dx = event.clientX - startX;
-                const dy = event.clientY - startY;
-
-                // If moved more than 5px, it's a drag
+                const event = e.type.includes('mouse') ? e : e.touches[0];
+                const dx = event.clientX - startX, dy = event.clientY - startY;
                 if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                     hasDragged = true;
-                    if (e.cancelable) e.preventDefault(); // Prevent scrolling while dragging
+                    if (e.cancelable) e.preventDefault();
                 }
-
                 if (hasDragged) {
-                    let newX = initialX + dx;
-                    let newY = initialY + dy;
-                    
-                    // Keep inside screen bounds
-                    const maxX = window.innerWidth - btnElement.offsetWidth;
-                    const maxY = window.innerHeight - btnElement.offsetHeight;
-                    
+                    let newX = initialX + dx, newY = initialY + dy;
+                    const maxX = window.innerWidth - btnElement.offsetWidth, maxY = window.innerHeight - btnElement.offsetHeight;
                     btnElement.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
                     btnElement.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
-                    btnElement.style.bottom = 'auto'; 
-                    btnElement.style.right = 'auto';  
+                    btnElement.style.bottom = 'auto'; btnElement.style.right = 'auto';
                 }
             };
 
             const dragEnd = () => {
-                if (isDragging) {
-                    isDragging = false;
-                    btnElement.style.transition = 'transform 0.3s'; // Restore animation
-                }
+                if (isDragging) { isDragging = false; btnElement.style.transition = 'transform 0.3s'; }
             };
 
-            // Desktop Drag
             btnElement.addEventListener('mousedown', dragStart);
             document.addEventListener('mousemove', dragMove, { passive: false });
             document.addEventListener('mouseup', dragEnd);
-
-            // Mobile Drag
             btnElement.addEventListener('touchstart', dragStart, { passive: false });
             document.addEventListener('touchmove', dragMove, { passive: false });
             document.addEventListener('touchend', dragEnd);
 
-            // Click Handler
             btnElement.addEventListener('click', (e) => {
-                if (hasDragged) {
-                    e.preventDefault();
-                    return; // Ignore click if element was dragged
-                }
+                if (hasDragged) { e.preventDefault(); return; }
                 if (onClickCallback) onClickCallback(e);
             });
         }
 
-        // Apply drag logic to Cart Button
         makeDraggable(document.getElementById('floatingCart'), () => {
             document.getElementById('cartPanel').classList.toggle('open');
         });
 
-        // Apply drag logic to Waiter Button
         makeDraggable(document.getElementById('waiterBtn'), async () => {
             const table = prompt(tl('table'));
             if (!table) return;
@@ -537,7 +511,6 @@
             document.getElementById('cartPanel').classList.remove('open');
         });
 
-        // Place order
         document.getElementById('placeOrderBtn').addEventListener('click', async ()=>{
             if (!cart.length) return alert(tl('cartEmpty'));
             const table = document.getElementById('tableNumber').value.trim();
@@ -573,9 +546,7 @@
 
         window.addEventListener('load', () => {
             const panel = document.getElementById('cartPanel');
-            if (panel) {
-                panel.classList.remove('open');
-            }
+            if (panel) { panel.classList.remove('open'); }
         });
 
         loadMenu();
