@@ -42,6 +42,10 @@
         .item-row { display:flex; align-items:center; gap:0.8rem; background:rgba(0,0,0,0.1); border:1px solid var(--border); padding:0.8rem; border-radius:10px; margin-bottom:0.6rem; flex-wrap:wrap; }
         .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.7rem; font-weight: 700; }
         .badge-discount { background:#c0392b; color:#fff; } .badge-featured { background:#f39c12; color:#000; }
+        .badge-standard { background:#3498db; color:#fff; }
+        .badge-best { background:#9b59b6; color:#fff; }
+        .badge-selling { background:#e67e22; color:#fff; }
+        .badge-new { background:#2ecc71; color:#fff; }
         .toggle-switch { position:relative; width:44px; height:24px; }
         .toggle-switch input { opacity:0; width:0; height:0; }
         .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:24px; transition:0.3s; cursor: pointer; }
@@ -65,6 +69,9 @@
         .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
         .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
         .edit-active #submitItemBtn::after { content: " (editing)"; }
+        .tag-toggle-group { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin-bottom: 1rem; }
+        .tag-toggle-group label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; }
+        .tag-toggle-group input[type="checkbox"] { width: auto; margin: 0; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; gap: 1rem; }
@@ -138,13 +145,15 @@
                 </div>
                 <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:1rem; width: 100%;">
                 <div style="position: relative; margin-bottom:1rem;">
-                    <textarea id="itemDesc" placeholder="Description" rows="3" style="width: 100%; padding-right: 60px;"></textarea>
+                    <textarea id="itemDesc" placeholder="Description (keep it short for best look)" rows="3" style="width: 100%; padding-right: 60px;"></textarea>
                     <button id="aiDescBtn" class="btn-sm" style="position: absolute; right: 10px; top: 10px;">✨ AI</button>
                 </div>
-                <div class="flex-row" style="margin-bottom:1rem;">
-                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; font-weight:600;">
-                        <input type="checkbox" id="itemFeatured" style="width: 18px; height: 18px;"> 🔥 Mark as Chef's Special
-                    </label>
+                <!-- NEW TAG TOGGLES -->
+                <div class="tag-toggle-group">
+                    <label><input type="checkbox" id="tagFeatured"> 🔥 Chef's Special</label>
+                    <label><input type="checkbox" id="tagStandard"> ✅ Standard Item</label>
+                    <label><input type="checkbox" id="tagBest"> 🏆 Best of the Cafe</label>
+                    <label><input type="checkbox" id="tagSelling"> 📈 Best Selling</label>
                 </div>
                 <div class="image-upload-area" style="text-align: left;">
                     <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Food Photo (Optional)</span>
@@ -499,13 +508,28 @@
             select.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="__new__">+ Add new…</option>';
         }
 
+        function getTagBadges(item) {
+            let badges = '';
+            const tags = item.tags ? item.tags.split(',') : [];
+            if (item.featured || tags.includes('featured')) badges += '<span class="badge badge-featured">🔥 Chef\'s Special</span> ';
+            if (tags.includes('standard')) badges += '<span class="badge badge-standard">✅ Standard</span> ';
+            if (tags.includes('best')) badges += '<span class="badge badge-best">🏆 Best of Cafe</span> ';
+            if (tags.includes('bestselling')) badges += '<span class="badge badge-selling">📈 Best Selling</span> ';
+            // New badge: within 7 days
+            const created = new Date(item.created_at);
+            const now = new Date();
+            if ((now - created) / (1000*60*60*24) < 7) badges += '<span class="badge badge-new">🆕 New</span> ';
+            if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
+            return badges;
+        }
+
         function renderItems() {
             const searchTerm = document.getElementById('menuSearch')?.value.toLowerCase() || '';
             const filtered = allItems.filter(item => !searchTerm || item.name.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm));
             const list = document.getElementById('menuItemsList');
             if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted);">No items match your search.</p>'; return; }
             list.innerHTML = filtered.map(item => {
-                let badges = ''; if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `; if (item.featured) badges += `<span class="badge badge-featured">🔥</span>`;
+                const badges = getTagBadges(item);
                 return `<div class="item-row">
                     ${item.image_url ? `<img src="${item.image_url}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">` : ''}
                     <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem; color:var(--primary);">${item.category} | ₹${item.price}</div></div>
@@ -516,7 +540,6 @@
             }).join('');
             document.querySelectorAll('.toggle-avail').forEach(cb => cb.addEventListener('change', async function(){ await _supabase.from('menu_items').update({available:this.checked}).eq('id',this.dataset.id); }));
             document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
-            // Edit button handler
             document.querySelectorAll('.edit-item-btn').forEach(b => b.addEventListener('click', function(){
                 const id = this.dataset.id;
                 const item = allItems.find(i => i.id === id);
@@ -524,12 +547,10 @@
             }));
         }
 
-        // Edit item: fill the form
         function editItem(item) {
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
-            // Set category
             const catSelect = document.getElementById('itemCategorySelect');
             const catInput = document.getElementById('itemCategoryInput');
             if (catSelect.querySelector(`option[value="${item.category}"]`)) {
@@ -541,11 +562,11 @@
                 catInput.value = item.category;
             }
             document.getElementById('itemDiscount').value = item.discount || '';
-            // Description – handle variants
+
+            // Description (handle variants)
             let desc = item.description || '';
-            // Clear previous variants
             const varContainer = document.getElementById('variantsContainer');
-            varContainer.innerHTML = ''; // clear existing
+            varContainer.innerHTML = '';
             if (desc.startsWith('VAR::')) {
                 const varStr = desc.replace('VAR::','');
                 const parts = varStr.split('|');
@@ -554,12 +575,18 @@
                     const row = createVariantRow(vname, vprice);
                     varContainer.appendChild(row);
                 });
-                desc = ''; // clear description part
+                desc = '';
             }
             document.getElementById('itemDesc').value = desc;
-            document.getElementById('itemFeatured').checked = item.featured || false;
 
-            // Image preview
+            // Tags
+            const tags = item.tags ? item.tags.split(',') : [];
+            document.getElementById('tagFeatured').checked = item.featured || tags.includes('featured');
+            document.getElementById('tagStandard').checked = tags.includes('standard');
+            document.getElementById('tagBest').checked = tags.includes('best');
+            document.getElementById('tagSelling').checked = tags.includes('bestselling');
+
+            // Image
             const preview = document.getElementById('itemImagePreview');
             if (item.image_url) {
                 preview.src = item.image_url;
@@ -568,15 +595,12 @@
                 preview.src = '';
                 preview.style.display = 'none';
             }
-            // Reset file input
             document.getElementById('itemImageFile').value = '';
 
-            // Change UI to edit mode
             document.getElementById('addItemTitle').textContent = '✏️ Edit Item';
             document.getElementById('submitItemBtn').textContent = 'Update Item';
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
             document.getElementById('addItemCard').classList.add('edit-active');
-            // Ensure card is open
             document.getElementById('addItemCard').classList.remove('collapsed');
         }
 
@@ -591,7 +615,6 @@
             return row;
         }
 
-        // Cancel edit
         document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
         function resetForm() {
@@ -602,7 +625,10 @@
             document.getElementById('itemCategoryInput').style.display = 'none';
             document.getElementById('itemDiscount').value = '';
             document.getElementById('itemDesc').value = '';
-            document.getElementById('itemFeatured').checked = false;
+            document.getElementById('tagFeatured').checked = false;
+            document.getElementById('tagStandard').checked = false;
+            document.getElementById('tagBest').checked = false;
+            document.getElementById('tagSelling').checked = false;
             document.getElementById('itemImageFile').value = '';
             document.getElementById('itemImagePreview').style.display = 'none';
             document.getElementById('variantsContainer').innerHTML = '<div class="flex-row" style="margin-bottom:0.5rem;"><input class="var-name" placeholder="e.g., Large" style="flex:1;"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;"><button class="remove-var btn-sm" style="color:#f87171;">✕</button></div>';
@@ -629,8 +655,19 @@
             let category = document.getElementById('itemCategorySelect').value;
             if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
             const price = parseFloat(document.getElementById('itemPrice').value)||0,
-                  discount = document.getElementById('itemDiscount').value.trim(),
-                  featured = document.getElementById('itemFeatured').checked;
+                  discount = document.getElementById('itemDiscount').value.trim();
+
+            // Collect tags
+            const tagList = [];
+            if (document.getElementById('tagFeatured').checked) tagList.push('featured');
+            if (document.getElementById('tagStandard').checked) tagList.push('standard');
+            if (document.getElementById('tagBest').checked) tagList.push('best');
+            if (document.getElementById('tagSelling').checked) tagList.push('bestselling');
+            const tagsStr = tagList.join(',');
+
+            // Keep `featured` field for backward compatibility (if 'featured' is in tags)
+            const featured = document.getElementById('tagFeatured').checked;
+
             let desc = document.getElementById('itemDesc').value.trim();
             const varRows = document.querySelectorAll('#variantsContainer > div'); let varParts = [];
             varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
@@ -641,17 +678,25 @@
                 try { imageUrl = await uploadImageToImgBB(imageFile); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saved without image.', true); }
             }
 
+            const itemData = {
+                name,
+                description: desc,
+                price,
+                category,
+                discount,
+                featured,
+                tags: tagsStr || null,
+                cafe_id: editId ? undefined : cafeData.id
+            };
+            if (imageUrl) itemData.image_url = imageUrl;
+
             if (editId) {
-                // Update existing item
-                const updateData = { name, description: desc, price, category, discount, featured };
-                if (imageUrl) updateData.image_url = imageUrl;
-                const { error } = await _supabase.from('menu_items').update(updateData).eq('id', editId);
+                const { error } = await _supabase.from('menu_items').update(itemData).eq('id', editId);
                 if (error) { toast('Update failed', true); return; }
                 toast('Item updated!');
                 resetForm();
             } else {
-                // Insert new item
-                const { error } = await _supabase.from('menu_items').insert({ name, description: desc, price, category, discount, featured, image_url: imageUrl || undefined, cafe_id: cafeData.id });
+                const { error } = await _supabase.from('menu_items').insert(itemData);
                 if (error) { toast('Save failed', true); return; }
                 toast('Item added!');
                 if (andClear) {
@@ -669,7 +714,6 @@
         document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
         document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
 
-        // Keyboard shortcut: press Enter anywhere in the add item card to save
         document.getElementById('addItemCard').addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON' && e.target.id !== 'itemDesc') {
                 e.preventDefault();
