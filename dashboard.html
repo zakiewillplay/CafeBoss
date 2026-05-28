@@ -21,70 +21,61 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         html, body { width: 100%; overflow-x: hidden; }
         body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; }
-        .support-badge { position:fixed; bottom:20px; right:20px; z-index:999; background:var(--card); border:1px solid var(--primary); padding:0.8rem 1.2rem; border-radius:30px; font-size:0.9rem; box-shadow:0 10px 25px rgba(0,0,0,0.3); backdrop-filter:blur(10px); display:flex; align-items:center; gap:0.5rem; font-weight:600; }
-        .support-badge a { color:var(--text); text-decoration:none; }
         .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
         .toast { background:#27ae60; color:#fff; padding:0.9rem 1.5rem; border-radius:12px; transform:translateX(120%); transition:0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
         .toast.show { transform:translateX(0); } .toast.error { background:#c0392b; }
         header { background:var(--card); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; }
-        .logo { font-weight:700; font-size:1.3rem; color:var(--primary); white-space:nowrap; }
+        .logo { font-weight:700; font-size:1.3rem; color:var(--primary); white-space: nowrap; }
         button, select, input, textarea { padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.2s; }
         button:hover { border-color:var(--primary); }
         .btn-primary { background:var(--primary); color:#fff; border:none; font-weight:600; }
-        .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
-        .container { width:100%; max-width:1200px; margin:1.5rem auto; padding:0 1rem; display:grid; gap:1.5rem; padding-bottom:80px; }
+        .container { width: 100%; max-width:1200px; margin:1.5rem auto; padding:0 1rem; display:grid; gap:1.5rem; padding-bottom:80px; }
         .stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:1rem; }
         .stat-card { background:var(--card); border-radius:14px; padding:1.2rem; text-align:center; border:1px solid var(--border); box-shadow:0 4px 15px rgba(0,0,0,0.05); }
-        .stat-num { font-size:2.2rem; font-weight:800; color:var(--primary); margin-bottom:0.2rem; }
+        .stat-num { font-size:2.2rem; font-weight:800; color:var(--primary); }
         .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
         .card h3 { cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; user-select:none; margin-bottom:1rem; color:var(--primary); }
         .card.collapsed .card-content { display:none; }
-        .card.collapsed h3 { margin-bottom:0; }
         .order-tabs { display:flex; margin-bottom:1rem; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
         .order-tabs button { flex:1; padding:0.6rem; border:none; background:transparent; color:var(--text); font-weight:600; font-size:0.9rem; }
         .order-tabs button.active { background:var(--primary); color:#fff; }
         .order-card { background:rgba(0,0,0,0.1); border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:0.8rem; }
         .item-row { display:flex; align-items:center; gap:0.8rem; background:rgba(0,0,0,0.1); border:1px solid var(--border); padding:0.8rem; border-radius:10px; margin-bottom:0.6rem; flex-wrap:wrap; }
-        .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.7rem; font-weight:700; }
+        .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.7rem; font-weight: 700; }
         .badge-discount { background:#c0392b; color:#fff; } .badge-featured { background:#f39c12; color:#000; }
         .toggle-switch { position:relative; width:44px; height:24px; }
         .toggle-switch input { opacity:0; width:0; height:0; }
-        .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:24px; transition:0.3s; cursor:pointer; }
+        .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:24px; transition:0.3s; cursor: pointer; }
         .toggle-slider:before { content:""; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
         input:checked+.toggle-slider { background:#27ae60; }
         input:checked+.toggle-slider:before { transform:translateX(20px); }
-        .qr-display img { border-radius:12px; background:#fff; padding:0.5rem; margin-top:1rem; }
+        .qr-display img { border-radius:12px; background:#fff; padding:0.5rem; margin-top: 1rem; }
         .btn-sm { padding:0.4rem 0.8rem; font-size:0.8rem; }
         .flex-row { display:flex; gap:0.8rem; align-items:center; flex-wrap:wrap; }
         .header-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
         .orders-toolbar { display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
         .orders-toolbar input { flex:1; min-width:200px; }
-        .menu-search { width:100%; margin-bottom:1rem; padding:0.8rem; }
+        .menu-search { width: 100%; margin-bottom: 1rem; padding: 0.8rem; }
         .realtime-indicator { font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:12px; margin-left:0.5rem; }
         .connected { background:#27ae60; color:#fff; }
         .disconnected { background:#c0392b; color:#fff; }
         .subscription-box { background:var(--card); border:1px solid var(--primary); border-radius:16px; padding:1.5rem; text-align:center; }
-        .subscription-box input { margin:0.5rem 0; width:100%; max-width:300px; }
-        .image-upload-area { margin:0.8rem 0; padding:1rem; border:1px dashed var(--border); border-radius:10px; text-align:center; }
+        .subscription-box input { margin:0.5rem 0; width: 100%; max-width: 300px; }
+        .image-upload-area { margin:0.8rem 0; padding: 1rem; border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
         .image-upload-area input[type="file"] { display:none; }
-        .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight:600; }
-        .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left:auto; margin-right:auto; }
-        #aiScannerStatus { margin-top:1rem; font-weight:600; }
-        .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation:spin 1s ease-in-out infinite; margin-right:8px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .preprocess-hint { font-size:0.8rem; color:var(--muted); margin-top:0.5rem; }
-        @media (max-width:500px) {
-            header { flex-direction:column; align-items:flex-start; }
-            .container { padding:0 0.8rem; gap:1rem; }
-            .card { padding:1rem; }
-            .support-badge { bottom:10px; right:10px; padding:0.6rem 1rem; font-size:0.8rem; }
+        .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
+        .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
+        #aiScannerStatus { margin-top: 1rem; font-weight: 600; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 500px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .container { padding: 0 0.8rem; gap: 1rem; }
+            .card { padding: 1rem; }
         }
     </style>
 </head>
 <body class="light-mode">
-    <div class="support-badge">
-        📞 <a href="tel:+919103173043">24/7 Support: +91 9103173043</a>
-    </div>
     <div class="toast-container" id="toastContainer"></div>
     <header>
         <div class="logo">☕ Cafe Boss <span id="realtimeStatus" class="realtime-indicator disconnected">⚫ Offline</span></div>
@@ -116,8 +107,8 @@
             </div>
         </div>
         <div class="card" id="ordersCard">
-            <h3 style="margin-bottom:0;"><span>📋 Orders</span> <button id="refreshOrdersBtn" class="btn-sm">↻ Refresh</button></h3>
-            <div class="card-content" style="margin-top:1rem;">
+            <h3 style="margin-bottom: 0;"><span>📋 Orders</span> <button id="refreshOrdersBtn" class="btn-sm">↻ Refresh</button></h3>
+            <div class="card-content" style="margin-top: 1rem;">
                 <div class="orders-toolbar">
                     <input type="text" id="orderSearch" placeholder="🔍 Search table or customer name...">
                     <button id="exportCsvBtn" class="btn-sm" title="Export to CSV">📥 Export CSV</button>
@@ -132,14 +123,11 @@
             </div>
         </div>
 
-        <!-- ========== AI SCANNER (HEAVILY IMPROVED) ========== -->
+        <!-- ========== AI SCANNER (IMPROVED) ========== -->
         <div class="card collapsed" id="aiScannerCard">
             <h3><span>🤖 AI Menu Scanner</span> <span style="font-size:0.8rem; background:var(--primary); color:#fff; padding:2px 8px; border-radius:10px;">BETA</span></h3>
             <div class="card-content">
-                <p style="font-size:0.9rem; color:var(--muted); margin-bottom:1rem;">
-                    Upload a clear photo of your printed menu. Works best with well‑lit, high‑contrast images. 
-                    <span style="display:block; margin-top:0.3rem;">⚡ For best results, ensure the text is large and horizontal.</span>
-                </p>
+                <p style="font-size:0.9rem; color:var(--muted); margin-bottom:1rem;">Upload a clear photo of your paper menu. The AI reads items, prices & categories and adds them instantly.</p>
                 <div class="image-upload-area">
                     <label for="aiMenuImageFile">📸 Upload Paper Menu</label>
                     <input type="file" id="aiMenuImageFile" accept="image/*">
@@ -162,56 +150,58 @@
                         <option value="Uncategorized">Uncategorized</option>
                         <option value="__new__">+ Add new category…</option>
                     </select>
-                    <input id="itemDiscount" placeholder="Discount (e.g. 10% OFF)" style="flex:1;">
+                    <input id="itemDiscount" placeholder="Discount" style="flex:1;">
                 </div>
-                <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:1rem; width:100%;">
-                <div style="position:relative; margin-bottom:1rem;">
-                    <textarea id="itemDesc" placeholder="Appetizing description (optional)" rows="3" style="width:100%; padding-right:60px;"></textarea>
-                    <button id="aiDescBtn" class="btn-sm" style="position:absolute; right:10px; top:10px;" title="Auto-write description">✨ AI</button>
+                <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:1rem; width: 100%;">
+                <div style="position: relative; margin-bottom:1rem;">
+                    <textarea id="itemDesc" placeholder="Description" rows="3" style="width: 100%; padding-right: 60px;"></textarea>
+                    <button id="aiDescBtn" class="btn-sm" style="position: absolute; right: 10px; top: 10px;">✨ AI</button>
                 </div>
                 <div class="flex-row" style="margin-bottom:1rem;">
                     <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; font-weight:600;">
-                        <input type="checkbox" id="itemFeatured" style="width:18px; height:18px;"> 🔥 Mark as Chef's Special
+                        <input type="checkbox" id="itemFeatured" style="width: 18px; height: 18px;"> 🔥 Mark as Chef's Special
                     </label>
                 </div>
-                <div class="image-upload-area" style="text-align:left;">
-                    <span style="font-size:0.9rem; font-weight:600; display:block; margin-bottom:0.5rem;">Food Photo (Optional)</span>
-                    <label for="itemImageFile" style="font-size:0.8rem;">Choose Image</label>
+                <div class="image-upload-area" style="text-align: left;">
+                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Food Photo (Optional)</span>
+                    <label for="itemImageFile" style="font-size: 0.8rem;">Choose Image</label>
                     <input type="file" id="itemImageFile" accept="image/*">
-                    <img id="itemImagePreview" class="image-preview" alt="Preview" style="margin-left:0; margin-top:10px;">
+                    <img id="itemImagePreview" class="image-preview" alt="Preview" style="margin-left: 0; margin-top: 10px;">
                 </div>
-                <div id="variantsContainer" style="margin-bottom:0.5rem; margin-top:1rem;">
-                    <span style="font-size:0.9rem; font-weight:600; display:block; margin-bottom:0.5rem;">Sizes / Variants (Optional)</span>
+                <div id="variantsContainer" style="margin-bottom:0.5rem; margin-top: 1rem;">
+                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Sizes / Variants (Optional)</span>
                     <div class="flex-row" style="margin-bottom:0.5rem;">
                         <input class="var-name" placeholder="e.g., Large" style="flex:1;">
                         <input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;">
-                        <button class="remove-var btn-sm" style="color:#f87171;">✕</button>
+                        <button class="remove-var btn-sm" style="color: #f87171;">✕</button>
                     </div>
                 </div>
                 <button id="addVariantBtn" class="btn-sm">+ Add Another Size</button>
                 <div class="flex-row" style="margin-top:1.5rem; gap:1rem;">
-                    <button id="submitItemBtn" class="btn-primary" style="flex:1; padding:0.8rem;">Save Item</button>
-                    <button id="saveAndNextBtn" style="flex:1; padding:0.8rem;">Save & Add Next</button>
+                    <button id="submitItemBtn" class="btn-primary" style="flex:1; padding: 0.8rem;">Save Item</button>
+                    <button id="saveAndNextBtn" style="flex:1; padding: 0.8rem;">Save & Add Next</button>
                 </div>
             </div>
         </div>
+
         <div class="card" id="menuItemsCard">
             <h3><span>📋 Live Menu Items</span> <span>▼</span></h3>
             <div class="card-content">
-                <input type="text" id="menuSearch" class="menu-search" placeholder="🔍 Search items by name, category, or description...">
+                <input type="text" id="menuSearch" class="menu-search" placeholder="🔍 Search items...">
                 <div id="menuItemsList"></div>
             </div>
         </div>
+
         <div class="card collapsed" id="qrCard">
             <h3><span>📱 QR Code & Links</span> <span>▼</span></h3>
-            <div class="card-content" style="text-align:center;">
-                <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">Print this QR code and place it on your tables.</p>
+            <div class="card-content" style="text-align: center;">
                 <button id="generateQrBtn" class="btn-primary">Generate My QR Code</button>
                 <div id="qrDisplay" class="qr-display" style="display:flex; justify-content:center;"></div>
-                <p id="qrUrl" style="word-break:break-all; font-size:0.85rem; margin:1rem 0; color:var(--primary);"></p>
-                <button id="copyQrLink" style="display:none; margin:0 auto;">📋 Copy Menu Link</button>
+                <p id="qrUrl" style="word-break:break-all; font-size:0.85rem; margin: 1rem 0; color:var(--primary);"></p>
+                <button id="copyQrLink" style="display:none; margin: 0 auto;">📋 Copy Menu Link</button>
             </div>
         </div>
+
         <div class="card collapsed" id="settingsCard">
             <h3><span>⚙️ Cafe Settings</span> <span>▼</span></h3>
             <div class="card-content">
@@ -219,7 +209,7 @@
                 <input id="setCafeName" placeholder="Cafe name" style="width:100%; margin-bottom:1rem;">
                 <label style="font-size:0.8rem; color:var(--muted);">WhatsApp Number</label>
                 <input id="setWhatsapp" placeholder="WhatsApp" style="width:100%; margin-bottom:1rem;">
-                <label style="font-size:0.8rem; color:var(--muted);">Short Description (Visible on menu)</label>
+                <label style="font-size:0.8rem; color:var(--muted);">Short Description</label>
                 <textarea id="setDesc" rows="3" style="width:100%; margin-bottom:1rem;"></textarea>
                 <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:0.5rem;">Brand Colors</label>
                 <div class="flex-row" style="margin-bottom:1.5rem;">
@@ -242,7 +232,7 @@
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const EDGE_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
 
-        // ---- Toast ----
+        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast ' + (err ? 'error' : '') + ' show';
@@ -251,7 +241,7 @@
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
-        // ---- Theme ----
+        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -265,11 +255,15 @@
         document.getElementById('themeToggle').addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
         applyTheme();
 
-        // ---- Sound ----
+        // Sound
         let audioCtx = null;
         let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
+        const notifBtn = document.getElementById('notifBtn');
+        const realtimeStatus = document.getElementById('realtimeStatus');
+
         if (audioReady) unmuteBtn.style.display = 'none';
+
         unmuteBtn.addEventListener('click', () => {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -302,8 +296,7 @@
             }
         }
 
-        // ---- Notifications ----
-        const notifBtn = document.getElementById('notifBtn');
+        // Notifications
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
@@ -351,7 +344,7 @@
             if (cafeData.id && !cafeData._temp) setupRealtime();
         }
 
-        // ---- Settings ----
+        // Settings
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { cafe_name: document.getElementById('setCafeName').value.trim(), whatsapp: document.getElementById('setWhatsapp').value.trim(), description: document.getElementById('setDesc').value.trim(), primary_color: document.getElementById('setPrimary').value, accent_color: document.getElementById('setAccent').value };
@@ -361,7 +354,6 @@
         });
 
         // ==================== IMPROVED AI SCANNER ====================
-        // Preprocess image: draw onto a canvas with increased contrast & grayscale
         function preprocessImage(file) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -371,21 +363,11 @@
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
-                    // Get image data
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
-                    // Convert to grayscale and increase contrast
                     for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i+1];
-                        const b = data[i+2];
-                        // Standard luminance formula
-                        let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                        // Increase contrast: stretch the gray values
-                        const contrast = 2.0; // higher = more contrast
-                        const midpoint = 128;
-                        gray = (gray - midpoint) * contrast + midpoint;
-                        // Clamp
+                        let gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                        gray = (gray - 128) * 2.2 + 128; // high contrast
                         gray = Math.max(0, Math.min(255, gray));
                         data[i] = data[i+1] = data[i+2] = gray;
                     }
@@ -404,13 +386,11 @@
             const status = document.getElementById('aiScannerStatus');
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
-            status.innerHTML = `<span class="spinner"></span> Enhancing image & scanning...`;
+            status.innerHTML = `<span class="spinner"></span> Enhancing & scanning...`;
             status.style.color = 'var(--primary)';
 
             try {
-                // Step 1: Preprocess
                 const canvas = await preprocessImage(file);
-                // Step 2: OCR with Tesseract using the preprocessed canvas
                 const worker = await Tesseract.createWorker('eng+hin');
                 const { data: { text } } = await worker.recognize(canvas);
                 await worker.terminate();
@@ -419,80 +399,52 @@
                 const extractedItems = [];
                 let currentCategory = 'Uncategorized';
 
-                // Improved parser for Indian menus
                 for (const line of lines) {
-                    // Skip very short lines (likely noise)
                     if (line.length < 3) continue;
-                    // Check if line is a category heading (short, no price, may end with colon)
-                    const isCategory = (
-                        (line.endsWith(':') && line.length < 25) ||
-                        (!line.match(/[₹Rs\d]/) && line.split(/\s+/).length <= 3 && line.length < 30)
-                    );
-                    if (isCategory && !line.match(/\d/)) {
+                    const isCategory = (line.endsWith(':') && line.length < 30) || (!line.match(/[₹Rs\d]/) && line.split(/\s+/).length <= 3 && line.length < 30);
+                    if (isCategory) {
                         currentCategory = line.replace(/:$/, '').trim();
                         continue;
                     }
-
-                    // Try to extract price: patterns like ₹150, Rs.150, 150/-, 150.00
                     const priceMatch = line.match(/(?:₹|Rs\.?\s*)?\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)\s*(?:\/-\s*)?$/i);
                     if (priceMatch) {
-                        const priceStr = priceMatch[1].replace(/,/g, '');
-                        const price = parseFloat(priceStr);
+                        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
                         if (isNaN(price) || price <= 0) continue;
-                        // Name is everything before the price match
-                        let name = line.substring(0, priceMatch.index).trim();
-                        // Remove trailing punctuation
-                        name = name.replace(/[:\-–,]+$/g, '').trim();
-                        if (!name) continue;
-                        // Clean up common OCR artifacts
+                        let name = line.substring(0, priceMatch.index).trim().replace(/[:\-–,]+$/g, '').trim();
                         name = name.replace(/^[^a-zA-Z\u0900-\u097F0-9]+/, '').replace(/[^a-zA-Z\u0900-\u097F0-9]+$/, '');
-                        if (name) {
-                            extractedItems.push({ name, price, category: currentCategory });
-                        }
+                        if (name) extractedItems.push({ name, price, category: currentCategory });
                     }
                 }
 
                 if (extractedItems.length === 0) {
-                    status.innerHTML = '❌ No items detected. Tips: Ensure the photo is bright, text is large, and background is plain white. You can also try cropping just the menu area.';
+                    status.innerHTML = '❌ No items detected. Try a clearer, well‑lit image.';
                     status.style.color = '#c0392b';
                     return;
                 }
 
                 status.innerHTML = `✅ Found ${extractedItems.length} items. Adding to your menu...`;
-                const inserts = extractedItems.map(item => ({
-                    cafe_id: cafeData.id,
-                    name: item.name,
-                    price: item.price,
-                    category: item.category,
-                    available: true
-                }));
-
+                const inserts = extractedItems.map(item => ({ cafe_id: cafeData.id, name: item.name, price: item.price, category: item.category, available: true }));
                 const { error } = await _supabase.from('menu_items').insert(inserts);
-                if (error) {
-                    status.innerHTML = `❌ Failed to save items: ${error.message}`;
-                    status.style.color = '#c0392b';
-                    return;
-                }
+                if (error) { status.innerHTML = `❌ Failed to save items: ${error.message}`; status.style.color = '#c0392b'; return; }
                 status.innerHTML = `🎉 Success! ${extractedItems.length} items added to your menu.`;
                 status.style.color = '#27ae60';
                 loadItems();
                 loadStats();
             } catch (err) {
                 console.error(err);
-                status.innerHTML = `❌ Scanner error: ${err.message}. Please try again with a clearer image.`;
+                status.innerHTML = `❌ Scanner error: ${err.message}. Please try again.`;
                 status.style.color = '#c0392b';
             }
         });
 
-        // ---- Subscription ----
+        // Subscription
         async function loadSubscriptionInfo() {
             const container = document.getElementById('subscriptionBoxContainer');
             if (!cafeData || !cafeData.id || cafeData._temp) return;
             const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
             if (!settings || !settings.subscription_price || settings.subscription_price <= 0) return;
-            const isPaid = cafeData.subscription_paid;
-            if (isPaid) return;
-            container.innerHTML = `<div class="subscription-box"><h3 style="color:var(--primary);">🔒 Unlock your dashboard</h3><p>${settings.subscription_message}</p><p>UPI ID: <strong>${settings.upi_id}</strong> | Amount: ₹${settings.subscription_price}</p><input type="text" id="transactionIdInput" placeholder="Enter UPI Transaction ID"><button id="submitPaymentBtn" class="btn-primary">Submit Payment</button></div>`;
+            if (cafeData.subscription_paid) return;
+            container.innerHTML = `<div class="subscription-box"><h3 style="color:var(--primary);">🔒 Unlock your menu</h3><p>${settings.subscription_message}</p><p>UPI ID: <strong>${settings.upi_id}</strong> | Amount: ₹${settings.subscription_price}</p><input type="text" id="transactionIdInput" placeholder="Enter UPI Transaction ID"><button id="submitPaymentBtn" class="btn-primary">Submit Payment</button></div>`;
             document.getElementById('submitPaymentBtn')?.addEventListener('click', async () => {
                 const transId = document.getElementById('transactionIdInput').value.trim();
                 if (transId) {
@@ -503,7 +455,7 @@
             });
         }
 
-        // ---- Image upload ----
+        // Image upload
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -521,7 +473,7 @@
             return result.url;
         }
 
-        // ---- Stats & Orders ----
+        // Stats / Orders
         async function loadStats() {
             if (!cafeData.id) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -529,7 +481,9 @@
                 _supabase.from('orders').select('*', { count:'exact', head:true }).eq('cafe_id', cafeData.id),
                 _supabase.from('menu_views_log').select('*', { count:'exact', head:true }).eq('cafe_id', cafeData.id)
             ]);
-            document.getElementById('statViews').textContent = views||0; document.getElementById('statItems').textContent = items||0; document.getElementById('statOrders').textContent = orders||0;
+            document.getElementById('statViews').textContent = views||0;
+            document.getElementById('statItems').textContent = items||0;
+            document.getElementById('statOrders').textContent = orders||0;
         }
 
         async function loadOrders() {
@@ -551,7 +505,7 @@
                 let actions = '';
                 if (o.status==='new') actions = `<button data-action="accept" data-id="${o.id}" class="btn-primary btn-sm">Accept</button>`;
                 if (o.status==='accepted') actions = `<button data-action="deliver" data-id="${o.id}" class="btn-primary btn-sm">Deliver</button>`;
-                if (o.status==='delivered'||o.status==='completed') actions = `<button data-action="print" data-id="${o.id}" class="btn-sm">Print Bill</button>`;
+                if (o.status==='delivered'||o.status==='completed') actions = `<button data-action="print" data-id="${o.id}" class="btn-sm">Print</button>`;
                 return `<div class="order-card"><div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><strong style="color:var(--primary);">Table: ${o.table_number||'N/A'}</strong><span style="font-size:0.8rem;">${time} | ${o.customer_name||'Guest'}</span></div><div style="font-size:0.9rem; margin-bottom:0.5rem;">${itemStr}</div><div style="display:flex; justify-content:space-between; align-items:center;"><strong>Total: ₹${parseFloat(o.total).toFixed(2)}</strong><div>${actions}</div></div></div>`;
             }).join('');
             document.querySelectorAll('[data-action="accept"]').forEach(b => b.addEventListener('click', async ()=>{ await _supabase.from('orders').update({status:'accepted'}).eq('id',b.dataset.id); loadOrders(); }));
@@ -632,7 +586,7 @@
         document.getElementById('weekBtn').addEventListener('click', ()=>{ analyticsMode='week'; document.getElementById('weekBtn').classList.add('btn-primary'); document.getElementById('monthBtn').classList.remove('btn-primary'); loadAnalytics(); });
         document.getElementById('monthBtn').addEventListener('click', ()=>{ analyticsMode='month'; document.getElementById('monthBtn').classList.add('btn-primary'); document.getElementById('weekBtn').classList.remove('btn-primary'); loadAnalytics(); });
 
-        // ---- Items ----
+        // Items
         async function loadItems() {
             if (!cafeData.id) return;
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -689,6 +643,7 @@
         document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
         document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
 
+        // QR
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
