@@ -64,6 +64,7 @@
         .image-upload-area input[type="file"] { display:none; }
         .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
         .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
+        .edit-active #submitItemBtn::after { content: " (editing)"; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; gap: 1rem; }
@@ -119,10 +120,9 @@
             </div>
         </div>
 
-        <!-- ========== ADD ITEM CARD – KEPT & MADE FASTER ========== -->
-        <!-- Removed "collapsed" so it's open by default -->
+        <!-- ========== ADD/EDIT ITEM CARD ========== -->
         <div class="card" id="addItemCard">
-            <h3><span>➕ Add Item</span> <span>▼</span></h3>
+            <h3><span id="addItemTitle">➕ Add Item</span> <span>▼</span></h3>
             <div class="card-content">
                 <input type="hidden" id="editItemId">
                 <div class="flex-row" style="margin-bottom:1rem;">
@@ -164,6 +164,7 @@
                 <div class="flex-row" style="margin-top:1.5rem; gap:1rem;">
                     <button id="submitItemBtn" class="btn-primary" style="flex:1; padding: 0.8rem;">Save Item</button>
                     <button id="saveAndNextBtn" style="flex:1; padding: 0.8rem;">Save & Add Next</button>
+                    <button id="cancelEditBtn" style="flex:1; padding: 0.8rem; display:none; background: transparent; border: 1px solid var(--border);">Cancel Edit</button>
                 </div>
             </div>
         </div>
@@ -215,8 +216,6 @@
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const EDGE_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
-        // Gemini URL removed since scanner is gone, but keep variable if needed elsewhere
-        const GEMINI_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
 
         function toast(msg, err=false) {
             const el = document.createElement('div');
@@ -341,8 +340,6 @@
             else { Object.assign(cafeData, u); toast('Settings saved!'); }
         });
 
-        // AI Scanner removed – no event listeners for that section
-
         // Subscription
         async function loadSubscriptionInfo() {
             const container = document.getElementById('subscriptionBoxContainer');
@@ -361,7 +358,7 @@
             });
         }
 
-        // Image upload (kept for manual item image upload)
+        // Image upload
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -513,25 +510,127 @@
                     ${item.image_url ? `<img src="${item.image_url}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">` : ''}
                     <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem; color:var(--primary);">${item.category} | ₹${item.price}</div></div>
                     <label class="toggle-switch"><input type="checkbox" ${item.available?'checked':''} data-id="${item.id}" class="toggle-avail"><span class="toggle-slider"></span></label>
+                    <button class="edit-item-btn btn-sm" data-id="${item.id}">✏️</button>
                     <button class="delete-item-btn btn-sm" data-id="${item.id}" style="color:#f87171;">Del</button>
                 </div>`;
             }).join('');
             document.querySelectorAll('.toggle-avail').forEach(cb => cb.addEventListener('change', async function(){ await _supabase.from('menu_items').update({available:this.checked}).eq('id',this.dataset.id); }));
             document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
+            // Edit button handler
+            document.querySelectorAll('.edit-item-btn').forEach(b => b.addEventListener('click', function(){
+                const id = this.dataset.id;
+                const item = allItems.find(i => i.id === id);
+                if (item) editItem(item);
+            }));
+        }
+
+        // Edit item: fill the form
+        function editItem(item) {
+            document.getElementById('editItemId').value = item.id;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemPrice').value = item.price;
+            // Set category
+            const catSelect = document.getElementById('itemCategorySelect');
+            const catInput = document.getElementById('itemCategoryInput');
+            if (catSelect.querySelector(`option[value="${item.category}"]`)) {
+                catSelect.value = item.category;
+                catInput.style.display = 'none';
+            } else {
+                catSelect.value = '__new__';
+                catInput.style.display = 'block';
+                catInput.value = item.category;
+            }
+            document.getElementById('itemDiscount').value = item.discount || '';
+            // Description – handle variants
+            let desc = item.description || '';
+            // Clear previous variants
+            const varContainer = document.getElementById('variantsContainer');
+            varContainer.innerHTML = ''; // clear existing
+            if (desc.startsWith('VAR::')) {
+                const varStr = desc.replace('VAR::','');
+                const parts = varStr.split('|');
+                parts.forEach(p => {
+                    const [vname, vprice] = p.split('=');
+                    const row = createVariantRow(vname, vprice);
+                    varContainer.appendChild(row);
+                });
+                desc = ''; // clear description part
+            }
+            document.getElementById('itemDesc').value = desc;
+            document.getElementById('itemFeatured').checked = item.featured || false;
+
+            // Image preview
+            const preview = document.getElementById('itemImagePreview');
+            if (item.image_url) {
+                preview.src = item.image_url;
+                preview.style.display = 'block';
+            } else {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            // Reset file input
+            document.getElementById('itemImageFile').value = '';
+
+            // Change UI to edit mode
+            document.getElementById('addItemTitle').textContent = '✏️ Edit Item';
+            document.getElementById('submitItemBtn').textContent = 'Update Item';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
+            document.getElementById('addItemCard').classList.add('edit-active');
+            // Ensure card is open
+            document.getElementById('addItemCard').classList.remove('collapsed');
+        }
+
+        function createVariantRow(name='', price='') {
+            const row = document.createElement('div');
+            row.className = 'flex-row';
+            row.style.marginBottom = '0.5rem';
+            row.innerHTML = `<input class="var-name" placeholder="Size" style="flex:1;" value="${name}">
+                             <input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;" value="${price}">
+                             <button class="remove-var btn-sm" style="color:#f87171;">✕</button>`;
+            row.querySelector('.remove-var').addEventListener('click', () => row.remove());
+            return row;
+        }
+
+        // Cancel edit
+        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+        function resetForm() {
+            document.getElementById('editItemId').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemPrice').value = '';
+            document.getElementById('itemCategorySelect').value = 'Uncategorized';
+            document.getElementById('itemCategoryInput').style.display = 'none';
+            document.getElementById('itemDiscount').value = '';
+            document.getElementById('itemDesc').value = '';
+            document.getElementById('itemFeatured').checked = false;
+            document.getElementById('itemImageFile').value = '';
+            document.getElementById('itemImagePreview').style.display = 'none';
+            document.getElementById('variantsContainer').innerHTML = '<div class="flex-row" style="margin-bottom:0.5rem;"><input class="var-name" placeholder="e.g., Large" style="flex:1;"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;"><button class="remove-var btn-sm" style="color:#f87171;">✕</button></div>';
+            document.getElementById('addItemTitle').textContent = '➕ Add Item';
+            document.getElementById('submitItemBtn').textContent = 'Save Item';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('addItemCard').classList.remove('edit-active');
+            document.getElementById('itemName').focus();
         }
 
         document.getElementById('menuSearch').addEventListener('input', renderItems);
         document.getElementById('aiDescBtn').addEventListener('click', ()=> document.getElementById('itemDesc').value = ['Rich and creamy.','A delightful blend.','Freshly prepared.','Our signature recipe.'][Math.floor(Math.random()*4)]);
         document.getElementById('itemCategorySelect').addEventListener('change', function() { const input = document.getElementById('itemCategoryInput'); if (this.value === '__new__') { input.style.display = 'block'; input.value = ''; } else input.style.display = 'none'; });
-        document.getElementById('addVariantBtn').addEventListener('click', ()=>{ const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.5rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm" style="color:#f87171;">✕</button>'; document.getElementById('variantsContainer').appendChild(row); row.querySelector('.remove-var').addEventListener('click', ()=>row.remove()); });
+        document.getElementById('addVariantBtn').addEventListener('click', ()=>{
+            const row = createVariantRow();
+            document.getElementById('variantsContainer').appendChild(row);
+        });
 
         async function saveItem(andClear = false) {
             if (!cafeData.id) return toast('Cafe not ready', true);
+            const editId = document.getElementById('editItemId').value;
             const name = document.getElementById('itemName').value.trim();
             if (!name) return toast('Name required', true);
             let category = document.getElementById('itemCategorySelect').value;
             if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
-            const price = parseFloat(document.getElementById('itemPrice').value)||0, discount = document.getElementById('itemDiscount').value.trim(), featured = document.getElementById('itemFeatured').checked;
+            const price = parseFloat(document.getElementById('itemPrice').value)||0,
+                  discount = document.getElementById('itemDiscount').value.trim(),
+                  featured = document.getElementById('itemFeatured').checked;
             let desc = document.getElementById('itemDesc').value.trim();
             const varRows = document.querySelectorAll('#variantsContainer > div'); let varParts = [];
             varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
@@ -541,15 +640,32 @@
             if (imageFile) {
                 try { imageUrl = await uploadImageToImgBB(imageFile); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saved without image.', true); }
             }
-            const { error } = await _supabase.from('menu_items').insert({ name, description: desc, price, category, discount, featured, image_url: imageUrl || undefined, cafe_id: cafeData.id });
-            if (error) { toast('Save failed', true); return; }
-            toast('Item added!'); loadItems(); loadStats();
-            if (andClear) {
-                document.getElementById('itemName').value = '';
-                document.getElementById('itemPrice').value = '';
-                document.getElementById('itemName').focus();
+
+            if (editId) {
+                // Update existing item
+                const updateData = { name, description: desc, price, category, discount, featured };
+                if (imageUrl) updateData.image_url = imageUrl;
+                const { error } = await _supabase.from('menu_items').update(updateData).eq('id', editId);
+                if (error) { toast('Update failed', true); return; }
+                toast('Item updated!');
+                resetForm();
+            } else {
+                // Insert new item
+                const { error } = await _supabase.from('menu_items').insert({ name, description: desc, price, category, discount, featured, image_url: imageUrl || undefined, cafe_id: cafeData.id });
+                if (error) { toast('Save failed', true); return; }
+                toast('Item added!');
+                if (andClear) {
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('itemPrice').value = '';
+                    document.getElementById('itemName').focus();
+                } else {
+                    resetForm();
+                }
             }
+            loadItems();
+            loadStats();
         }
+
         document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
         document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
 
