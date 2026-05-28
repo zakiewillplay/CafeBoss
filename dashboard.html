@@ -353,7 +353,7 @@
             else { Object.assign(cafeData, u); toast('Settings saved!'); }
         });
 
-        // ==================== GEMINI AI SCANNER (SECURE) ====================
+        // ==================== GEMINI AI SCANNER ====================
         document.getElementById('aiMenuImageFile').addEventListener('change', async function() {
             const file = this.files[0];
             if (!file) return;
@@ -383,7 +383,10 @@
                 });
 
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Scanner failed');
+                if (!response.ok) {
+                    const detail = result.error || result.message || 'Unknown error';
+                    throw new Error(detail);
+                }
 
                 const items = result.items;
                 if (!items || items.length === 0) {
