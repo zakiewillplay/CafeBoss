@@ -60,27 +60,14 @@
         .disconnected { background:#c0392b; color:#fff; }
         .subscription-box { background:var(--card); border:1px solid var(--primary); border-radius:16px; padding:1.5rem; text-align:center; }
         .subscription-box input { margin:0.5rem 0; width: 100%; max-width: 300px; }
-
-        /* Quick Add bar */
-        .quick-add-bar {
-            display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;
-            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-            padding: 1rem; margin-bottom: 1rem;
-        }
-        .quick-add-bar input, .quick-add-bar select {
-            flex: 1 1 150px; min-width: 120px; margin:0;
-        }
-        .quick-add-bar button {
-            background: var(--primary); color: #fff; border: none;
-            padding: 0.7rem 1.2rem; border-radius: 10px; font-weight: 600;
-            white-space: nowrap;
-        }
-
+        .image-upload-area { margin:0.8rem 0; padding: 1rem; border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
+        .image-upload-area input[type="file"] { display:none; }
+        .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
+        .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; gap: 1rem; }
             .card { padding: 1rem; }
-            .quick-add-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -132,19 +119,58 @@
             </div>
         </div>
 
-        <!-- ========== QUICK ADD ITEM (replaces collapsed manual add) ========== -->
+        <!-- ========== ADD ITEM CARD – KEPT & MADE FASTER ========== -->
+        <!-- Removed "collapsed" so it's open by default -->
+        <div class="card" id="addItemCard">
+            <h3><span>➕ Add Item</span> <span>▼</span></h3>
+            <div class="card-content">
+                <input type="hidden" id="editItemId">
+                <div class="flex-row" style="margin-bottom:1rem;">
+                    <input id="itemName" placeholder="Item name *" style="flex:2;" autofocus>
+                    <input type="number" id="itemPrice" step="0.01" placeholder="Price ₹" style="width:120px;">
+                </div>
+                <div class="flex-row" style="margin-bottom:1rem;">
+                    <select id="itemCategorySelect" class="select-cat" style="flex:1;">
+                        <option value="Uncategorized">Uncategorized</option>
+                        <option value="__new__">+ Add new category…</option>
+                    </select>
+                    <input id="itemDiscount" placeholder="Discount" style="flex:1;">
+                </div>
+                <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:1rem; width: 100%;">
+                <div style="position: relative; margin-bottom:1rem;">
+                    <textarea id="itemDesc" placeholder="Description" rows="3" style="width: 100%; padding-right: 60px;"></textarea>
+                    <button id="aiDescBtn" class="btn-sm" style="position: absolute; right: 10px; top: 10px;">✨ AI</button>
+                </div>
+                <div class="flex-row" style="margin-bottom:1rem;">
+                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.9rem; font-weight:600;">
+                        <input type="checkbox" id="itemFeatured" style="width: 18px; height: 18px;"> 🔥 Mark as Chef's Special
+                    </label>
+                </div>
+                <div class="image-upload-area" style="text-align: left;">
+                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Food Photo (Optional)</span>
+                    <label for="itemImageFile" style="font-size: 0.8rem;">Choose Image</label>
+                    <input type="file" id="itemImageFile" accept="image/*">
+                    <img id="itemImagePreview" class="image-preview" alt="Preview" style="margin-left: 0; margin-top: 10px;">
+                </div>
+                <div id="variantsContainer" style="margin-bottom:0.5rem; margin-top: 1rem;">
+                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Sizes / Variants (Optional)</span>
+                    <div class="flex-row" style="margin-bottom:0.5rem;">
+                        <input class="var-name" placeholder="e.g., Large" style="flex:1;">
+                        <input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;">
+                        <button class="remove-var btn-sm" style="color: #f87171;">✕</button>
+                    </div>
+                </div>
+                <button id="addVariantBtn" class="btn-sm">+ Add Another Size</button>
+                <div class="flex-row" style="margin-top:1.5rem; gap:1rem;">
+                    <button id="submitItemBtn" class="btn-primary" style="flex:1; padding: 0.8rem;">Save Item</button>
+                    <button id="saveAndNextBtn" style="flex:1; padding: 0.8rem;">Save & Add Next</button>
+                </div>
+            </div>
+        </div>
+
         <div class="card" id="menuItemsCard">
             <h3><span>📋 Live Menu Items</span> <span>▼</span></h3>
             <div class="card-content">
-                <!-- Quick Add Bar at top -->
-                <div class="quick-add-bar">
-                    <input type="text" id="quickName" placeholder="Item name *">
-                    <input type="number" id="quickPrice" step="0.01" placeholder="Price ₹">
-                    <select id="quickCategory">
-                        <option value="Uncategorized">Uncategorized</option>
-                    </select>
-                    <button id="quickAddBtn">+ Add Item</button>
-                </div>
                 <input type="text" id="menuSearch" class="menu-search" placeholder="🔍 Search items...">
                 <div id="menuItemsList"></div>
             </div>
@@ -189,7 +215,7 @@
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const EDGE_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
-        // Note: Gemini function removed from code as AI scanner is gone, but keep variable if needed elsewhere
+        // Gemini URL removed since scanner is gone, but keep variable if needed elsewhere
         const GEMINI_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
 
         function toast(msg, err=false) {
@@ -315,8 +341,7 @@
             else { Object.assign(cafeData, u); toast('Settings saved!'); }
         });
 
-        // ==================== AI SCANNER REMOVED ====================
-        // All previous Gemini / AI scanner code removed completely.
+        // AI Scanner removed – no event listeners for that section
 
         // Subscription
         async function loadSubscriptionInfo() {
@@ -336,7 +361,16 @@
             });
         }
 
-        // Image upload (kept for possible future use, but no longer triggered by AI)
+        // Image upload (kept for manual item image upload)
+        document.getElementById('itemImageFile').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => { document.getElementById('itemImagePreview').src = e.target.result; document.getElementById('itemImagePreview').style.display = 'block'; };
+                reader.readAsDataURL(file);
+            }
+        });
+
         async function uploadImageToImgBB(file) {
             const formData = new FormData(); formData.append('image', file);
             const response = await fetch(EDGE_FUNCTION_URL, { method: 'POST', body: formData, headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
@@ -463,12 +497,9 @@
             if (!cafeData.id) return;
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
             allItems = data||[]; renderItems();
-            // Update quick-add category dropdown
             const cats = [...new Set(allItems.map(i=>i.category).filter(Boolean))].sort();
-            const quickSelect = document.getElementById('quickCategory');
-            quickSelect.innerHTML = '<option value="Uncategorized">Uncategorized</option>';
-            cats.forEach(c => quickSelect.innerHTML += `<option value="${c}">${c}</option>`);
-            quickSelect.innerHTML += '<option value="__new__">+ Add new…</option>';
+            const select = document.getElementById('itemCategorySelect');
+            select.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="__new__">+ Add new…</option>';
         }
 
         function renderItems() {
@@ -490,39 +521,44 @@
         }
 
         document.getElementById('menuSearch').addEventListener('input', renderItems);
+        document.getElementById('aiDescBtn').addEventListener('click', ()=> document.getElementById('itemDesc').value = ['Rich and creamy.','A delightful blend.','Freshly prepared.','Our signature recipe.'][Math.floor(Math.random()*4)]);
+        document.getElementById('itemCategorySelect').addEventListener('change', function() { const input = document.getElementById('itemCategoryInput'); if (this.value === '__new__') { input.style.display = 'block'; input.value = ''; } else input.style.display = 'none'; });
+        document.getElementById('addVariantBtn').addEventListener('click', ()=>{ const row = document.createElement('div'); row.className='flex-row'; row.style.marginBottom='0.5rem'; row.innerHTML='<input class="var-name" placeholder="Size" style="flex:1"><input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1"><button class="remove-var btn-sm" style="color:#f87171;">✕</button>'; document.getElementById('variantsContainer').appendChild(row); row.querySelector('.remove-var').addEventListener('click', ()=>row.remove()); });
 
-        // ========== QUICK ADD LOGIC ==========
-        document.getElementById('quickCategory').addEventListener('change', function() {
-            if (this.value === '__new__') {
-                const newCat = prompt('Enter new category name:');
-                if (newCat) {
-                    this.innerHTML += `<option value="${newCat}">${newCat}</option>`;
-                    this.value = newCat;
-                } else {
-                    this.value = 'Uncategorized';
-                }
-            }
-        });
-
-        document.getElementById('quickAddBtn').addEventListener('click', async () => {
-            const name = document.getElementById('quickName').value.trim();
-            if (!name) return toast('Item name required', true);
-            const price = parseFloat(document.getElementById('quickPrice').value) || 0;
-            let category = document.getElementById('quickCategory').value;
-            if (category === '__new__') category = 'Uncategorized';
+        async function saveItem(andClear = false) {
             if (!cafeData.id) return toast('Cafe not ready', true);
-            
-            const { error } = await _supabase.from('menu_items').insert({
-                name, price, category, cafe_id: cafeData.id, available: true
-            });
-            if (error) { toast('Add failed', true); return; }
-            toast('Item added!');
-            // Clear quick-add fields
-            document.getElementById('quickName').value = '';
-            document.getElementById('quickPrice').value = '';
-            document.getElementById('quickName').focus();
-            loadItems();
-            loadStats();
+            const name = document.getElementById('itemName').value.trim();
+            if (!name) return toast('Name required', true);
+            let category = document.getElementById('itemCategorySelect').value;
+            if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
+            const price = parseFloat(document.getElementById('itemPrice').value)||0, discount = document.getElementById('itemDiscount').value.trim(), featured = document.getElementById('itemFeatured').checked;
+            let desc = document.getElementById('itemDesc').value.trim();
+            const varRows = document.querySelectorAll('#variantsContainer > div'); let varParts = [];
+            varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
+            if (varParts.length > 0) desc = 'VAR::' + varParts.join('|');
+            let imageUrl = '';
+            const imageFile = document.getElementById('itemImageFile').files[0];
+            if (imageFile) {
+                try { imageUrl = await uploadImageToImgBB(imageFile); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saved without image.', true); }
+            }
+            const { error } = await _supabase.from('menu_items').insert({ name, description: desc, price, category, discount, featured, image_url: imageUrl || undefined, cafe_id: cafeData.id });
+            if (error) { toast('Save failed', true); return; }
+            toast('Item added!'); loadItems(); loadStats();
+            if (andClear) {
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+                document.getElementById('itemName').focus();
+            }
+        }
+        document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
+        document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
+
+        // Keyboard shortcut: press Enter anywhere in the add item card to save
+        document.getElementById('addItemCard').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON' && e.target.id !== 'itemDesc') {
+                e.preventDefault();
+                saveItem(false);
+            }
         });
 
         // QR
