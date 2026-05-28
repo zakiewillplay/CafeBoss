@@ -116,8 +116,13 @@
         .item-details { flex: 1; min-width: 0; }
         .item-name { font-weight: 700; font-size: 1.3rem; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem; flex-wrap: wrap; }
         .item-desc { font-size:0.9rem; color: var(--muted); margin-top:0.2rem; line-height:1.5; word-break: break-word; }
-        .badge-discount { background: #c0392b; color:#fff; padding:3px 10px; border-radius: 20px; font-size:0.75rem; font-weight:700; display:inline-block; letter-spacing:0.5px; }
-        .badge-featured { font-size:1rem; }
+        .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.7rem; font-weight: 700; }
+        .badge-discount { background:#c0392b; color:#fff; }
+        .badge-featured { background:#f39c12; color:#000; }
+        .badge-standard { background:#3498db; color:#fff; }
+        .badge-best { background:#9b59b6; color:#fff; }
+        .badge-selling { background:#e67e22; color:#fff; }
+        .badge-new { background:#2ecc71; color:#fff; }
         .variant-pills { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
         .variant-pill { padding:0.4rem 1rem; border-radius: 20px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-color); cursor:pointer; font-size:0.85rem; transition: all 0.3s; font-weight:500; }
         .variant-pill.selected { background: var(--gold); color:#000; border-color:var(--gold); }
@@ -308,6 +313,32 @@
             renderMenu();
         }
 
+        // Helper: truncate description to a max number of words
+        function truncateWords(text, maxWords = 15) {
+            if (!text) return '';
+            const words = text.split(/\s+/);
+            if (words.length <= maxWords) return text;
+            return words.slice(0, maxWords).join(' ') + '…';
+        }
+
+        // Helper: get badges for an item
+        function getItemBadges(item) {
+            let badges = '';
+            const tags = item.tags ? item.tags.split(',') : [];
+            if (item.featured || tags.includes('featured')) badges += '<span class="badge badge-featured">🔥 Chef\'s Special</span> ';
+            if (tags.includes('standard')) badges += '<span class="badge badge-standard">✅ Standard</span> ';
+            if (tags.includes('best')) badges += '<span class="badge badge-best">🏆 Best of Cafe</span> ';
+            if (tags.includes('bestselling')) badges += '<span class="badge badge-selling">📈 Best Selling</span> ';
+            // New badge (within 7 days)
+            if (item.created_at) {
+                const created = new Date(item.created_at);
+                const now = new Date();
+                if ((now - created) / (1000*60*60*24) < 7) badges += '<span class="badge badge-new">🆕 New</span> ';
+            }
+            if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
+            return badges;
+        }
+
         function renderMenu() {
             const search = document.getElementById('searchBar').value.toLowerCase();
             const filtered = menuItems.filter(i =>
@@ -334,16 +365,20 @@
                     catItems.forEach(item => {
                         const hasVariants = item.description?.startsWith('VAR::');
                         let variants = [], priceDisplay = item.price;
+                        let itemDescText = item.description || '';
                         if (hasVariants) {
                             const vStr = item.description.replace('VAR::','');
                             variants = vStr.split('|').map(v => { const [n,p]=v.split('='); return { name:n, price:parseFloat(p) }; });
-                            if (variants.length) priceDisplay = variants.price;
+                            if (variants.length) priceDisplay = variants[0].price;
+                            itemDescText = ''; // No description text when variants are present
                         }
+                        // Truncate description
+                        itemDescText = truncateWords(itemDescText, 15);
                         let variantHTML = '';
                         if (variants.length) {
                             variantHTML = `<div class="variant-pills">${variants.map((v,i)=>`<button class="variant-pill${i===0?' selected':''}" data-price="${v.price}" data-vname="${v.name}">${v.name} ₹${v.price}</button>`).join('')}</div>`;
                         }
-                        // ---------- LAZY LOADING IMAGES ----------
+                        const badgesHTML = getItemBadges(item);
                         const imageHTML = item.image_url
                             ? `<img src="${item.image_url}" class="menu-item-img" loading="lazy" decoding="async">`
                             : '';
@@ -353,10 +388,9 @@
                             <div class="item-details">
                                 <div class="item-name">
                                     ${item.name}
-                                    ${item.discount ? `<span class="badge-discount">${item.discount}</span>` : ''}
-                                    ${item.featured ? '<span class="badge-featured">🔥</span>' : ''}
+                                    ${badgesHTML}
                                 </div>
-                                ${!hasVariants && item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                                ${itemDescText && !hasVariants ? `<div class="item-desc">${itemDescText}</div>` : ''}
                                 ${variantHTML}
                                 <div class="item-price">₹<span class="active-price">${priceDisplay}</span></div>
                             </div>
