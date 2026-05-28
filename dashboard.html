@@ -88,7 +88,6 @@
         .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
         .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
         
-        /* AI Scanner Specific */
         #aiScannerStatus { margin-top: 1rem; font-weight: 600; }
         .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s ease-in-out infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -262,10 +261,6 @@
                     <div><input type="color" id="setAccent" value="#2F3E46"> <span style="font-size:0.8rem;">Accent</span></div>
                 </div>
 
-                <hr style="border:0; border-top:1px solid var(--border); margin-bottom:1rem;">
-                <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:0.5rem;">AI Scanner Setup (Bring Your Own Key)</label>
-                <input id="setApiKey" placeholder="Paste your free Gemini / DeepSeek API Key here" type="password" style="width:100%; margin-bottom:1.5rem;">
-
                 <button id="saveSettingsBtn" class="btn-primary" style="width:100%;">Save All Settings</button>
             </div>
         </div>
@@ -394,7 +389,6 @@
             document.getElementById('setDesc').value = cafeData.description||'';
             document.getElementById('setPrimary').value = cafeData.primary_color||'#FF6B35';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
-            document.getElementById('setApiKey').value = localStorage.getItem('cafeboss_ai_key') || '';
 
             await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics(), loadSubscriptionInfo()]);
             if (cafeData.id && !cafeData._temp) setupRealtime();
@@ -411,7 +405,7 @@
             }
         }
 
-        // ========== SETTINGS & KEYS ==========
+        // ========== SETTINGS ==========
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = { 
@@ -421,71 +415,52 @@
                 primary_color: document.getElementById('setPrimary').value, 
                 accent_color: document.getElementById('setAccent').value 
             };
-            const aiKey = document.getElementById('setApiKey').value.trim();
-            if (aiKey) localStorage.setItem('cafeboss_ai_key', aiKey);
             
             const { error } = await _supabase.from('cafes').update(u).eq('id', cafeData.id);
             if (error) toast('Save failed', true);
             else { Object.assign(cafeData, u); toast('Settings saved successfully!'); }
         });
 
-        // ========== AI MENU SCANNER (VISION API) ==========
+        // ========== AI MENU SCANNER (SECURE EDGE FUNCTION ROUTE) ==========
         document.getElementById('aiMenuImageFile').addEventListener('change', async function() {
             const file = this.files;
             if (!file) return;
             
-            const apiKey = localStorage.getItem('cafeboss_ai_key');
-            if (!apiKey) {
-                alert("Please paste your free Gemini or DeepSeek API Key in the 'Cafe Settings' section first.");
-                document.getElementById('settingsCard').classList.remove('collapsed');
-                return;
-            }
-
-            // Show Preview & Loader
             const preview = document.getElementById('aiMenuImagePreview');
             const status = document.getElementById('aiScannerStatus');
+            
             preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
-            status.innerHTML = `<span class="spinner"></span> Scanning menu... Please wait.`;
+            status.innerHTML = `<span class="spinner"></span> AI is reading your menu... Please wait.`;
             status.style.color = 'var(--primary)';
 
             try {
-                // Convert to Base64
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = async () => {
                     const base64String = reader.result.split(',');
                     const mimeType = file.type;
 
-                    // Formulate standard Gemini Prompt for strict JSON
-                    const promptText = `You are a menu extraction bot. Read this restaurant menu image. Extract all items, their prices, and their categories. Return ONLY a valid JSON array of objects. Do not use markdown blocks (\`\`\`json). Just return the raw array. Format: [{"name": "Coffee", "price": 120, "category": "Drinks", "description": "Optional description"}]`;
-
-                    // Using Gemini 1.5 Flash endpoint (Default)
-                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                    
-                    const response = await fetch(endpoint, {
+                    const response = await fetch('https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/smart-function', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
                         body: JSON.stringify({
-                            contents: [{ parts: [
-                                { text: promptText },
-                                { inline_data: { mime_type: mimeType, data: base64String } }
-                            ]}]
+                            image: base64String,
+                            mimeType: mimeType
                         })
                     });
 
-                    if (!response.ok) throw new Error("API limits reached or invalid key.");
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error || "The AI server is momentarily busy. Please try again.");
+                    }
 
-                    const jsonResult = await response.json();
-                    let rawText = jsonResult.candidates.content.parts.text;
-                    
-                    // Clean markdown if AI accidentally includes it
-                    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const extractedItems = JSON.parse(rawText);
+                    const extractedItems = await response.json();
+                    status.innerHTML = `✅ Successfully extracted ${extractedItems.length} items. Saving to menu...`;
 
-                    status.innerHTML = `✅ Found ${extractedItems.length} items. Saving to database...`;
-
-                    // Bulk Insert into Supabase
                     let insertData = extractedItems.map(item => ({
                         cafe_id: cafeData.id,
                         name: item.name,
@@ -496,23 +471,19 @@
                     }));
 
                     const { error } = await _supabase.from('menu_items').insert(insertData);
-                    if (error) throw new Error("Failed to save to database");
+                    if (error) throw new Error("Failed to insert items into your menu list.");
 
-                    status.innerHTML = `🎉 Successfully added ${extractedItems.length} items to your menu!`;
+                    status.innerHTML = `🎉 Done! ${extractedItems.length} items successfully generated and added to your menu.`;
                     status.style.color = '#27ae60';
                     loadItems();
                     loadStats();
-
                 };
             } catch (err) {
                 console.error(err);
-                status.innerHTML = `❌ Error: ${err.message}. Try adding items manually.`;
+                status.innerHTML = `❌ Scanner Notice: ${err.message}`;
                 status.style.color = '#c0392b';
             }
         });
-
-        // ========== EXISTING FUNCTIONALITY BLOCKS ==========
-        // (Image Uploads, Realtime Orders, Charts, PDFs remain unchanged and fully functional)
 
         async function loadSubscriptionInfo() {
             const container = document.getElementById('subscriptionBoxContainer');
@@ -529,7 +500,6 @@
             });
         }
 
-        // Handle Manual Image Upload
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files;
             if (file) {
@@ -547,7 +517,6 @@
             return result.url;
         }
 
-        // Stats & Orders functions
         async function loadStats() {
             if (!cafeData.id) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -585,7 +554,6 @@
             document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => printSingleOrder(allOrders.find(o=>o.id===b.dataset.id))));
         }
 
-        // Print and export logic
         function printSingleOrder(order) {
             const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
             let html = `<html><body style="font-family:sans-serif;padding:20px;"><h2>Cafe Boss Receipt</h2><p>Table: ${order.table_number||'N/A'} | Customer: ${order.customer_name||'Guest'}</p><hr>`;
@@ -610,7 +578,6 @@
                 });
         }
 
-        // Load Items and save logic
         async function loadItems() { 
             if (!cafeData.id) return; 
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category'); 
@@ -681,7 +648,6 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // Chart Loader Stub
         async function loadAnalytics() {}
 
         init();
