@@ -74,9 +74,7 @@
         .tag-toggle-group input[type="checkbox"] { width: auto; margin: 0; }
         .scanner-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .scanner-buttons button { flex: 1; padding: 0.8rem; }
-        /* Table QR specific */
         .table-qr-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }
-        /* Translation section */
         .translation-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; }
         .translation-row input { flex: 1; min-width: 120px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -222,7 +220,7 @@
             </div>
         </div>
 
-        <!-- QR CODE CARD (updated with table QR) -->
+        <!-- QR CODE CARD (with table QR) -->
         <div class="card collapsed" id="qrCard">
             <h3><span>📱 QR Code & Links</span> <span>▼</span></h3>
             <div class="card-content">
@@ -247,7 +245,7 @@
             </div>
         </div>
 
-        <!-- SETTINGS CARD (now includes Google Place ID) -->
+        <!-- SETTINGS CARD (with Google Place ID) -->
         <div class="card collapsed" id="settingsCard">
             <h3><span>⚙️ Cafe Settings</span> <span>▼</span></h3>
             <div class="card-content">
@@ -404,7 +402,7 @@
             if (cafeData.id && !cafeData._temp) setupRealtime();
         }
 
-        // Settings save (now includes Google Place ID)
+        // Settings save (includes Google Place ID)
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = {
@@ -420,7 +418,7 @@
             else { Object.assign(cafeData, u); toast('Settings saved!'); }
         });
 
-        // Subscription logic (unchanged)
+        // Subscription logic
         async function loadSubscriptionInfo() {
             const container = document.getElementById('subscriptionBoxContainer');
             if (!cafeData || !cafeData.id || cafeData._temp) return;
@@ -438,7 +436,7 @@
             });
         }
 
-        // Image upload (unchanged)
+        // Image upload
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -455,7 +453,7 @@
             return result.url;
         }
 
-        // Stats / Orders (unchanged)
+        // Stats / Orders
         async function loadStats() {
             if (!cafeData.id) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -554,7 +552,6 @@
                 });
         }
 
-        // Analytics (unchanged)
         async function loadAnalytics() {
             if (!cafeData.id) return;
             const days = analyticsMode === 'week' ? 7 : 30;
@@ -569,7 +566,6 @@
         document.getElementById('weekBtn').addEventListener('click', ()=>{ analyticsMode='week'; document.getElementById('weekBtn').classList.add('btn-primary'); document.getElementById('monthBtn').classList.remove('btn-primary'); loadAnalytics(); });
         document.getElementById('monthBtn').addEventListener('click', ()=>{ analyticsMode='month'; document.getElementById('monthBtn').classList.add('btn-primary'); document.getElementById('weekBtn').classList.remove('btn-primary'); loadAnalytics(); });
 
-        // Items loading (unchanged but now we include translations)
         async function loadItems() {
             if (!cafeData.id) return;
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -617,7 +613,6 @@
             }));
         }
 
-        // Edit item – now populates translations
         function editItem(item) {
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
@@ -723,7 +718,6 @@
             document.getElementById('translationRows').appendChild(row);
         }
 
-        // Cancel edit / Reset form
         document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
         function resetForm() {
@@ -761,7 +755,6 @@
             document.getElementById('variantsContainer').appendChild(row);
         });
 
-        // Initial variant row
         (function initVariants() {
             const varContainer = document.getElementById('variantsContainer');
             if (varContainer && varContainer.children.length <= 1) {
@@ -769,7 +762,6 @@
             }
         })();
 
-        // Save item – now includes translations
         async function saveItem(andClear = false) {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const editId = document.getElementById('editItemId').value;
@@ -854,7 +846,7 @@
             }
         });
 
-        // AI Scanner logic (unchanged)
+        // AI Scanner (unchanged)
         const aiFileInput = document.getElementById('aiMenuImageFile');
         const aiPreview = document.getElementById('aiMenuImagePreview');
         const scanBtn = document.getElementById('scanMenuBtn');
@@ -997,7 +989,6 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
-        // Table QR Generation
         document.getElementById('generateTableQrBtn').addEventListener('click', () => {
             const table = document.getElementById('tableNumberSelect').value;
             if (!table) return toast('Please select a table number.', true);
@@ -1009,7 +1000,6 @@
         });
         document.getElementById('copyTableQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('tableQrUrl').textContent); toast('Table link copied!'); });
 
-        // Download all table QR codes as PDF
         document.getElementById('downloadAllTableQrsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const { jsPDF } = window.jspdf;
@@ -1019,7 +1009,6 @@
             for (let i = 0; i < tables.length; i++) {
                 const table = tables[i];
                 const url = BASE_URL + cafeData.id + '&table=' + table;
-                // Create temporary img element to get QR code as canvas
                 const img = document.createElement('img');
                 img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
                 await new Promise(resolve => { img.onload = resolve; });
