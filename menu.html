@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
         :root {
-            --gold: #ff7f50; /* Adjusted to match the orange theme in your screenshot */
+            --gold: #ff7f50; 
             --gold-light: #ff9e7a;
             --dark: #0A0806;
             --glass: rgba(20, 18, 15, 0.85);
@@ -24,7 +24,7 @@
             --radius: 20px;
         }
         body.light-mode {
-            --dark: #f4f1eb; /* Matched to the background in your screenshot */
+            --dark: #f4f1eb; 
             --glass: rgba(255, 255, 250, 0.95);
             --glass-border: rgba(255, 127, 80, 0.3);
             --card-bg: rgba(255, 255, 255, 1);
@@ -333,13 +333,17 @@
                         if (tags.includes('featured')) badges += '<span class="badge badge-featured">🔥 Special</span> ';
                         if (tags.includes('new')) badges += '<span class="badge badge-new">🆕 New</span> ';
                         
-                        const imgUrl = item.image_url || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2RkZCIvPjwvc3ZnPg==';
+                        // FIX: Only create the image HTML if the database has an image URL
+                        const imageHTML = (item.image_url && item.image_url.trim() !== '') 
+                            ? `<img src="${item.image_url}" class="menu-item-img" loading="lazy">` 
+                            : '';
+                            
                         const cartItem = cart.find(c => c.id == item.id);
                         const qty = cartItem ? cartItem.qty : 0;
 
                         html += `
                         <div class="menu-item" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
-                            <img src="${imgUrl}" class="menu-item-img" loading="lazy">
+                            ${imageHTML}
                             <div class="item-details">
                                 <div class="item-name">${item.name}</div>
                                 <div style="margin-bottom: 4px;">${badges}</div>
