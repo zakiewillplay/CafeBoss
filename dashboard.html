@@ -74,6 +74,11 @@
         .tag-toggle-group input[type="checkbox"] { width: auto; margin: 0; }
         .scanner-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .scanner-buttons button { flex: 1; padding: 0.8rem; }
+        /* Multi-image previews */
+        .preview-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+        .preview-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .remove-preview { position: absolute; top: 2px; right: 2px; background: #c0392b; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 500px) {
             header { flex-direction: column; align-items: flex-start; }
@@ -130,23 +135,23 @@
             </div>
         </div>
 
-        <!-- AI SCANNER -->
+        <!-- ========== AI MENU SCANNER (MULTI-IMAGE) ========== -->
         <div class="card collapsed" id="aiScannerCard">
             <h3><span>🤖 AI Menu Scanner</span> <span style="font-size:0.8rem; background:var(--primary); color:#fff; padding:2px 8px; border-radius:10px;">BETA</span></h3>
             <div class="card-content">
-                <p style="font-size:0.9rem; color:var(--muted); margin-bottom:1rem;">Upload or take a photo of your paper menu. The AI extracts items, prices, categories & variants and adds them to your menu.</p>
+                <p style="font-size:0.9rem; color:var(--muted); margin-bottom:1rem;">Upload multiple photos of your paper menu. The AI reads all of them and adds the items to your menu.</p>
                 <div class="scanner-buttons">
-                    <button id="takePhotoBtn">📸 Take Photo</button>
+                    <button id="takePhotoBtn">📸 Take Photos</button>
                     <button id="galleryUploadBtn">🖼️ From Gallery</button>
                 </div>
-                <input type="file" id="aiMenuImageFile" accept="image/*" capture="environment" style="display:none;">
-                <img id="aiMenuImagePreview" class="image-preview" alt="Menu Preview">
-                <button id="scanMenuBtn" class="btn-primary" style="margin-top: 1rem; display: none;">🔍 Scan Menu</button>
+                <input type="file" id="aiMenuImageFile" accept="image/*" capture="environment" multiple style="display:none;">
+                <div id="aiPreviews" class="preview-grid"></div>
+                <button id="scanMenuBtn" class="btn-primary" style="margin-top: 1rem; display: none;">🔍 Scan All Menus</button>
                 <div id="aiScannerStatus" style="margin-top: 1rem; font-weight: 600;"></div>
             </div>
         </div>
 
-        <!-- ADD/EDIT ITEM CARD -->
+        <!-- ========== ADD/EDIT ITEM CARD ========== -->
         <div class="card" id="addItemCard">
             <h3><span id="addItemTitle">➕ Add Item</span> <span>▼</span></h3>
             <div class="card-content">
@@ -209,7 +214,6 @@
             </div>
         </div>
 
-        <!-- SETTINGS CARD with Google Place ID -->
         <div class="card collapsed" id="settingsCard">
             <h3><span>⚙️ Cafe Settings</span> <span>▼</span></h3>
             <div class="card-content">
@@ -224,11 +228,7 @@
                     <div><input type="color" id="setPrimary" value="#FF6B35"> <span style="font-size:0.8rem;">Primary</span></div>
                     <div><input type="color" id="setAccent" value="#2F3E46"> <span style="font-size:0.8rem;">Accent</span></div>
                 </div>
-                <!-- Google Place ID -->
-                <label style="font-size:0.8rem; color:var(--muted);">
-                    Google Place ID
-                    <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" style="color:var(--primary); text-decoration:underline; font-size:0.7rem;">(what's this?)</a>
-                </label>
+                <label style="font-size:0.8rem; color:var(--muted);">Google Place ID <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" style="color:var(--primary); text-decoration:underline; font-size:0.7rem;">(what's this?)</a></label>
                 <input id="setGooglePlaceId" placeholder="e.g., ChIJN1t_tDeuEmsRUsoyG83frY4" style="width:100%; margin-bottom:1.5rem;">
                 <button id="saveSettingsBtn" class="btn-primary" style="width:100%;">Save All Settings</button>
             </div>
@@ -356,7 +356,6 @@
             if (cafeData.id && !cafeData._temp) setupRealtime();
         }
 
-        // Settings save (includes Google Place ID)
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = {
@@ -372,7 +371,6 @@
             else { Object.assign(cafeData, u); toast('Settings saved!'); }
         });
 
-        // Subscription
         async function loadSubscriptionInfo() {
             const container = document.getElementById('subscriptionBoxContainer');
             if (!cafeData || !cafeData.id || cafeData._temp) return;
@@ -390,7 +388,6 @@
             });
         }
 
-        // Image upload (unchanged)
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -399,6 +396,7 @@
                 reader.readAsDataURL(file);
             }
         });
+
         async function uploadImageToImgBB(file) {
             const formData = new FormData(); formData.append('image', file);
             const response = await fetch(EDGE_FUNCTION_URL, { method: 'POST', body: formData, headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
@@ -407,7 +405,6 @@
             return result.url;
         }
 
-        // Stats / Orders (unchanged)
         async function loadStats() {
             if (!cafeData.id) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -746,11 +743,52 @@
             }
         });
 
-        // AI Scanner
+        // ========================
+        // 🤖 MULTI-IMAGE AI SCANNER
+        // ========================
         const aiFileInput = document.getElementById('aiMenuImageFile');
-        const aiPreview = document.getElementById('aiMenuImagePreview');
+        const aiPreviews = document.getElementById('aiPreviews');
         const scanBtn = document.getElementById('scanMenuBtn');
         const aiStatus = document.getElementById('aiScannerStatus');
+        // Store selected files
+        let selectedFiles = [];
+
+        // Helper to update previews
+        function updatePreviews() {
+            aiPreviews.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-preview" data-index="${index}">✕</button>`;
+                    aiPreviews.appendChild(div);
+                    div.querySelector('.remove-preview').addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        selectedFiles.splice(index, 1);
+                        updatePreviews();
+                        if (selectedFiles.length === 0) {
+                            scanBtn.style.display = 'none';
+                        }
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            scanBtn.style.display = selectedFiles.length > 0 ? 'inline-block' : 'none';
+        }
+
+        // Override change event for multi-file selection
+        aiFileInput.addEventListener('change', () => {
+            // Add new files to selectedFiles (avoid duplicates by name/size)
+            const newFiles = Array.from(aiFileInput.files);
+            newFiles.forEach(file => {
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                }
+            });
+            updatePreviews();
+            aiFileInput.value = ''; // reset so the same file can be re-selected if needed
+        });
 
         document.getElementById('takePhotoBtn').addEventListener('click', () => {
             aiFileInput.setAttribute('capture', 'environment');
@@ -761,28 +799,7 @@
             aiFileInput.click();
         });
 
-        aiFileInput.addEventListener('change', () => {
-            const file = aiFileInput.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) {
-                aiStatus.innerHTML = '❌ Please select a valid image file.';
-                aiStatus.style.color = '#c0392b';
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                aiPreview.src = e.target.result;
-                aiPreview.style.display = 'block';
-                scanBtn.style.display = 'inline-block';
-                aiStatus.textContent = '';
-            };
-            reader.onerror = () => {
-                aiStatus.innerHTML = '❌ Failed to read the image file.';
-                aiStatus.style.color = '#c0392b';
-            };
-            reader.readAsDataURL(file);
-        });
-
+        // Resize function (same as before)
         async function resizeImage(file, maxWidth = 1024, quality = 0.8) {
             return new Promise((resolve, reject) => {
                 if (!file || !file.type) return reject(new Error('No file selected.'));
@@ -813,68 +830,81 @@
 
         scanBtn.addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
-            const file = aiFileInput.files[0];
-            if (!file) return toast('No image selected', true);
+            if (selectedFiles.length === 0) return toast('No images selected', true);
 
-            aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> AI is analyzing your menu...';
+            aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning 0/' + selectedFiles.length + ' images...';
             aiStatus.style.color = 'var(--primary)';
             scanBtn.disabled = true;
 
-            try {
-                const { base64, mimeType } = await resizeImage(file);
-                const response = await fetch(GEMINI_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    },
-                    body: JSON.stringify({ imageBase64: base64, mimeType })
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || result.message || `HTTP ${response.status}`);
-                const items = result.items;
-                if (!items || items.length === 0) {
-                    aiStatus.innerHTML = '❌ No items detected. Try a clearer image.';
-                    aiStatus.style.color = '#c0392b';
-                    scanBtn.disabled = false;
-                    return;
-                }
-                const inserts = items.map(item => {
-                    let desc = item.description || '';
-                    if (item.variants && item.variants.length > 0) {
-                        const varParts = item.variants.map(v => `${v.name}=${v.price}`).join('|');
-                        desc = 'VAR::' + varParts;
+            let allInsertedItems = [];
+            let processedCount = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                try {
+                    const { base64, mimeType } = await resizeImage(file);
+                    const response = await fetch(GEMINI_FUNCTION_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        },
+                        body: JSON.stringify({ imageBase64: base64, mimeType })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || result.message || `HTTP ${response.status}`);
+                    const items = result.items || [];
+                    if (items.length > 0) {
+                        const inserts = items.map(item => {
+                            let desc = item.description || '';
+                            if (item.variants && item.variants.length > 0) {
+                                const varParts = item.variants.map(v => `${v.name}=${v.price}`).join('|');
+                                desc = 'VAR::' + varParts;
+                            }
+                            return {
+                                cafe_id: cafeData.id,
+                                name: item.name,
+                                price: parseFloat(item.price) || 0,
+                                category: item.category || 'Uncategorized',
+                                description: desc,
+                                available: true
+                            };
+                        });
+                        allInsertedItems = allInsertedItems.concat(inserts);
                     }
-                    return {
-                        cafe_id: cafeData.id,
-                        name: item.name,
-                        price: parseFloat(item.price) || 0,
-                        category: item.category || 'Uncategorized',
-                        description: desc,
-                        available: true
-                    };
-                });
-                const { error } = await _supabase.from('menu_items').insert(inserts);
-                if (error) {
-                    aiStatus.innerHTML = `❌ Failed to save: ${error.message}`;
-                    aiStatus.style.color = '#c0392b';
-                    scanBtn.disabled = false;
-                    return;
+                    processedCount++;
+                    aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
+                } catch (err) {
+                    console.error('Error on image ' + (i+1), err);
+                    // Continue with next image, but report error for this one
+                    toast(`Image ${i+1} failed: ${err.message}`, true);
+                    processedCount++;
+                    aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
                 }
-                aiStatus.innerHTML = `🎉 Success! ${items.length} items added to your menu.`;
-                aiStatus.style.color = '#27ae60';
-                scanBtn.disabled = false;
-                aiFileInput.value = '';
-                aiPreview.style.display = 'none';
-                scanBtn.style.display = 'none';
-                loadItems();
-                loadStats();
-            } catch (err) {
-                console.error(err);
-                aiStatus.innerHTML = `❌ Scanner error: ${err.message}`;
-                aiStatus.style.color = '#c0392b';
-                scanBtn.disabled = false;
             }
+
+            // Insert all collected items
+            if (allInsertedItems.length > 0) {
+                const { error } = await _supabase.from('menu_items').insert(allInsertedItems);
+                if (error) {
+                    aiStatus.innerHTML = `❌ Failed to save items: ${error.message}`;
+                    aiStatus.style.color = '#c0392b';
+                } else {
+                    aiStatus.innerHTML = `🎉 Success! ${allInsertedItems.length} items added from ${processedCount} image(s).`;
+                    aiStatus.style.color = '#27ae60';
+                }
+            } else {
+                aiStatus.innerHTML = '❌ No items detected in any image.';
+                aiStatus.style.color = '#c0392b';
+            }
+
+            scanBtn.disabled = false;
+            // Clear selected files and previews
+            selectedFiles = [];
+            updatePreviews();
+            scanBtn.style.display = 'none';
+            loadItems();
+            loadStats();
         });
 
         // QR
