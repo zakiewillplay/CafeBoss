@@ -64,9 +64,11 @@
         .disconnected { background:#c0392b; color:#fff; }
         .subscription-box { background:var(--card); border:1px solid var(--primary); border-radius:16px; padding:1.5rem; text-align:center; }
         .subscription-box input { margin:0.5rem 0; width: 100%; max-width: 300px; }
-        .image-upload-area { margin:0.8rem 0; padding: 1rem; border: 1px dashed var(--border); border-radius: 10px; text-align: center; }
+        .image-upload-area { margin:0.8rem 0; padding: 1rem; border: 1px dashed var(--border); border-radius: 10px; text-align: center; position: relative; }
         .image-upload-area input[type="file"] { display:none; }
         .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
+        .auto-image-btn { display: inline-block; margin-top: 0.5rem; background: transparent; border: 1px solid var(--primary); color: var(--primary); border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .auto-image-btn:hover { background: var(--primary); color: #fff; }
         .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
         .edit-active #submitItemBtn::after { content: " (editing)"; }
         .tag-toggle-group { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin-bottom: 1rem; }
@@ -74,7 +76,6 @@
         .tag-toggle-group input[type="checkbox"] { width: auto; margin: 0; }
         .scanner-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .scanner-buttons button { flex: 1; padding: 0.8rem; }
-        /* Multi-image previews */
         .preview-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
         .preview-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; }
         .preview-item img { width: 100%; height: 100%; object-fit: cover; }
@@ -84,6 +85,7 @@
             header { flex-direction: column; align-items: flex-start; }
             .container { padding: 0 0.8rem; gap: 1rem; }
             .card { padding: 1rem; }
+            .auto-image-btn { position: static; margin-top: 0.5rem; }
         }
     </style>
 </head>
@@ -135,7 +137,7 @@
             </div>
         </div>
 
-        <!-- ========== AI MENU SCANNER (MULTI-IMAGE) ========== -->
+        <!-- AI SCANNER (multi-image) -->
         <div class="card collapsed" id="aiScannerCard">
             <h3><span>🤖 AI Menu Scanner</span> <span style="font-size:0.8rem; background:var(--primary); color:#fff; padding:2px 8px; border-radius:10px;">BETA</span></h3>
             <div class="card-content">
@@ -151,7 +153,7 @@
             </div>
         </div>
 
-        <!-- ========== ADD/EDIT ITEM CARD ========== -->
+        <!-- ADD/EDIT ITEM CARD -->
         <div class="card" id="addItemCard">
             <h3><span id="addItemTitle">➕ Add Item</span> <span>▼</span></h3>
             <div class="card-content">
@@ -182,6 +184,7 @@
                     <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Food Photo (Optional)</span>
                     <label for="itemImageFile" style="font-size: 0.8rem;">Choose Image</label>
                     <input type="file" id="itemImageFile" accept="image/*">
+                    <button id="autoImageBtn" class="auto-image-btn" title="Find photo automatically">🖼️ Auto Image</button>
                     <img id="itemImagePreview" class="image-preview" alt="Preview" style="margin-left: 0; margin-top: 10px;">
                 </div>
                 <div id="variantsContainer" style="margin-bottom:0.5rem; margin-top: 1rem;">
@@ -246,7 +249,9 @@
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
         const EDGE_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
         const GEMINI_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
+        const AUTO_IMAGE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/auto-image';
 
+        // ---------- TOAST ----------
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast ' + (err ? 'error' : '') + ' show';
@@ -255,6 +260,7 @@
             setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
         }
 
+        // ---------- THEME ----------
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -272,6 +278,7 @@
         });
         applyTheme();
 
+        // ---------- SOUND ----------
         let audioCtx = null;
         let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
@@ -308,6 +315,7 @@
             }
         }
 
+        // ---------- NOTIFICATIONS ----------
         if ('Notification' in window) {
             const requestNotif = () => {
                 if (Notification.permission === 'default') {
@@ -331,6 +339,7 @@
         document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
 
+        // ---------- GLOBAL STATE ----------
         let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null, analyticsMode = 'week';
         let realtimeChannel = null;
 
@@ -356,6 +365,7 @@
             if (cafeData.id && !cafeData._temp) setupRealtime();
         }
 
+        // ---------- SETTINGS ----------
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const u = {
@@ -388,6 +398,7 @@
             });
         }
 
+        // ---------- IMAGE UPLOAD (for manual file) ----------
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -405,6 +416,7 @@
             return result.url;
         }
 
+        // ---------- STATS / ORDERS ----------
         async function loadStats() {
             if (!cafeData.id) return;
             const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
@@ -517,7 +529,7 @@
         document.getElementById('weekBtn').addEventListener('click', ()=>{ analyticsMode='week'; document.getElementById('weekBtn').classList.add('btn-primary'); document.getElementById('monthBtn').classList.remove('btn-primary'); loadAnalytics(); });
         document.getElementById('monthBtn').addEventListener('click', ()=>{ analyticsMode='month'; document.getElementById('monthBtn').classList.add('btn-primary'); document.getElementById('weekBtn').classList.remove('btn-primary'); loadAnalytics(); });
 
-        // Items
+        // ---------- ITEMS ----------
         async function loadItems() {
             if (!cafeData.id) return;
             const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
@@ -612,12 +624,16 @@
                 preview.style.display = 'none';
             }
             document.getElementById('itemImageFile').value = '';
+            document.getElementById('itemImageFile').dataset.autoUrl = ''; // clear any auto URL
 
             document.getElementById('addItemTitle').textContent = '✏️ Edit Item';
             document.getElementById('submitItemBtn').textContent = 'Update Item';
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
             document.getElementById('addItemCard').classList.add('edit-active');
             document.getElementById('addItemCard').classList.remove('collapsed');
+            // Scroll into view
+            document.getElementById('addItemCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('itemName').focus();
         }
 
         function createVariantRow(name='', price='') {
@@ -646,6 +662,7 @@
             document.getElementById('tagBest').checked = false;
             document.getElementById('tagSelling').checked = false;
             document.getElementById('itemImageFile').value = '';
+            document.getElementById('itemImageFile').dataset.autoUrl = '';
             document.getElementById('itemImagePreview').style.display = 'none';
             const varContainer = document.getElementById('variantsContainer');
             while (varContainer.children.length > 1) varContainer.removeChild(varContainer.lastChild);
@@ -672,6 +689,36 @@
             }
         })();
 
+        // ---------- AUTO IMAGE BUTTON ----------
+        document.getElementById('autoImageBtn').addEventListener('click', async () => {
+            const name = document.getElementById('itemName').value.trim();
+            if (!name) return toast('Enter item name first', true);
+            const btn = document.getElementById('autoImageBtn');
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
+            try {
+                const res = await fetch(AUTO_IMAGE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                    body: JSON.stringify({ query: name })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed');
+                if (data.imageUrl) {
+                    const preview = document.getElementById('itemImagePreview');
+                    preview.src = data.imageUrl;
+                    preview.style.display = 'block';
+                    // Store the URL so saveItem can use it if no file is uploaded
+                    document.getElementById('itemImageFile').dataset.autoUrl = data.imageUrl;
+                } else {
+                    toast('No photo found', true);
+                }
+            } catch (e) { toast('Auto image failed: ' + e.message, true); }
+            btn.disabled = false;
+            btn.textContent = '🖼️ Auto Image';
+        });
+
+        // ---------- SAVE ITEM (with auto image support) ----------
         async function saveItem(andClear = false) {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const editId = document.getElementById('editItemId').value;
@@ -694,10 +741,16 @@
             const varRows = document.querySelectorAll('#variantsContainer > div'); let varParts = [];
             varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
             if (varParts.length > 0) desc = 'VAR::' + varParts.join('|');
+
+            // Determine image URL: use uploaded file, or fallback to auto image URL
             let imageUrl = '';
-            const imageFile = document.getElementById('itemImageFile').files[0];
-            if (imageFile) {
-                try { imageUrl = await uploadImageToImgBB(imageFile); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saved without image.', true); }
+            const imageFileInput = document.getElementById('itemImageFile');
+            const file = imageFileInput.files[0];
+            if (file) {
+                try { imageUrl = await uploadImageToImgBB(file); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saving without image.', true); }
+            } else if (imageFileInput.dataset.autoUrl) {
+                imageUrl = imageFileInput.dataset.autoUrl;   // use the auto‑fetched URL
+                delete imageFileInput.dataset.autoUrl;       // clear for next use
             }
 
             const itemData = {
@@ -743,17 +796,13 @@
             }
         });
 
-        // ========================
-        // 🤖 MULTI-IMAGE AI SCANNER
-        // ========================
+        // ---------- AI SCANNER (MULTI‑IMAGE) ----------
         const aiFileInput = document.getElementById('aiMenuImageFile');
         const aiPreviews = document.getElementById('aiPreviews');
         const scanBtn = document.getElementById('scanMenuBtn');
         const aiStatus = document.getElementById('aiScannerStatus');
-        // Store selected files
         let selectedFiles = [];
 
-        // Helper to update previews
         function updatePreviews() {
             aiPreviews.innerHTML = '';
             selectedFiles.forEach((file, index) => {
@@ -767,9 +816,7 @@
                         ev.stopPropagation();
                         selectedFiles.splice(index, 1);
                         updatePreviews();
-                        if (selectedFiles.length === 0) {
-                            scanBtn.style.display = 'none';
-                        }
+                        if (selectedFiles.length === 0) scanBtn.style.display = 'none';
                     });
                 };
                 reader.readAsDataURL(file);
@@ -777,9 +824,7 @@
             scanBtn.style.display = selectedFiles.length > 0 ? 'inline-block' : 'none';
         }
 
-        // Override change event for multi-file selection
         aiFileInput.addEventListener('change', () => {
-            // Add new files to selectedFiles (avoid duplicates by name/size)
             const newFiles = Array.from(aiFileInput.files);
             newFiles.forEach(file => {
                 if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
@@ -787,7 +832,7 @@
                 }
             });
             updatePreviews();
-            aiFileInput.value = ''; // reset so the same file can be re-selected if needed
+            aiFileInput.value = '';
         });
 
         document.getElementById('takePhotoBtn').addEventListener('click', () => {
@@ -799,7 +844,6 @@
             aiFileInput.click();
         });
 
-        // Resize function (same as before)
         async function resizeImage(file, maxWidth = 1024, quality = 0.8) {
             return new Promise((resolve, reject) => {
                 if (!file || !file.type) return reject(new Error('No file selected.'));
@@ -820,7 +864,7 @@
                         if (!base64 || base64.length < 10) return reject(new Error('Resized image too small.'));
                         resolve({ base64, mimeType: 'image/jpeg' });
                     };
-                    img.onerror = () => reject(new Error('Failed to decode image. It may be corrupted.'));
+                    img.onerror = () => reject(new Error('Failed to decode image.'));
                     img.src = e.target.result;
                 };
                 reader.onerror = () => reject(new Error('Failed to read file.'));
@@ -845,10 +889,7 @@
                     const { base64, mimeType } = await resizeImage(file);
                     const response = await fetch(GEMINI_FUNCTION_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                        },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
                         body: JSON.stringify({ imageBase64: base64, mimeType })
                     });
                     const result = await response.json();
@@ -876,14 +917,12 @@
                     aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
                 } catch (err) {
                     console.error('Error on image ' + (i+1), err);
-                    // Continue with next image, but report error for this one
                     toast(`Image ${i+1} failed: ${err.message}`, true);
                     processedCount++;
                     aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
                 }
             }
 
-            // Insert all collected items
             if (allInsertedItems.length > 0) {
                 const { error } = await _supabase.from('menu_items').insert(allInsertedItems);
                 if (error) {
@@ -899,7 +938,6 @@
             }
 
             scanBtn.disabled = false;
-            // Clear selected files and previews
             selectedFiles = [];
             updatePreviews();
             scanBtn.style.display = 'none';
@@ -907,7 +945,7 @@
             loadStats();
         });
 
-        // QR
+        // ---------- QR ----------
         document.getElementById('generateQrBtn').addEventListener('click', () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const url = BASE_URL + cafeData.id;
@@ -918,6 +956,7 @@
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
 
+        // ---------- BOOT ----------
         init();
     </script>
 </body>
