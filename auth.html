@@ -65,6 +65,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isRecovery = urlParams.get('type') === 'recovery';
         let mode = isRecovery ? 'recovery' : 'login';
+
         function toggleTheme() {
             document.body.classList.toggle('light-mode');
             document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
@@ -77,12 +78,14 @@
             else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.remove('light-mode');
             document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
         })();
+
         function showToast(msg, isErr=false) {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.className = 'toast ' + (isErr ? 'error' : '') + ' show';
             setTimeout(() => t.classList.remove('show'), 3000);
         }
+
         function updateUI() {
             document.getElementById('authTitle').textContent = { login:'Welcome Back', signup:'Create Your Cafe', forgot:'Reset Password', recovery:'Set New Password' }[mode];
             document.getElementById('tabsRow').style.display = (mode==='forgot'||mode==='recovery') ? 'none' : 'flex';
@@ -95,10 +98,12 @@
             document.getElementById('forgotLink').style.display = mode==='login' ? 'inline' : 'none';
             document.getElementById('submitBtn').textContent = { login:'Login', signup:'Sign Up', forgot:'Send Reset Link', recovery:'Update Password' }[mode];
         }
+
         document.getElementById('tabLogin').addEventListener('click', ()=>{ mode='login'; updateUI(); });
         document.getElementById('tabSignup').addEventListener('click', ()=>{ mode='signup'; updateUI(); });
         document.getElementById('toggleLink').addEventListener('click', ()=>{ mode = mode==='login'?'signup':'login'; updateUI(); });
         document.getElementById('forgotLink').addEventListener('click', (e)=>{ e.preventDefault(); mode='forgot'; updateUI(); });
+
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn'); btn.disabled = true;
@@ -112,7 +117,10 @@
                     showToast('Password updated! Redirecting...');
                     setTimeout(() => window.location.href = 'auth.html', 2000);
                 } else if (mode === 'forgot') {
-                    const { error } = await _supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/CafeBoss/auth.html?type=recovery' });
+                    // ===== FIXED: hardcoded production URL =====
+                    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: 'https://zakiewillplay.github.io/CafeBoss/auth.html?type=recovery'
+                    });
                     if (error) throw error;
                     showToast('Reset link sent! Check your email.');
                     btn.disabled = false;
@@ -138,6 +146,7 @@
                 }
             } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
         });
+
         if (isRecovery) mode = 'recovery';
         updateUI();
     </script>
