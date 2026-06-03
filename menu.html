@@ -140,46 +140,48 @@
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
         /* ========================================= */
-        /* EXACT MOBILE LAYOUT FIX (Side-By-Side)    */
+        /* BULLET-PROOF MOBILE LAYOUT (Side-By-Side) */
         /* ========================================= */
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .menu-item { 
                 display: flex !important;
                 flex-direction: row !important; 
-                align-items: center;
-                gap: 1rem; 
-                padding: 1rem; 
-                border-radius: 16px; 
+                align-items: center !important;
+                gap: 1rem !important; 
+                padding: 1rem !important; 
+                border-radius: 16px !important; 
             }
             .menu-item-img { 
                 width: 85px !important; 
                 height: 85px !important; 
-                border-radius: 12px; 
-                flex-shrink: 0; 
+                border-radius: 12px !important; 
+                flex-shrink: 0 !important; 
             }
             .item-details { 
-                flex: 1;
-                display: flex; 
-                flex-direction: column; 
-                justify-content: center; 
+                flex: 1 !important;
+                display: flex !important; 
+                flex-direction: column !important; 
+                justify-content: center !important; 
+                min-width: 0 !important;
             }
-            .item-name { font-size: 1.1rem; }
-            .item-desc { font-size: 0.8rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-            .item-price { font-size: 1.2rem; margin-top: 0.3rem; }
-            .qty-controls { 
-                margin-left: auto; 
-                flex-direction: column !important; /* Stack + and - vertically to save space */
-                gap: 0.4rem; 
-            }
-            .qty-controls button { width: 32px; height: 32px; font-size: 1.1rem; }
-            .qty-num { font-size: 1rem; min-width: 20px; }
+            .item-name { font-size: 1.1rem !important; }
+            .item-desc { font-size: 0.8rem !important; line-height: 1.4 !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
+            .item-price { font-size: 1.2rem !important; margin-top: 0.3rem !important; }
             
-            header.menu-header h1 { font-size: 2.2rem; }
-            .floating-cart, .waiter-btn { width: 55px; height: 55px; font-size: 1.4rem; bottom: 20px; }
-            .floating-cart { right: 20px; }
-            .waiter-btn { left: 20px; }
-            .search-container { top: 0; }
-            .category-tabs { top: 60px; }
+            .qty-controls { 
+                margin-left: auto !important; 
+                flex-direction: column !important; 
+                gap: 0.4rem !important; 
+            }
+            .qty-controls button { width: 32px !important; height: 32px !important; font-size: 1.1rem !important; }
+            .qty-num { font-size: 1rem !important; min-width: 20px !important; }
+            
+            header.menu-header h1 { font-size: 2.2rem !important; }
+            .floating-cart, .waiter-btn { width: 55px !important; height: 55px !important; font-size: 1.4rem !important; bottom: 20px !important; }
+            .floating-cart { right: 20px !important; }
+            .waiter-btn { left: 20px !important; }
+            .search-container { top: 0 !important; }
+            .category-tabs { top: 60px !important; }
         }
     </style>
 </head>
@@ -333,7 +335,7 @@
                         if (tags.includes('featured')) badges += '<span class="badge badge-featured">🔥 Special</span> ';
                         if (tags.includes('new')) badges += '<span class="badge badge-new">🆕 New</span> ';
                         
-                        // FIX: Only create the image HTML if the database has an image URL
+                        // LOGIC UPDATE: Completely hide the image slot if no image is present
                         const imageHTML = (item.image_url && item.image_url.trim() !== '') 
                             ? `<img src="${item.image_url}" class="menu-item-img" loading="lazy">` 
                             : '';
