@@ -339,7 +339,6 @@
         document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
         document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
 
-        // ---------- GLOBAL STATE ----------
         let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null, analyticsMode = 'week';
         let realtimeChannel = null;
 
@@ -398,7 +397,7 @@
             });
         }
 
-        // ---------- IMAGE UPLOAD (for manual file) ----------
+        // ---------- IMAGE UPLOAD ----------
         document.getElementById('itemImageFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -624,14 +623,13 @@
                 preview.style.display = 'none';
             }
             document.getElementById('itemImageFile').value = '';
-            document.getElementById('itemImageFile').dataset.autoUrl = ''; // clear any auto URL
+            document.getElementById('itemImageFile').dataset.autoUrl = '';
 
             document.getElementById('addItemTitle').textContent = '✏️ Edit Item';
             document.getElementById('submitItemBtn').textContent = 'Update Item';
             document.getElementById('cancelEditBtn').style.display = 'inline-block';
             document.getElementById('addItemCard').classList.add('edit-active');
             document.getElementById('addItemCard').classList.remove('collapsed');
-            // Scroll into view
             document.getElementById('addItemCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
             document.getElementById('itemName').focus();
         }
@@ -708,7 +706,6 @@
                     const preview = document.getElementById('itemImagePreview');
                     preview.src = data.imageUrl;
                     preview.style.display = 'block';
-                    // Store the URL so saveItem can use it if no file is uploaded
                     document.getElementById('itemImageFile').dataset.autoUrl = data.imageUrl;
                 } else {
                     toast('No photo found', true);
@@ -742,15 +739,14 @@
             varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
             if (varParts.length > 0) desc = 'VAR::' + varParts.join('|');
 
-            // Determine image URL: use uploaded file, or fallback to auto image URL
             let imageUrl = '';
             const imageFileInput = document.getElementById('itemImageFile');
             const file = imageFileInput.files[0];
             if (file) {
                 try { imageUrl = await uploadImageToImgBB(file); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saving without image.', true); }
             } else if (imageFileInput.dataset.autoUrl) {
-                imageUrl = imageFileInput.dataset.autoUrl;   // use the auto‑fetched URL
-                delete imageFileInput.dataset.autoUrl;       // clear for next use
+                imageUrl = imageFileInput.dataset.autoUrl;
+                delete imageFileInput.dataset.autoUrl;
             }
 
             const itemData = {
@@ -796,7 +792,7 @@
             }
         });
 
-        // ---------- AI SCANNER (MULTI‑IMAGE) ----------
+        // ---------- MULTI-IMAGE AI SCANNER ----------
         const aiFileInput = document.getElementById('aiMenuImageFile');
         const aiPreviews = document.getElementById('aiPreviews');
         const scanBtn = document.getElementById('scanMenuBtn');
@@ -919,7 +915,6 @@
                     console.error('Error on image ' + (i+1), err);
                     toast(`Image ${i+1} failed: ${err.message}`, true);
                     processedCount++;
-                    aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
                 }
             }
 
