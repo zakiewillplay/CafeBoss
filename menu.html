@@ -1039,7 +1039,11 @@
                 customer_phone: phone || null
             }).select().maybeSingle();
 
-            if (error) { showToast('Order failed'); return; }
+            if (error) {
+                // Show the exact error message so you can see what's wrong
+                showToast('Order failed: ' + error.message);
+                return;
+            }
 
             cart = [];
             updateCartUI();
