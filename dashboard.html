@@ -184,6 +184,7 @@
                     <input id="itemPrice" type="number" placeholder="Price ₹" style="width:120px;">
                 </div>
                 <select id="itemCategorySelect"><option>Uncategorized</option></select>
+                <input id="itemCategoryInput" placeholder="New category name" style="display:none;">
                 <input id="itemDiscount" placeholder="Discount (e.g. 10% off)">
                 <textarea id="itemDesc" rows="2" placeholder="Short description"></textarea>
                 <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.5rem;">
@@ -192,7 +193,6 @@
                     <label><input type="checkbox" id="tagBest"> 🏆 Best of Cafe</label>
                     <label><input type="checkbox" id="tagSelling"> 📈 Best Seller</label>
                 </div>
-                <!-- Allergens -->
                 <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem;">
                     <label><input type="checkbox" class="allergenCheck" value="gluten"> 🌾 Gluten</label>
                     <label><input type="checkbox" class="allergenCheck" value="dairy"> 🥛 Dairy</label>
@@ -357,6 +357,7 @@
             document.getElementById('waitTime').value = cafeData.wait_time||10;
             await Promise.all([loadStats(), loadOrders(), loadItems(), loadStaff()]);
             if(cafeData.id) setupRealtime();
+            createDefaultVariantRow(); // ensure one variant row exists
         }
 
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
@@ -459,7 +460,7 @@
             renderItems();
             const cats = [...new Set(allItems.map(i=>i.category).filter(Boolean))].sort();
             const sel = document.getElementById('itemCategorySelect');
-            sel.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option>${c}</option>`).join('') + '<option value="__new__">+ New</option>';
+            sel.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="__new__">+ New</option>';
         }
         function renderItems() {
             const search = document.getElementById('menuSearch').value.toLowerCase();
@@ -481,13 +482,87 @@
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
-            document.getElementById('itemCategorySelect').value = item.category;
+            // category
+            const catSel = document.getElementById('itemCategorySelect');
+            if ([...catSel.options].some(o => o.value === item.category)) {
+                catSel.value = item.category;
+                document.getElementById('itemCategoryInput').style.display = 'none';
+            } else {
+                catSel.value = '__new__';
+                document.getElementById('itemCategoryInput').style.display = 'block';
+                document.getElementById('itemCategoryInput').value = item.category;
+            }
             document.getElementById('itemDiscount').value = item.discount||'';
             document.getElementById('itemDesc').value = item.description||'';
-            document.getElementById('tagFeatured').checked = item.featured;
+            // tags
+            document.getElementById('tagFeatured').checked = item.featured || (item.tags||'').split(',').includes('featured');
+            document.getElementById('tagStandard').checked = (item.tags||'').split(',').includes('standard');
+            document.getElementById('tagBest').checked = (item.tags||'').split(',').includes('best');
+            document.getElementById('tagSelling').checked = (item.tags||'').split(',').includes('bestselling');
+            // allergens / dietary
+            document.querySelectorAll('.allergenCheck').forEach(c => c.checked = (item.allergens||[]).includes(c.value));
+            document.querySelectorAll('.dietaryCheck').forEach(c => c.checked = (item.dietary||[]).includes(c.value));
+            // image preview
+            if(item.image_url) {
+                document.getElementById('itemImagePreview').src = item.image_url;
+                document.getElementById('itemImagePreview').style.display = 'block';
+            } else {
+                document.getElementById('itemImagePreview').style.display = 'none';
+            }
+            document.getElementById('itemImageFile').value = '';
+            document.getElementById('itemImageFile').dataset.autoUrl = '';
+            // variants
+            const varContainer = document.getElementById('variantsContainer');
+            varContainer.innerHTML = '';
+            if (item.description?.startsWith('VAR::')) {
+                const parts = item.description.replace('VAR::','').split('|');
+                parts.forEach(p => {
+                    const [name, price] = p.split('=');
+                    varContainer.appendChild(createVariantRow(name, price));
+                });
+            } else {
+                varContainer.appendChild(createVariantRow());
+            }
             document.getElementById('addItemCard').classList.remove('collapsed');
             document.getElementById('addItemCard').scrollIntoView({behavior:'smooth'});
+            document.getElementById('submitItemBtn').textContent = 'Update Item';
+            document.getElementById('cancelEditBtn').style.display = 'inline-block';
         };
+        window.cancelEdit = () => {
+            resetForm();
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('submitItemBtn').textContent = 'Save Item';
+        };
+        document.getElementById('cancelEditBtn').addEventListener('click', window.cancelEdit);
+
+        // Category select: handle new category
+        document.getElementById('itemCategorySelect').addEventListener('change', function() {
+            const input = document.getElementById('itemCategoryInput');
+            if (this.value === '__new__') {
+                input.style.display = 'block';
+                input.value = '';
+            } else {
+                input.style.display = 'none';
+            }
+        });
+
+        // Variant management
+        function createVariantRow(name='', price='') {
+            const row = document.createElement('div');
+            row.style.display = 'flex'; row.style.gap = '0.5rem'; row.style.marginBottom = '0.4rem';
+            row.innerHTML = `<input class="var-name" placeholder="Size" value="${name}" style="flex:1;"><input class="var-price" type="number" placeholder="Price" value="${price}" style="flex:1;"><button type="button" class="btn remove-var" style="padding:0.3rem 0.6rem;">✕</button>`;
+            row.querySelector('.remove-var').addEventListener('click', () => row.remove());
+            return row;
+        }
+        function createDefaultVariantRow() {
+            if (document.getElementById('variantsContainer').children.length === 0) {
+                document.getElementById('variantsContainer').appendChild(createVariantRow());
+            }
+        }
+        document.getElementById('addVariantBtn').addEventListener('click', () => {
+            document.getElementById('variantsContainer').appendChild(createVariantRow());
+        });
+        createDefaultVariantRow(); // init
 
         // AI Scanner
         document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
@@ -543,24 +618,32 @@
             }
         });
 
-        // Save Item
-        document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
-        document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
+        // Save Item (corrected with tags & allergens)
         async function saveItem(andClear) {
             const id = document.getElementById('editItemId').value;
             const name = document.getElementById('itemName').value.trim();
             if(!name) return toast('Name required');
-            const category = document.getElementById('itemCategorySelect').value;
+            let category = document.getElementById('itemCategorySelect').value;
+            if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
             const price = parseFloat(document.getElementById('itemPrice').value)||0;
             const discount = document.getElementById('itemDiscount').value;
             const desc = document.getElementById('itemDesc').value;
-            const featured = document.getElementById('tagFeatured').checked;
             const tags = [];
+            if(document.getElementById('tagFeatured').checked) tags.push('featured');
             if(document.getElementById('tagStandard').checked) tags.push('standard');
             if(document.getElementById('tagBest').checked) tags.push('best');
             if(document.getElementById('tagSelling').checked) tags.push('bestselling');
             const allergens = Array.from(document.querySelectorAll('.allergenCheck:checked')).map(c=>c.value);
             const dietary = Array.from(document.querySelectorAll('.dietaryCheck:checked')).map(c=>c.value);
+            // collect variants
+            const varParts = [];
+            document.querySelectorAll('#variantsContainer > div').forEach(row => {
+                const vName = row.querySelector('.var-name')?.value.trim();
+                const vPrice = row.querySelector('.var-price')?.value;
+                if (vName && vPrice) varParts.push(vName + '=' + vPrice);
+            });
+            const finalDesc = varParts.length ? 'VAR::' + varParts.join('|') : desc;
+
             let imageUrl = document.getElementById('itemImageFile').dataset.autoUrl || '';
             const file = document.getElementById('itemImageFile').files[0];
             if(file) {
@@ -569,10 +652,14 @@
                 const data = await res.json();
                 if(data.url) imageUrl = data.url;
             }
-            const itemData = { name, price, category, discount, description:desc, featured, tags: tags.join(',') || null, allergens, dietary, image_url: imageUrl || null };
-            if(id) await _sb.from('menu_items').update(itemData).eq('id',id);
-            else await _sb.from('menu_items').insert({...itemData, cafe_id:cafeData.id});
-            toast(id ? 'Updated' : 'Added');
+            const itemData = { name, price, category, discount, description: finalDesc, featured: tags.includes('featured'), tags: tags.join(',') || null, allergens, dietary, image_url: imageUrl || null };
+            if(id) {
+                await _sb.from('menu_items').update(itemData).eq('id',id);
+                toast('Updated');
+            } else {
+                await _sb.from('menu_items').insert({...itemData, cafe_id:cafeData.id});
+                toast('Added');
+            }
             loadItems(); loadStats();
             resetForm();
             if(andClear) { document.getElementById('itemName').value=''; document.getElementById('itemPrice').value=''; }
@@ -581,6 +668,8 @@
             document.getElementById('editItemId').value = '';
             document.getElementById('itemName').value = '';
             document.getElementById('itemPrice').value = '';
+            document.getElementById('itemCategorySelect').value = 'Uncategorized';
+            document.getElementById('itemCategoryInput').style.display = 'none';
             document.getElementById('itemDiscount').value = '';
             document.getElementById('itemDesc').value = '';
             document.getElementById('tagFeatured').checked = false;
@@ -591,7 +680,13 @@
             document.getElementById('itemImagePreview').style.display = 'none';
             document.getElementById('itemImageFile').value = '';
             document.getElementById('itemImageFile').dataset.autoUrl = '';
+            document.getElementById('variantsContainer').innerHTML = '';
+            document.getElementById('variantsContainer').appendChild(createVariantRow());
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('submitItemBtn').textContent = 'Save Item';
         }
+        document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
+        document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
 
         init();
     </script>
