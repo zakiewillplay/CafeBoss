@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Cafe Boss - Free digital QR menus.">
     <meta name="theme-color" content="#FF6B35">
-    
     <link rel="manifest" href="manifest.json">
-    
     <title>Cafe Boss – Free Digital QR Menus</title>
     <style>
         :root { --primary: #FF6B35; --bg: #0f0f13; --text: #f0f0f0; --muted: #a0a0b0; --card-bg: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.08); }
@@ -29,6 +27,8 @@
         .feature-card .icon { font-size:3rem; margin-bottom:1rem; }
         .feature-card h3 { color:var(--primary); margin-bottom:0.5rem; }
         footer { text-align:center; padding:2rem; color:var(--muted); }
+        .staff-login { display:inline-block; margin-top:1.5rem; padding:0.8rem 1.8rem; border:2px solid var(--primary); color:var(--primary); border-radius:50px; font-weight:600; text-decoration:none; transition:0.2s; }
+        .staff-login:hover { background:var(--primary); color:#fff; }
     </style>
 </head>
 <body class="light-mode">
@@ -41,6 +41,8 @@
             <h1>Cafe Boss</h1>
             <p>Free digital QR menus for your cafe.<br>Beautiful, instant, and your brand.</p>
             <a href="auth.html" class="btn">Get Started Free</a>
+            <br>
+            <a href="staff.html" class="staff-login">🔐 Staff Login</a>
         </section>
         <div class="features">
             <div class="feature-card"><div class="icon">🚀</div><h3>Instant QR Menu</h3><p>Generate a QR code in seconds. Customers scan and browse your menu instantly.</p></div>
@@ -49,22 +51,10 @@
         </div>
         <footer>© 2026 Cafe Boss – 100% Free. Built with ☕</footer>
     </div>
-    
     <script>
-        // PWA Service Worker Registration - Uses relative path
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            });
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         }
-
-        // Theme Toggle Logic
         const themeToggle = document.getElementById('themeToggle');
         function applyTheme() {
             const saved = localStorage.getItem('theme');
