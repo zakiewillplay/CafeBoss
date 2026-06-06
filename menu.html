@@ -203,6 +203,18 @@
         }
         .top-btn:hover { border-color: var(--amber); color: var(--amber); transform: translateY(-2px); }
 
+        /* Voice button listening state */
+        .top-btn.listening {
+            background: var(--amber);
+            color: #fff;
+            animation: micPulse 0.8s ease-in-out infinite;
+            border-color: var(--amber);
+        }
+        @keyframes micPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(232,146,26,0.7); }
+            50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(232,146,26,0); }
+        }
+
         /* ============================================================
            HEADER
         ============================================================ */
@@ -1041,20 +1053,40 @@
         /* ─────────────────────── V2 ADDITIONS ─────────────────────── */
         const GEMINI_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
 
-        // Voice order
-        document.getElementById('voiceOrderBtn').addEventListener('click', () => {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        // Voice order with mic feedback
+        let recognition = null;
+        const voiceBtn = document.getElementById('voiceOrderBtn');
+
+        voiceBtn.addEventListener('click', () => {
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                showToast('Voice input not supported');
+                return;
+            }
+            recognition = new SpeechRecognition();
             recognition.lang = 'hi-IN';
+            recognition.interimResults = false;
+            recognition.onstart = () => {
+                voiceBtn.classList.add('listening');
+                voiceBtn.textContent = '🔴';
+            };
             recognition.onresult = async (event) => {
                 const transcript = event.results[0][0].transcript;
                 showToast('Heard: ' + transcript);
-                const res = await fetch(GEMINI_URL, {
-                    method:'POST',
-                    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
-                    body: JSON.stringify({ promptExtra: `Extract ordered items from this text: "${transcript}". Return JSON array of {name, qty}.` })
-                });
-                const data = await res.json();
                 try {
+                    const res = await fetch(GEMINI_URL, {
+                        method:'POST',
+                        headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
+                        body: JSON.stringify({ promptExtra: `Extract ordered items from this text: "${transcript}". Return JSON array of {name, qty}.` })
+                    });
+                    const data = await res.json();
                     const items = JSON.parse(data.result);
                     items.forEach(item => {
                         const menuItem = menuItems.find(i => i.name.toLowerCase().includes(item.name.toLowerCase()));
@@ -1067,6 +1099,17 @@
                     updateCartUI();
                     renderMenu(false);
                 } catch(e) { showToast('Could not understand'); }
+            };
+            recognition.onerror = (event) => {
+                showToast('Voice error: ' + event.error);
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                recognition = null;
+            };
+            recognition.onend = () => {
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                recognition = null;
             };
             recognition.start();
         });
