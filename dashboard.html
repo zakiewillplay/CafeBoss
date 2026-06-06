@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        /* ========== FULL CSS (unchanged) ========== */
         :root {
             --amber:        #e8921a;
             --amber-lt:     #f5b445;
@@ -143,6 +144,30 @@
             </div>
         </div>
 
+        <!-- QR Code Generator Card -->
+        <div class="card collapsed">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">📱 QR Code & Links <span>▼</span></div>
+            <div class="card-body" style="text-align: center;">
+                <button id="generateQrBtn" class="btn-primary">Generate My Cafe QR Code</button>
+                <div id="qrDisplay" class="qr-box" style="display:flex; justify-content:center;"></div>
+                <p id="qrUrl" style="word-break:break-all; font-size:0.85rem; margin: 1rem 0; color:var(--amber);"></p>
+                <button id="copyQrLink" style="display:none; margin: 0 auto;" class="btn">📋 Copy Menu Link</button>
+                <hr style="border-color:var(--border); margin: 1.5rem 0;">
+                <h4>🪑 Table-Specific QR Codes</h4>
+                <p style="font-size:0.85rem; color:var(--muted); margin-bottom:1rem;">Generate QR codes for individual tables. Orders will automatically include the table number.</p>
+                <div style="display:flex; gap:0.8rem; margin-bottom:1rem;">
+                    <select id="tableNumberSelect" style="flex:1;">
+                        <option value="">Select table...</option>
+                    </select>
+                    <button id="generateTableQrBtn" class="btn-primary" style="flex:1;">Generate Table QR</button>
+                </div>
+                <div id="tableQrDisplay" class="qr-box" style="display:flex; justify-content:center; margin-top:1rem;"></div>
+                <p id="tableQrUrl" style="word-break:break-all; font-size:0.85rem; margin: 0.5rem 0; color:var(--amber);"></p>
+                <button id="copyTableQrLink" style="display:none; margin: 0 auto;" class="btn">📋 Copy Table Link</button>
+                <button id="downloadAllTableQrsBtn" class="btn" style="margin-top:1rem;">📥 Download All Table QR Codes (PDF)</button>
+            </div>
+        </div>
+
         <!-- AI Scanner -->
         <div class="card collapsed">
             <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">🤖 AI Menu Scanner <span style="font-size:0.7rem;background:var(--amber);color:#fff;padding:2px 8px;border-radius:10px;">BETA</span></div>
@@ -224,16 +249,6 @@
                     <button id="addStaffBtn" class="btn-primary">Add</button>
                 </div>
                 <div id="staffList" style="margin-top:0.8rem;"></div>
-            </div>
-        </div>
-
-        <!-- Loyalty -->
-        <div class="card collapsed">
-            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">🎫 Loyalty <span>▼</span></div>
-            <div class="card-body">
-                <input id="loyaltyPhone" placeholder="Customer Phone">
-                <button id="searchLoyaltyBtn" class="btn">Search</button>
-                <div id="loyaltyInfo" style="margin-top:0.5rem;"></div>
             </div>
         </div>
 
@@ -365,6 +380,14 @@
                 document.getElementById('paymentQrPreview').src = cafeData.payment_qr_url;
                 document.getElementById('paymentQrPreview').style.display = 'block';
             }
+            // Populate table dropdown (1-20)
+            const tableSelect = document.getElementById('tableNumberSelect');
+            for (let i = 1; i <= 20; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `Table ${i}`;
+                tableSelect.appendChild(opt);
+            }
             await Promise.all([loadStats(), loadOrders(), loadItems(), loadStaff()]);
             if(cafeData.id) setupRealtime();
             createDefaultVariantRow();
@@ -424,6 +447,56 @@
             toast('Settings saved');
         });
 
+        // QR Code Generation
+        document.getElementById('generateQrBtn').addEventListener('click', () => {
+            if (!cafeData.id) return toast('Cafe not ready', true);
+            const url = BASE_URL + cafeData.id;
+            document.getElementById('qrDisplay').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" width="250" height="250">`;
+            document.getElementById('qrUrl').textContent = url;
+            document.getElementById('copyQrLink').style.display = 'inline-block';
+            document.getElementById('qrCard')?.classList.remove('collapsed');
+        });
+        document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
+
+        // Table QR Generation
+        document.getElementById('generateTableQrBtn').addEventListener('click', () => {
+            const table = document.getElementById('tableNumberSelect').value;
+            if (!table) return toast('Select a table number', true);
+            if (!cafeData.id) return toast('Cafe not ready', true);
+            const url = BASE_URL + cafeData.id + '&table=' + table;
+            document.getElementById('tableQrDisplay').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" width="250" height="250">`;
+            document.getElementById('tableQrUrl').textContent = url;
+            document.getElementById('copyTableQrLink').style.display = 'inline-block';
+        });
+        document.getElementById('copyTableQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('tableQrUrl').textContent); toast('Table link copied!'); });
+
+        // Download all table QR codes as PDF
+        document.getElementById('downloadAllTableQrsBtn').addEventListener('click', async () => {
+            if (!cafeData.id) return toast('Cafe not ready', true);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const tables = [];
+            for (let i = 1; i <= 20; i++) tables.push(i);
+            for (let i = 0; i < tables.length; i++) {
+                const table = tables[i];
+                const url = BASE_URL + cafeData.id + '&table=' + table;
+                const img = document.createElement('img');
+                img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+                await new Promise(resolve => { img.onload = resolve; });
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                canvas.getContext('2d').drawImage(img, 0, 0);
+                const dataUrl = canvas.toDataURL('image/png');
+                if (i > 0) doc.addPage();
+                doc.setFontSize(16);
+                doc.text(`Table ${table}`, 105, 20, { align: 'center' });
+                doc.addImage(dataUrl, 'PNG', 55, 30, 100, 100);
+            }
+            doc.save(`table_qr_codes_${cafeData.id.slice(0,8)}.pdf`);
+            toast('PDF downloaded!');
+        });
+
         async function loadStaff() {
             const { data } = await _sb.from('staff').select('*').eq('cafe_id', cafeData.id);
             document.getElementById('staffList').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center;">${s.name} (${s.role}) - PIN: ${s.pin} <button onclick="deleteStaff('${s.id}')" class="btn" style="padding:0.2rem 0.5rem;">🗑️</button></div>`).join('');
@@ -440,13 +513,6 @@
             loadStaff();
         });
         window.deleteStaff = async (id) => { await _sb.from('staff').delete().eq('id',id); loadStaff(); };
-
-        document.getElementById('searchLoyaltyBtn').addEventListener('click', async () => {
-            const phone = document.getElementById('loyaltyPhone').value.trim();
-            if(!phone) return;
-            const { data } = await _sb.from('loyalty').select('*').eq('phone',phone).eq('cafe_id',cafeData.id).maybeSingle();
-            document.getElementById('loyaltyInfo').textContent = data ? `Stamps: ${data.stamps}` : 'No record';
-        });
 
         async function loadStats() {
             const [{count:i},{count:o},{count:v}] = await Promise.all([
@@ -465,7 +531,7 @@
         }
         function renderOrders() {
             const search = document.getElementById('orderSearch').value.toLowerCase();
-            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')))
+            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status=='delivered'||o.status=='completed')))
                 .filter(o => !search || (o.table_number||'').toLowerCase().includes(search) || (o.customer_name||'').toLowerCase().includes(search));
             const list = document.getElementById('ordersList');
             list.innerHTML = filtered.length ? filtered.map(o => {
