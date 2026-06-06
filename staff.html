@@ -26,10 +26,18 @@
         .toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--amber); color:#fff; padding:0.6rem 1.2rem; border-radius:30px; font-weight:600; font-size:0.85rem; z-index:999; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
         .logout-btn { background:transparent; border:1px solid var(--glass-border); color:var(--muted); margin-top:0.5rem; }
+        .tab-bar { display:flex; gap:0.3rem; margin-bottom:1rem; }
+        .tab { flex:1; padding:0.5rem; text-align:center; border-radius:8px; background:transparent; border:1px solid var(--glass-border); color:var(--muted); cursor:pointer; font-weight:600; font-size:0.82rem; transition:0.2s; }
+        .tab.active { background:var(--amber); color:#fff; border-color:var(--amber); }
+        .stats { display:flex; justify-content:space-around; margin-bottom:1rem; }
+        .stat-box { text-align:center; }
+        .stat-num { font-size:1.8rem; font-weight:800; color:var(--amber); }
+        .stat-label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Login form -->
         <div class="card" id="loginCard">
             <h2>Staff Login</h2>
             <input id="staffCafeId" placeholder="Cafe ID (get from owner's dashboard)" type="text">
@@ -37,20 +45,43 @@
             <button class="btn" id="loginBtn">Enter</button>
             <p style="text-align:center; margin-top:0.8rem; font-size:0.8rem; color:var(--muted);">Ask your cafe owner for the ID & PIN.</p>
         </div>
+
+        <!-- Main panel (hidden until login) -->
         <div class="card" id="ordersCard" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2>📋 Orders</h2>
+                <h2 id="panelTitle">📋 Orders</h2>
                 <button class="btn logout-btn" id="logoutStaffBtn" style="width:auto; padding:0.5rem 1rem;">↪ Leave</button>
             </div>
+
+            <!-- Manager stats -->
+            <div id="managerStats" class="stats" style="display:none;">
+                <div class="stat-box"><div class="stat-num" id="mgrTotal">0</div><div class="stat-label">Total</div></div>
+                <div class="stat-box"><div class="stat-num" id="mgrRevenue">₹0</div><div class="stat-label">Revenue</div></div>
+            </div>
+
+            <!-- Tabs (only manager sees all) -->
+            <div id="tabBar" class="tab-bar" style="display:none;">
+                <div class="tab active" data-tab="new">New</div>
+                <div class="tab" data-tab="accepted">Preparing</div>
+                <div class="tab" data-tab="cooked">Cooked</div>
+                <div class="tab" data-tab="delivered">Delivered</div>
+                <div class="tab" data-tab="completed">Completed</div>
+            </div>
+
             <div id="staffOrdersList"></div>
             <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--muted);" id="lastUpdated"></p>
         </div>
     </div>
+
     <script>
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
         const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const STAFF_UPDATE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/staff-update-order';
+
         let currentCafeId = null;
+        let currentStaff = null;       // { id, name, role, pin }
+        let activeTab = 'new';         // for manager
 
         function showToast(msg) {
             const t = document.createElement('div');
@@ -60,59 +91,142 @@
             setTimeout(() => t.remove(), 3000);
         }
 
+        // LOGIN
         document.getElementById('loginBtn').addEventListener('click', async () => {
             const cafeId = document.getElementById('staffCafeId').value.trim();
             const pin = document.getElementById('staffPin').value.trim();
             if (!cafeId || !pin) return showToast('Please fill all fields');
+
             const { data, error } = await _sb.from('staff')
                 .select('*')
                 .eq('cafe_id', cafeId)
                 .eq('pin', pin)
                 .maybeSingle();
+
             if (error || !data) return showToast('Invalid Cafe ID or PIN');
+
+            currentStaff = data;
             currentCafeId = cafeId;
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('ordersCard').style.display = 'block';
+            document.getElementById('panelTitle').textContent = `👋 ${data.name} (${data.role})`;
+
+            // Show appropriate UI based on role
+            if (data.role === 'manager') {
+                document.getElementById('tabBar').style.display = 'flex';
+                document.getElementById('managerStats').style.display = 'flex';
+                // tab clicks
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.addEventListener('click', function() {
+                        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+                        this.classList.add('active');
+                        activeTab = this.dataset.tab;
+                        loadOrders();
+                    });
+                });
+            }
             loadOrders();
             setInterval(loadOrders, 10000);
         });
 
         document.getElementById('logoutStaffBtn').addEventListener('click', () => {
             currentCafeId = null;
+            currentStaff = null;
             document.getElementById('loginCard').style.display = 'block';
             document.getElementById('ordersCard').style.display = 'none';
             document.getElementById('staffOrdersList').innerHTML = '';
         });
 
+        // LOAD ORDERS based on role
         async function loadOrders() {
-            if (!currentCafeId) return;
-            const { data } = await _sb.from('orders')
-                .select('*')
-                .eq('cafe_id', currentCafeId)
-                .in('status', ['new', 'accepted'])
-                .order('created_at', { ascending: false });
+            if (!currentCafeId || !currentStaff) return;
+            let query = _sb.from('orders').select('*').eq('cafe_id', currentCafeId).order('created_at', { ascending: false });
+
+            // Filter by role
+            if (currentStaff.role === 'cook') {
+                query = query.in('status', ['new', 'accepted']);   // cook sees new + accepted
+            } else if (currentStaff.role === 'waiter') {
+                query = query.in('status', ['cooked']);           // waiter sees cooked
+            } else if (currentStaff.role === 'manager') {
+                // manager sees all, filter by activeTab
+                if (activeTab !== 'all') {
+                    query = query.eq('status', activeTab);
+                }
+            }
+
+            const { data } = await query;
             const list = document.getElementById('staffOrdersList');
             if (!data || data.length === 0) {
-                list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders yet.</p>';
+                list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders</p>';
             } else {
                 list.innerHTML = data.map(o => {
                     const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
                     const itemStr = items.map(i => i.name + ' x' + (i.qty||1)).join(', ');
+                    let actions = '';
+
+                    // Determine allowed actions based on role and order status
+                    const role = currentStaff.role;
+                    if (role === 'cook') {
+                        if (o.status === 'new') actions += `<button class="btn" onclick="updateStatus('${o.id}','accepted')" style="margin-top:0.3rem;">Accept</button>`;
+                        if (o.status === 'accepted') actions += `<button class="btn" onclick="updateStatus('${o.id}','cooked')" style="margin-top:0.3rem;">Cooked</button>`;
+                    } else if (role === 'waiter') {
+                        if (o.status === 'cooked') actions += `<button class="btn" onclick="updateStatus('${o.id}','delivered')" style="margin-top:0.3rem;">Deliver</button>`;
+                        if (o.status === 'delivered') actions += `<button class="btn" onclick="updateStatus('${o.id}','completed')" style="margin-top:0.3rem;">Complete</button>`;
+                    } else if (role === 'manager') {
+                        // manager can do all status changes
+                        const transitions = {
+                            new: ['accepted'],
+                            accepted: ['cooked'],
+                            cooked: ['delivered'],
+                            delivered: ['completed']
+                        };
+                        if (transitions[o.status]) {
+                            transitions[o.status].forEach(newStatus => {
+                                actions += `<button class="btn" onclick="updateStatus('${o.id}','${newStatus}')" style="margin-top:0.3rem; margin-right:0.3rem;">${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}</button>`;
+                            });
+                        }
+                    }
+
                     return `
                         <div class="order-item">
                             <h3>Table ${o.table_number||'?'} — ${o.customer_name||'Guest'}</h3>
                             <p>${itemStr}</p>
                             <p style="color:var(--amber); font-weight:700; margin-top:0.3rem;">₹${o.total} | ${o.status}</p>
-                            ${o.status === 'new' ? `<button class="btn" onclick="acceptOrder('${o.id}')" style="margin-top:0.5rem;">Accept</button>` : ''}
+                            ${actions}
                         </div>`;
                 }).join('');
             }
+
+            // Update manager stats
+            if (currentStaff.role === 'manager') {
+                const { data: allOrders } = await _sb.from('orders').select('*').eq('cafe_id', currentCafeId);
+                const totalRevenue = allOrders.reduce((sum, o) => sum + (o.total||0), 0);
+                document.getElementById('mgrTotal').textContent = allOrders.length;
+                document.getElementById('mgrRevenue').textContent = '₹' + totalRevenue;
+            }
+
             document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
         }
 
-        window.acceptOrder = async (id) => {
-            await _sb.from('orders').update({ status: 'accepted' }).eq('id', id);
-            loadOrders();
+        // Call edge function to update order status
+        window.updateStatus = async (orderId, newStatus) => {
+            const res = await fetch(STAFF_UPDATE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                body: JSON.stringify({
+                    cafe_id: currentCafeId,
+                    pin: currentStaff.pin,
+                    order_id: orderId,
+                    new_status: newStatus
+                })
+            });
+            const result = await res.json();
+            if (result.error) {
+                showToast(result.error);
+            } else {
+                showToast('Status updated to ' + newStatus);
+                loadOrders();
+            }
         };
     </script>
 </body>
