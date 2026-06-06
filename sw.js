@@ -1,5 +1,5 @@
-const CACHE_NAME = 'cafeboss-v7';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'cafeboss-v2';
+const urlsToCache = [
   './',
   'index.html',
   'auth.html',
@@ -14,15 +14,13 @@ const ASSETS_TO_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'
 ];
 
-// Install Event - Caches all required assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
   self.skipWaiting();
 });
 
-// Activate Event - Deletes old caches when the version number changes
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
@@ -32,19 +30,29 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch Event - Serves cached files or fetches from the network
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request).then(response => {
+    caches.match(event.request).then(cachedResponse => {
+      return cachedResponse || fetch(event.request).then(response => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-        const clonedResponse = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clonedResponse));
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
         return response;
       });
+    })
+  );
+});
+
+self.addEventListener('push', event => {
+  const data = event.data?.json() || { title: 'Cafe Boss', body: 'Order update!' };
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/CafeBoss/icon-192.png',
+      badge: '/CafeBoss/icon-192.png'
     })
   );
 });
