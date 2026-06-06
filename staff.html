@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="/CafeBoss/manifest.json">
+    <title>Cafe Boss – Staff</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        :root {
+            --amber:        #e8921a;
+            --amber-lt:     #f5b445;
+            --espresso:     #120b05;
+            --card-bg:      rgba(26,14,6,0.97);
+            --card-border:  rgba(232,146,26,0.16);
+            --glass:        rgba(20,11,4,0.90);
+            --glass-border: rgba(232,146,26,0.22);
+            --text:         #f2e2c8;
+            --muted:        #9a8068;
+            --radius:       18px;
+            --shadow:       0 8px 32px rgba(0,0,0,0.65);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Plus Jakarta Sans', sans-serif;
+            background: var(--espresso);
+            color: var(--text);
+            min-height:100vh;
+            display:flex; align-items:center; justify-content:center;
+            padding:1rem;
+        }
+        .container { width:100%; max-width:500px; }
+        .card {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:var(--radius); padding:2rem; margin-bottom:1.5rem;
+            box-shadow:var(--shadow);
+        }
+        .card h2 { font-family:'Cormorant Garamond', serif; color:var(--amber); margin-bottom:1.5rem; text-align:center; font-size:2rem; }
+        input {
+            width:100%; padding:0.8rem; border-radius:10px;
+            border:1px solid var(--glass-border); background:var(--glass);
+            color:var(--text); font-size:0.9rem; font-family:'Plus Jakarta Sans',sans-serif;
+            margin-bottom:1rem; outline:none;
+        }
+        input:focus { border-color:var(--amber); }
+        .btn {
+            width:100%; padding:0.8rem; border-radius:10px; border:none;
+            background:var(--amber); color:#fff; font-weight:700; font-size:0.95rem;
+            cursor:pointer; transition:0.2s;
+        }
+        .btn:hover { background:var(--amber-lt); }
+        .order-item {
+            background:var(--glass); border:1px solid var(--glass-border);
+            border-radius:12px; padding:1rem; margin-bottom:0.8rem;
+        }
+        .order-item h3 { color:var(--amber); margin-bottom:0.3rem; font-family:'Cormorant Garamond',serif; font-size:1.3rem; }
+        .order-item p { font-size:0.85rem; color:var(--muted); }
+        .toast {
+            position:fixed; top:20px; left:50%; transform:translateX(-50%);
+            background:var(--amber); color:#fff; padding:0.6rem 1.2rem;
+            border-radius:30px; font-weight:600; font-size:0.85rem; z-index:999;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        .logout-btn { background:transparent; border:1px solid var(--glass-border); color:var(--muted); margin-top:0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" id="loginCard">
+            <h2>Staff Login</h2>
+            <input id="staffCafeId" placeholder="Cafe ID (from owner)" type="text">
+            <input id="staffPin" placeholder="4‑digit PIN" type="password" maxlength="4">
+            <button class="btn" id="loginBtn">Enter</button>
+            <p style="text-align:center; margin-top:0.8rem; font-size:0.8rem; color:var(--muted);">Ask your cafe owner for the ID & PIN.</p>
+        </div>
+
+        <div class="card" id="ordersCard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2>📋 Orders</h2>
+                <button class="btn logout-btn" id="logoutStaffBtn" style="width:auto; padding:0.5rem 1rem;">↪ Leave</button>
+            </div>
+            <div id="staffOrdersList"></div>
+            <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--muted);" id="lastUpdated"></p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
+        const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentCafeId = null;
+        let staffName = '';
+
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const cafeId = document.getElementById('staffCafeId').value.trim();
+            const pin = document.getElementById('staffPin').value.trim();
+            if (!cafeId || !pin) return showToast('Please fill all fields');
+
+            const { data, error } = await _sb.from('staff')
+                .select('*')
+                .eq('cafe_id', cafeId)
+                .eq('pin', pin)
+                .maybeSingle();
+
+            if (error || !data) {
+                return showToast('Invalid Cafe ID or PIN');
+            }
+
+            staffName = data.name;
+            currentCafeId = cafeId;
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('ordersCard').style.display = 'block';
+            loadOrders();
+            setInterval(loadOrders, 10000);
+        });
+
+        document.getElementById('logoutStaffBtn').addEventListener('click', () => {
+            currentCafeId = null;
+            staffName = '';
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('ordersCard').style.display = 'none';
+            document.getElementById('staffOrdersList').innerHTML = '';
+        });
+
+        async function loadOrders() {
+            if (!currentCafeId) return;
+            const { data } = await _sb.from('orders')
+                .select('*')
+                .eq('cafe_id', currentCafeId)
+                .in('status', ['new', 'accepted'])
+                .order('created_at', { ascending: false });
+
+            const list = document.getElementById('staffOrdersList');
+            if (!data || data.length === 0) {
+                list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders yet.</p>';
+            } else {
+                list.innerHTML = data.map(o => {
+                    const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
+                    const itemStr = items.map(i => i.name + ' x' + (i.qty||1)).join(', ');
+                    return `
+                        <div class="order-item">
+                            <h3>Table ${o.table_number||'?'} — ${o.customer_name||'Guest'}</h3>
+                            <p>${itemStr}</p>
+                            <p style="color:var(--amber); font-weight:700; margin-top:0.3rem;">₹${o.total} | ${o.status}</p>
+                            ${o.status === 'new' ? `<button class="btn" onclick="acceptOrder('${o.id}')" style="margin-top:0.5rem;">Accept</button>` : ''}
+                        </div>`;
+                }).join('');
+            }
+            document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+        }
+
+        window.acceptOrder = async (id) => {
+            await _sb.from('orders').update({ status: 'accepted' }).eq('id', id);
+            loadOrders();
+        };
+    </script>
+</body>
+</html>
