@@ -1,0 +1,22 @@
+name: Cafe Boss Daily Report
+
+on:
+  schedule:
+    - cron: '25 18 * * *'   # 23:55 IST
+  workflow_dispatch:
+
+jobs:
+  daily-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Daily Report Edge Function
+        run: |
+          curl -X POST https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/daily-report \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
+
+      - name: Clean Up Old Completed Orders
+        run: |
+          curl -X POST https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/cleanup-orders \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
