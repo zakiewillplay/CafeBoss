@@ -5,265 +5,295 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="/CafeBoss/manifest.json">
     <title>Cafe Boss – Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root {
-            --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85);
-            --border: rgba(255,255,255,0.08); --text: #f0f0f0; --muted: #a0a0b0;
+            --amber:        #e8921a;
+            --amber-lt:     #f5b445;
+            --amber-glow:   rgba(232,146,26,0.15);
+            --espresso:     #120b05;
+            --card-bg:      rgba(26,14,6,0.97);
+            --card-border:  rgba(232,146,26,0.16);
+            --glass:        rgba(20,11,4,0.90);
+            --glass-border: rgba(232,146,26,0.22);
+            --text:         #f2e2c8;
+            --muted:        #9a8068;
+            --radius:       18px;
+            --shadow:       0 8px 32px rgba(0,0,0,0.65);
         }
         body.light-mode {
-            --bg: #f2f1ed; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.12); --text: #1a1a1a; --muted: #555;
+            --espresso:     #f8f2e8;
+            --card-bg:      rgba(255,252,246,1);
+            --card-border:  rgba(190,95,20,0.13);
+            --glass:        rgba(248,242,232,0.96);
+            --glass-border: rgba(190,95,20,0.18);
+            --text:         #1c0f05;
+            --muted:        #7a5c3a;
+            --shadow:       0 4px 22px rgba(0,0,0,0.07);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        html, body { width: 100%; overflow-x: hidden; }
-        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; }
-        .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
-        .toast { background:#27ae60; color:#fff; padding:0.9rem 1.5rem; border-radius:12px; transform:translateX(120%); transition:0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
-        .toast.show { transform:translateX(0); } .toast.error { background:#c0392b; }
-        header { background:var(--card); border-bottom:1px solid var(--border); padding:1rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; }
-        .logo { font-weight:700; font-size:1.3rem; color:var(--primary); white-space: nowrap; }
-        button, select, input, textarea { padding:0.6rem 0.8rem; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); cursor:pointer; font-size:0.85rem; font-family:inherit; transition:0.2s; }
-        button:hover { border-color:var(--primary); }
-        .btn-primary { background:var(--primary); color:#fff; border:none; font-weight:600; }
-        .container { width: 100%; max-width:1200px; margin:1.5rem auto; padding:0 1rem; display:grid; gap:1.5rem; padding-bottom:80px; }
-        .stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:1rem; }
-        .stat-card { background:var(--card); border-radius:14px; padding:1.2rem; text-align:center; border:1px solid var(--border); }
-        .stat-num { font-size:2.2rem; font-weight:800; color:var(--primary); }
-        .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
-        .card h3 { cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; user-select:none; margin-bottom:1rem; color:var(--primary); }
-        .card.collapsed .card-content { display:none; }
-        .order-tabs { display:flex; margin-bottom:1rem; border-radius:8px; overflow:hidden; border:1px solid var(--border); }
-        .order-tabs button { flex:1; padding:0.6rem; border:none; background:transparent; color:var(--text); font-weight:600; font-size:0.9rem; }
-        .order-tabs button.active { background:var(--primary); color:#fff; }
-        .order-card { background:rgba(0,0,0,0.1); border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:0.8rem; }
-        .item-row { display:flex; align-items:center; gap:0.8rem; background:rgba(0,0,0,0.1); border:1px solid var(--border); padding:0.8rem; border-radius:10px; margin-bottom:0.6rem; flex-wrap:wrap; }
-        .badge { display:inline-block; padding:3px 8px; border-radius:4px; font-size:0.7rem; font-weight: 700; }
-        .badge-discount { background:#c0392b; color:#fff; } .badge-featured { background:#f39c12; color:#000; }
-        .badge-standard { background:#3498db; color:#fff; }
-        .badge-best { background:#9b59b6; color:#fff; }
-        .badge-selling { background:#e67e22; color:#fff; }
-        .badge-new { background:#2ecc71; color:#fff; }
-        .toggle-switch { position:relative; width:44px; height:24px; }
-        .toggle-switch input { opacity:0; width:0; height:0; }
-        .toggle-slider { position:absolute; top:0;left:0;right:0;bottom:0; background:#555; border-radius:24px; transition:0.3s; cursor: pointer; }
-        .toggle-slider:before { content:""; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
-        input:checked+.toggle-slider { background:#27ae60; }
-        input:checked+.toggle-slider:before { transform:translateX(20px); }
-        .qr-display img { border-radius:12px; background:#fff; padding:0.5rem; margin-top: 1rem; }
-        .btn-sm { padding:0.4rem 0.8rem; font-size:0.8rem; }
-        .flex-row { display:flex; gap:0.8rem; align-items:center; flex-wrap:wrap; }
-        .header-actions { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
-        .orders-toolbar { display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
-        .orders-toolbar input { flex:1; min-width:200px; }
-        .menu-search { width: 100%; margin-bottom: 1rem; padding: 0.8rem; }
-        .realtime-indicator { font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:12px; margin-left:0.5rem; }
-        .connected { background:#27ae60; color:#fff; }
-        .disconnected { background:#c0392b; color:#fff; }
-        .subscription-box { background:var(--card); border:1px solid var(--primary); border-radius:16px; padding:1.5rem; text-align:center; }
-        .subscription-box input { margin:0.5rem 0; width: 100%; max-width: 300px; }
-        .image-upload-area { margin:0.8rem 0; padding: 1rem; border: 1px dashed var(--border); border-radius: 10px; text-align: center; position: relative; }
-        .image-upload-area input[type="file"] { display:none; }
-        .image-upload-area label { display:inline-block; padding:0.6rem 1rem; background:var(--primary); color:#fff; border-radius:8px; cursor:pointer; font-weight: 600; }
-        .auto-image-btn { display: inline-block; margin-top: 0.5rem; background: transparent; border: 1px solid var(--primary); color: var(--primary); border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
-        .auto-image-btn:hover { background: var(--primary); color: #fff; }
-        .image-preview { max-width:150px; max-height:150px; border-radius:8px; margin-top:0.8rem; display:none; margin-left: auto; margin-right: auto; }
-        .edit-active #submitItemBtn::after { content: " (editing)"; }
-        .tag-toggle-group { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; margin-bottom: 1rem; }
-        .tag-toggle-group label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; }
-        .tag-toggle-group input[type="checkbox"] { width: auto; margin: 0; }
-        .scanner-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-        .scanner-buttons button { flex: 1; padding: 0.8rem; }
-        .preview-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-        .preview-item { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; }
-        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-        .preview-item .remove-preview { position: absolute; top: 2px; right: 2px; background: #c0392b; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 500px) {
-            header { flex-direction: column; align-items: flex-start; }
-            .container { padding: 0 0.8rem; gap: 1rem; }
-            .card { padding: 1rem; }
-            .auto-image-btn { position: static; margin-top: 0.5rem; }
+        html, body { width:100%; overflow-x:hidden; }
+        body {
+            font-family:'Plus Jakarta Sans', sans-serif;
+            background: var(--espresso);
+            color: var(--text);
+            transition: background 0.4s, color 0.4s;
+            min-height:100vh;
+        }
+        body::after {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index:1;
+            opacity:0.03;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        h1,h2,h3 { font-family:'Cormorant Garamond', serif; }
+
+        .container { max-width:1200px; margin:0 auto; padding:1.5rem 1.2rem 100px; position:relative; z-index:2; }
+        .header-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; }
+        .logo { font-size:2rem; font-weight:700; color:var(--amber); font-family:'Cormorant Garamond', serif; }
+        .header-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
+        .header-actions button, .header-actions select {
+            padding:0.55rem 1rem; border-radius:30px; border:1px solid var(--glass-border);
+            background:var(--glass); color:var(--text); cursor:pointer; font-size:0.82rem; font-weight:600;
+            font-family:'Plus Jakarta Sans',sans-serif; transition:0.2s;
+        }
+        .header-actions button:hover, .header-actions select:hover { border-color:var(--amber); color:var(--amber); }
+
+        .card {
+            background:var(--card-bg); border:1px solid var(--card-border);
+            border-radius:var(--radius); padding:1.5rem; margin-bottom:1.2rem;
+            box-shadow:var(--shadow);
+        }
+        .card-title { font-size:1.4rem; font-weight:600; color:var(--amber); margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+        .collapsed .card-body { display:none; }
+
+        .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+        .stat-box { text-align:center; padding:1rem; border-radius:14px; background:var(--card-bg); border:1px solid var(--card-border); }
+        .stat-num { font-size:2.2rem; font-weight:800; color:var(--amber); }
+
+        .btn { padding:0.6rem 1.2rem; border-radius:30px; border:1px solid var(--glass-border); background:var(--glass); color:var(--text); cursor:pointer; font-weight:600; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; transition:0.2s; }
+        .btn:hover { border-color:var(--amber); color:var(--amber); }
+        .btn-primary { background:var(--amber); color:#fff; border:none; }
+        .btn-primary:hover { background:var(--amber-lt); }
+
+        input, select, textarea {
+            width:100%; padding:0.65rem 0.9rem; border-radius:10px;
+            border:1px solid var(--glass-border); background:var(--glass);
+            color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; font-size:0.85rem; margin-bottom:0.8rem;
+            transition:0.2s;
+        }
+        input:focus, select:focus, textarea:focus { outline:none; border-color:var(--amber); }
+
+        .badge {
+            display:inline-block; padding:2px 8px; border-radius:6px;
+            font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px;
+            margin-right:4px;
+        }
+        .badge-amber { background:rgba(232,146,26,0.15); color:var(--amber); border:1px solid rgba(232,146,26,0.3); }
+        .badge-red  { background:rgba(231,76,60,0.1); color:#e74c3c; border:1px solid rgba(231,76,60,0.25); }
+
+        .tabs { display:flex; gap:0.3rem; margin-bottom:1rem; }
+        .tab { flex:1; padding:0.5rem; text-align:center; border-radius:8px; background:transparent; border:1px solid var(--glass-border); color:var(--muted); cursor:pointer; font-weight:600; font-size:0.82rem; transition:0.2s; }
+        .tab.active { background:var(--amber); color:#fff; border-color:var(--amber); }
+
+        .switch { position:relative; display:inline-block; width:44px; height:24px; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#555; border-radius:24px; transition:0.3s; }
+        .slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s; }
+        input:checked+.slider { background:var(--amber); }
+        input:checked+.slider:before { transform:translateX(20px); }
+
+        .qr-box img { background:#fff; padding:0.5rem; border-radius:12px; margin-top:1rem; max-width:200px; }
+
+        .toast-container { position:fixed; top:20px; right:20px; z-index:999; display:flex; flex-direction:column; gap:10px; }
+        .toast { background:var(--amber); color:#fff; padding:0.7rem 1.2rem; border-radius:30px; font-weight:600; font-size:0.85rem; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:none;opacity:1} }
+
+        @media (max-width:600px) {
+            .header-row { flex-direction:column; align-items:flex-start; }
+            .container { padding:1rem 0.8rem 90px; }
         }
     </style>
 </head>
-<body class="light-mode">
+<body>
     <div class="toast-container" id="toastContainer"></div>
-    <header>
-        <div class="logo">☕ Cafe Boss <span id="realtimeStatus" class="realtime-indicator disconnected">⚫ Offline</span></div>
-        <div class="header-actions">
-            <select id="langSelect"><option value="en">EN</option><option value="hi">हि</option></select>
-            <button id="themeToggle">🌙</button>
-            <button id="unmuteBtn">🔊 Unmute</button>
-            <button id="notifBtn" style="display:none;">🔔</button>
-            <button id="testAlertBtn" title="Test sound & notification">📢</button>
-            <button id="livePreviewBtn">👁️ Preview</button>
-            <button id="logoutBtn" style="color:#f87171;" title="Logout">↪</button>
-        </div>
-    </header>
     <div class="container">
-        <div id="subscriptionBoxContainer"></div>
-        <div class="stats-row">
-            <div class="stat-card"><div class="stat-num" id="statViews">0</div><div>Menu Views</div></div>
-            <div class="stat-card"><div class="stat-num" id="statItems">0</div><div>Active Items</div></div>
-            <div class="stat-card"><div class="stat-num" id="statOrders">0</div><div>Total Orders</div></div>
-        </div>
-        <div class="card collapsed" id="analyticsCard">
-            <h3><span>📊 Analytics</span> <span>▼</span></h3>
-            <div class="card-content">
-                <div class="flex-row" style="margin-bottom:1rem;">
-                    <button id="weekBtn" class="btn-sm btn-primary">This Week</button>
-                    <button id="monthBtn" class="btn-sm">This Month</button>
-                </div>
-                <canvas id="ordersChart" height="200"></canvas>
+        <div class="header-row">
+            <div class="logo">☕ Cafe Boss <span style="font-size:0.7rem;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;">Dashboard</span></div>
+            <div class="header-actions">
+                <select id="langSelect"><option>EN</option></select>
+                <button id="themeToggle">🌙</button>
+                <button id="unmuteBtn">🔊</button>
+                <button id="testAlertBtn">📢</button>
+                <button id="livePreviewBtn">👁️</button>
+                <button id="logoutBtn" style="color:#e74c3c;">↪</button>
             </div>
         </div>
-        <div class="card" id="ordersCard">
-            <h3 style="margin-bottom: 0;"><span>📋 Orders</span> <button id="refreshOrdersBtn" class="btn-sm">↻ Refresh</button></h3>
-            <div class="card-content" style="margin-top: 1rem;">
-                <div class="orders-toolbar">
-                    <input type="text" id="orderSearch" placeholder="🔍 Search table or customer name...">
-                    <button id="exportCsvBtn" class="btn-sm" title="Export to CSV">📥 Export CSV</button>
-                    <button id="printTabBtn" class="btn-sm" title="Print all visible orders" style="display:none;">🖨️ Print All</button>
+
+        <div class="stats">
+            <div class="stat-box"><div class="stat-num" id="statViews">0</div><small class="muted">Menu Views</small></div>
+            <div class="stat-box"><div class="stat-num" id="statItems">0</div><small class="muted">Active Items</small></div>
+            <div class="stat-box"><div class="stat-num" id="statOrders">0</div><small class="muted">Total Orders</small></div>
+        </div>
+
+        <!-- Orders -->
+        <div class="card">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">📋 Orders <span>▼</span></div>
+            <div class="card-body">
+                <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                    <input id="orderSearch" placeholder="Search...">
+                    <button id="exportCsvBtn" class="btn">📥 CSV</button>
                 </div>
-                <div class="order-tabs">
-                    <button class="active" data-tab="new">New</button>
-                    <button data-tab="accepted">Preparing</button>
-                    <button data-tab="completed">Completed</button>
+                <div class="tabs">
+                    <div class="tab active" data-tab="new">New</div>
+                    <div class="tab" data-tab="accepted">Preparing</div>
+                    <div class="tab" data-tab="completed">Completed</div>
                 </div>
                 <div id="ordersList"></div>
             </div>
         </div>
 
-        <!-- AI SCANNER (multi-image) -->
-        <div class="card collapsed" id="aiScannerCard">
-            <h3><span>🤖 AI Menu Scanner</span> <span style="font-size:0.8rem; background:var(--primary); color:#fff; padding:2px 8px; border-radius:10px;">BETA</span></h3>
-            <div class="card-content">
-                <p style="font-size:0.9rem; color:var(--muted); margin-bottom:1rem;">Upload multiple photos of your paper menu. The AI reads all of them and adds the items to your menu.</p>
-                <div class="scanner-buttons">
-                    <button id="takePhotoBtn">📸 Take Photos</button>
-                    <button id="galleryUploadBtn">🖼️ From Gallery</button>
+        <!-- AI Scanner -->
+        <div class="card collapsed">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">🤖 AI Menu Scanner <span style="font-size:0.7rem;background:var(--amber);color:#fff;padding:2px 8px;border-radius:10px;">BETA</span></div>
+            <div class="card-body">
+                <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1rem;">Upload multiple photos – AI extracts items with prices & variants.</p>
+                <div style="display:flex; gap:0.8rem; margin-bottom:1rem;">
+                    <button id="takePhotoBtn" class="btn-primary">📸 Camera</button>
+                    <button id="galleryUploadBtn" class="btn">🖼️ Gallery</button>
                 </div>
                 <input type="file" id="aiMenuImageFile" accept="image/*" capture="environment" multiple style="display:none;">
-                <div id="aiPreviews" class="preview-grid"></div>
-                <button id="scanMenuBtn" class="btn-primary" style="margin-top: 1rem; display: none;">🔍 Scan All Menus</button>
-                <div id="aiScannerStatus" style="margin-top: 1rem; font-weight: 600;"></div>
+                <div id="aiPreviews" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;"></div>
+                <button id="scanMenuBtn" class="btn-primary" style="display:none;">🔍 Scan All</button>
+                <div id="aiScannerStatus" style="margin-top:1rem; font-weight:600;"></div>
             </div>
         </div>
 
-        <!-- ADD/EDIT ITEM CARD -->
+        <!-- Add/Edit Item -->
         <div class="card" id="addItemCard">
-            <h3><span id="addItemTitle">➕ Add Item</span> <span>▼</span></h3>
-            <div class="card-content">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">➕ Add Item <span>▼</span></div>
+            <div class="card-body">
                 <input type="hidden" id="editItemId">
-                <div class="flex-row" style="margin-bottom:1rem;">
-                    <input id="itemName" placeholder="Item name *" style="flex:2;" autofocus>
-                    <input type="number" id="itemPrice" step="0.01" placeholder="Price ₹" style="width:120px;">
+                <div style="display:flex; gap:0.8rem;">
+                    <input id="itemName" placeholder="Item name *" autofocus>
+                    <input id="itemPrice" type="number" placeholder="Price ₹" style="width:120px;">
                 </div>
-                <div class="flex-row" style="margin-bottom:1rem;">
-                    <select id="itemCategorySelect" class="select-cat" style="flex:1;">
-                        <option value="Uncategorized">Uncategorized</option>
-                        <option value="__new__">+ Add new category…</option>
-                    </select>
-                    <input id="itemDiscount" placeholder="Discount" style="flex:1;">
-                </div>
-                <input id="itemCategoryInput" placeholder="New category name" style="display:none; margin-bottom:1rem; width: 100%;">
-                <div style="position: relative; margin-bottom:1rem;">
-                    <textarea id="itemDesc" placeholder="Description (keep it short for best look)" rows="3" style="width: 100%; padding-right: 60px;"></textarea>
-                    <button id="aiDescBtn" class="btn-sm" style="position: absolute; right: 10px; top: 10px;">✨ AI</button>
-                </div>
-                <div class="tag-toggle-group">
+                <select id="itemCategorySelect"><option>Uncategorized</option></select>
+                <input id="itemDiscount" placeholder="Discount (e.g. 10% off)">
+                <textarea id="itemDesc" rows="2" placeholder="Short description"></textarea>
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.5rem;">
                     <label><input type="checkbox" id="tagFeatured"> 🔥 Chef's Special</label>
-                    <label><input type="checkbox" id="tagStandard"> ✅ Standard Item</label>
-                    <label><input type="checkbox" id="tagBest"> 🏆 Best of the Cafe</label>
-                    <label><input type="checkbox" id="tagSelling"> 📈 Best Selling</label>
+                    <label><input type="checkbox" id="tagStandard"> ✅ Standard</label>
+                    <label><input type="checkbox" id="tagBest"> 🏆 Best of Cafe</label>
+                    <label><input type="checkbox" id="tagSelling"> 📈 Best Seller</label>
                 </div>
-                <div class="image-upload-area" style="text-align: left;">
-                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Food Photo (Optional)</span>
-                    <label for="itemImageFile" style="font-size: 0.8rem;">Choose Image</label>
-                    <input type="file" id="itemImageFile" accept="image/*">
-                    <button id="autoImageBtn" class="auto-image-btn" title="Find photo automatically">🖼️ Auto Image</button>
-                    <img id="itemImagePreview" class="image-preview" alt="Preview" style="margin-left: 0; margin-top: 10px;">
+                <!-- Allergens -->
+                <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem;">
+                    <label><input type="checkbox" class="allergenCheck" value="gluten"> 🌾 Gluten</label>
+                    <label><input type="checkbox" class="allergenCheck" value="dairy"> 🥛 Dairy</label>
+                    <label><input type="checkbox" class="allergenCheck" value="nuts"> 🥜 Nuts</label>
+                    <label><input type="checkbox" class="dietaryCheck" value="vegan"> 🌱 Vegan</label>
+                    <label><input type="checkbox" class="dietaryCheck" value="jain"> 🕉️ Jain</label>
                 </div>
-                <div id="variantsContainer" style="margin-bottom:0.5rem; margin-top: 1rem;">
-                    <span style="font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 0.5rem;">Sizes / Variants (Optional)</span>
+                <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+                    <label for="itemImageFile" class="btn">📷 Choose Photo</label>
+                    <input type="file" id="itemImageFile" accept="image/*" style="display:none;">
+                    <button id="autoImageBtn" class="btn">🖼️ Auto Image</button>
+                    <img id="itemImagePreview" style="max-width:80px; max-height:80px; border-radius:8px; display:none;">
                 </div>
-                <button id="addVariantBtn" class="btn-sm">+ Add Another Size</button>
-                <div class="flex-row" style="margin-top:1.5rem; gap:1rem;">
-                    <button id="submitItemBtn" class="btn-primary" style="flex:1; padding: 0.8rem;">Save Item</button>
-                    <button id="saveAndNextBtn" style="flex:1; padding: 0.8rem;">Save & Add Next</button>
-                    <button id="cancelEditBtn" style="flex:1; padding: 0.8rem; display:none; background: transparent; border: 1px solid var(--border);">Cancel Edit</button>
+                <div style="margin-bottom:1rem;">
+                    <small>Sizes / Variants</small>
+                    <div id="variantsContainer"></div>
+                    <button id="addVariantBtn" class="btn" style="margin-top:0.3rem;">+ Add Size</button>
+                </div>
+                <div style="display:flex; gap:0.8rem;">
+                    <button id="submitItemBtn" class="btn-primary" style="flex:1;">Save Item</button>
+                    <button id="saveAndNextBtn" class="btn" style="flex:1;">Save & Next</button>
+                    <button id="cancelEditBtn" class="btn" style="display:none;">Cancel</button>
                 </div>
             </div>
         </div>
 
-        <div class="card" id="menuItemsCard">
-            <h3><span>📋 Live Menu Items</span> <span>▼</span></h3>
-            <div class="card-content">
-                <input type="text" id="menuSearch" class="menu-search" placeholder="🔍 Search items...">
+        <!-- Menu Items List -->
+        <div class="card">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">📋 Live Menu <span>▼</span></div>
+            <div class="card-body">
+                <input id="menuSearch" placeholder="Search items..." style="margin-bottom:1rem;">
                 <div id="menuItemsList"></div>
             </div>
         </div>
 
-        <div class="card collapsed" id="qrCard">
-            <h3><span>📱 QR Code & Links</span> <span>▼</span></h3>
-            <div class="card-content" style="text-align: center;">
-                <button id="generateQrBtn" class="btn-primary">Generate My QR Code</button>
-                <div id="qrDisplay" class="qr-display" style="display:flex; justify-content:center;"></div>
-                <p id="qrUrl" style="word-break:break-all; font-size:0.85rem; margin: 1rem 0; color:var(--primary);"></p>
-                <button id="copyQrLink" style="display:none; margin: 0 auto;">📋 Copy Menu Link</button>
+        <!-- Staff -->
+        <div class="card collapsed">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">👥 Staff <span>▼</span></div>
+            <div class="card-body">
+                <div style="display:flex; gap:0.8rem;">
+                    <input id="staffName" placeholder="Name">
+                    <select id="staffRole"><option value="cook">Cook</option><option value="waiter">Waiter</option></select>
+                    <input id="staffPin" placeholder="PIN" maxlength="4">
+                    <button id="addStaffBtn" class="btn-primary">Add</button>
+                </div>
+                <div id="staffList" style="margin-top:0.8rem;"></div>
             </div>
         </div>
 
-        <div class="card collapsed" id="settingsCard">
-            <h3><span>⚙️ Cafe Settings</span> <span>▼</span></h3>
-            <div class="card-content">
-                <label style="font-size:0.8rem; color:var(--muted);">Cafe Name</label>
-                <input id="setCafeName" placeholder="Cafe name" style="width:100%; margin-bottom:1rem;">
-                <label style="font-size:0.8rem; color:var(--muted);">WhatsApp Number</label>
-                <input id="setWhatsapp" placeholder="WhatsApp" style="width:100%; margin-bottom:1rem;">
-                <label style="font-size:0.8rem; color:var(--muted);">Short Description</label>
-                <textarea id="setDesc" rows="3" style="width:100%; margin-bottom:1rem;"></textarea>
-                <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:0.5rem;">Brand Colors</label>
-                <div class="flex-row" style="margin-bottom:1.5rem;">
-                    <div><input type="color" id="setPrimary" value="#FF6B35"> <span style="font-size:0.8rem;">Primary</span></div>
-                    <div><input type="color" id="setAccent" value="#2F3E46"> <span style="font-size:0.8rem;">Accent</span></div>
+        <!-- Loyalty -->
+        <div class="card collapsed">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">🎫 Loyalty <span>▼</span></div>
+            <div class="card-body">
+                <input id="loyaltyPhone" placeholder="Customer Phone">
+                <button id="searchLoyaltyBtn" class="btn">Search</button>
+                <div id="loyaltyInfo" style="margin-top:0.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card collapsed">
+            <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">⚙️ Settings <span>▼</span></div>
+            <div class="card-body">
+                <input id="setCafeName" placeholder="Cafe Name">
+                <input id="setWhatsapp" placeholder="WhatsApp Number">
+                <textarea id="setDesc" rows="2" placeholder="Short Description"></textarea>
+                <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                    <div><input type="color" id="setPrimary" value="#e8921a"> Primary</div>
+                    <div><input type="color" id="setAccent" value="#2F3E46"> Accent</div>
                 </div>
-                <label style="font-size:0.8rem; color:var(--muted);">Google Place ID <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" style="color:var(--primary); text-decoration:underline; font-size:0.7rem;">(what's this?)</a></label>
-                <input id="setGooglePlaceId" placeholder="e.g., ChIJN1t_tDeuEmsRUsoyG83frY4" style="width:100%; margin-bottom:1.5rem;">
-                <button id="saveSettingsBtn" class="btn-primary" style="width:100%;">Save All Settings</button>
+                <input id="setGooglePlaceId" placeholder="Google Place ID">
+                <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem;">
+                    <label>Busy Mode</label><label class="switch"><input type="checkbox" id="busyModeToggle"><span class="slider"></span></label>
+                    <input id="waitTime" type="number" placeholder="Wait mins" style="width:80px;">
+                </div>
+                <button id="saveSettingsBtn" class="btn-primary" style="width:100%;">Save Settings</button>
             </div>
         </div>
     </div>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
-        }
-
+        if('serviceWorker' in navigator) navigator.serviceWorker.register('/CafeBoss/sw.js');
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
-        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const BASE_URL = 'https://zakiewillplay.github.io/CafeBoss/menu.html?id=';
-        const EDGE_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
-        const GEMINI_FUNCTION_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
-        const AUTO_IMAGE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/auto-image';
+        const GEMINI_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
+        const AUTO_IMG_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/auto-image';
+        const IMG_UPLOAD_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
 
-        // ---------- TOAST ----------
         function toast(msg, err=false) {
             const el = document.createElement('div');
-            el.className = 'toast ' + (err ? 'error' : '') + ' show';
+            el.className = 'toast';
             el.textContent = msg;
             document.getElementById('toastContainer').appendChild(el);
-            setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+            setTimeout(() => el.remove(), 3000);
         }
 
-        // ---------- THEME ----------
         function applyTheme() {
             const saved = localStorage.getItem('theme');
-            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            if(saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme:dark)').matches)) {
                 document.body.classList.remove('light-mode');
                 document.getElementById('themeToggle').textContent = '☀️';
             } else {
@@ -278,680 +308,291 @@
         });
         applyTheme();
 
-        // ---------- SOUND ----------
-        let audioCtx = null;
+        let audioCtx;
         let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
-        const notifBtn = document.getElementById('notifBtn');
-        const realtimeStatus = document.getElementById('realtimeStatus');
-        if (audioReady) unmuteBtn.style.display = 'none';
+        if(audioReady) unmuteBtn.style.display = 'none';
         unmuteBtn.addEventListener('click', () => {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                audioReady = true;
-                localStorage.setItem('cafeboss_unmuted', 'true');
-                unmuteBtn.style.display = 'none';
-                toast('Sound alerts enabled!');
-            } catch(e) { toast('Audio not supported', true); }
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            audioReady = true;
+            localStorage.setItem('cafeboss_unmuted', 'true');
+            unmuteBtn.style.display = 'none';
+            toast('Sound enabled');
         });
         function beep() {
-            if (!audioReady) return;
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') { audioCtx.resume().then(() => playBeep()); return; }
-                playBeep();
-            } catch(e) {}
-        }
-        function playBeep() {
-            const now = audioCtx.currentTime;
-            for (let i = 0; i < 3; i++) {
-                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.type = 'square'; osc.frequency.value = 1000;
-                gain.gain.setValueAtTime(0.4, now + i * 0.2);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.2 + 0.1);
-                osc.start(now + i * 0.2); osc.stop(now + i * 0.2 + 0.1);
-            }
+            if(!audioReady) return;
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.value = 1000;
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
         }
 
-        // ---------- NOTIFICATIONS ----------
-        if ('Notification' in window) {
-            const requestNotif = () => {
-                if (Notification.permission === 'default') {
-                    Notification.requestPermission().then(perm => {
-                        if (perm === 'granted') { notifBtn.style.display = 'none'; toast('Alerts enabled!'); }
-                        else { notifBtn.style.display = 'inline-flex'; notifBtn.textContent = '🔕'; }
-                    });
-                } else if (Notification.permission === 'denied') { notifBtn.style.display = 'inline-flex'; notifBtn.textContent = '🔕'; }
-                else if (Notification.permission === 'granted') { notifBtn.style.display = 'none'; }
-            };
-            notifBtn.addEventListener('click', requestNotif);
-            document.addEventListener('click', () => { if (Notification.permission === 'default') requestNotif(); }, { once: true });
-            if (Notification.permission !== 'granted') {
-                notifBtn.style.display = 'inline-flex';
-                notifBtn.textContent = Notification.permission === 'denied' ? '🔕' : '🔔';
-            }
-        }
+        document.getElementById('testAlertBtn').addEventListener('click', () => { beep(); toast('Beep!'); });
+        document.getElementById('logoutBtn').addEventListener('click', () => _sb.auth.signOut().then(() => location.href='index.html'));
+        document.getElementById('livePreviewBtn').addEventListener('click', () => {
+            if(cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank');
+            else toast('Cafe not ready');
+        });
 
-        document.getElementById('testAlertBtn').addEventListener('click', () => { beep(); if (Notification.permission === 'granted') new Notification('Cafe Boss', { body:'Test alert working!', icon:'☕' }); toast('Test beep played!'); });
-        document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='index.html'));
-        document.getElementById('livePreviewBtn').addEventListener('click', () => { if (cafeData?.id) window.open(BASE_URL + cafeData.id, '_blank'); else toast('Cafe not ready', true); });
-        document.querySelectorAll('.card h3').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
+        let cafeData, allOrders=[], allItems=[], activeOrderTab='new', chartInstance, analyticsMode='week', realtimeChannel;
+        let selectedFiles = [];
 
-        let cafeData = null, allOrders = [], allItems = [], activeOrderTab = 'new', chartInstance = null, analyticsMode = 'week';
-        let realtimeChannel = null;
-
-        async function getOrCreateCafe(uid) {
-            const { data } = await _supabase.from('cafes').select('*').eq('owner_id', uid).maybeSingle();
-            if (data) return data;
-            const { data: ins } = await _supabase.from('cafes').insert({ owner_id: uid, cafe_name: 'My Cafe' }).select().maybeSingle();
-            return ins || { id: null, cafe_name:'My Cafe', _temp:true };
-        }
+        document.querySelectorAll('.card-title').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
 
         async function init() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) { window.location.href='auth.html'; return; }
-            cafeData = await getOrCreateCafe(user.id);
-            if (cafeData._temp) toast('Cafe profile loading...');
+            const { data: { user } } = await _sb.auth.getUser();
+            if(!user) { location.href='auth.html'; return; }
+            cafeData = (await _sb.from('cafes').select('*').eq('owner_id', user.id).maybeSingle()).data || (await _sb.from('cafes').insert({owner_id:user.id, cafe_name:'My Cafe'}).select().maybeSingle()).data;
             document.getElementById('setCafeName').value = cafeData.cafe_name||'';
             document.getElementById('setWhatsapp').value = cafeData.whatsapp||'';
             document.getElementById('setDesc').value = cafeData.description||'';
-            document.getElementById('setPrimary').value = cafeData.primary_color||'#FF6B35';
+            document.getElementById('setPrimary').value = cafeData.primary_color||'#e8921a';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
             document.getElementById('setGooglePlaceId').value = cafeData.google_place_id||'';
-            await Promise.all([loadStats(), loadOrders(), loadItems(), loadAnalytics(), loadSubscriptionInfo()]);
-            if (cafeData.id && !cafeData._temp) setupRealtime();
+            document.getElementById('busyModeToggle').checked = cafeData.busy_mode||false;
+            document.getElementById('waitTime').value = cafeData.wait_time||10;
+            await Promise.all([loadStats(), loadOrders(), loadItems(), loadStaff()]);
+            if(cafeData.id) setupRealtime();
         }
 
-        // ---------- SETTINGS ----------
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
-            if (!cafeData.id) return toast('Cafe not ready', true);
             const u = {
                 cafe_name: document.getElementById('setCafeName').value.trim(),
                 whatsapp: document.getElementById('setWhatsapp').value.trim(),
                 description: document.getElementById('setDesc').value.trim(),
                 primary_color: document.getElementById('setPrimary').value,
                 accent_color: document.getElementById('setAccent').value,
-                google_place_id: document.getElementById('setGooglePlaceId').value.trim()
+                google_place_id: document.getElementById('setGooglePlaceId').value.trim(),
+                busy_mode: document.getElementById('busyModeToggle').checked,
+                wait_time: parseInt(document.getElementById('waitTime').value)||10
             };
-            const { error } = await _supabase.from('cafes').update(u).eq('id', cafeData.id);
-            if (error) toast('Save failed', true);
-            else { Object.assign(cafeData, u); toast('Settings saved!'); }
+            await _sb.from('cafes').update(u).eq('id', cafeData.id);
+            Object.assign(cafeData, u);
+            toast('Settings saved');
         });
 
-        async function loadSubscriptionInfo() {
-            const container = document.getElementById('subscriptionBoxContainer');
-            if (!cafeData || !cafeData.id || cafeData._temp) return;
-            const { data: settings } = await _supabase.from('app_settings').select('*').maybeSingle();
-            if (!settings || !settings.subscription_price || settings.subscription_price <= 0) return;
-            if (cafeData.subscription_paid) return;
-            container.innerHTML = `<div class="subscription-box"><h3 style="color:var(--primary);">🔒 Unlock your menu</h3><p>${settings.subscription_message}</p><p>UPI ID: <strong>${settings.upi_id}</strong> | Amount: ₹${settings.subscription_price}</p><input type="text" id="transactionIdInput" placeholder="Enter UPI Transaction ID"><button id="submitPaymentBtn" class="btn-primary">Submit Payment</button></div>`;
-            document.getElementById('submitPaymentBtn')?.addEventListener('click', async () => {
-                const transId = document.getElementById('transactionIdInput').value.trim();
-                if (transId) {
-                    const { error } = await _supabase.from('cafes').update({ transaction_id: transId, payment_status: 'pending' }).eq('id', cafeData.id);
-                    if (error) toast('Submission failed', true);
-                    else toast('Payment submitted for review!');
-                }
-            });
+        async function loadStaff() {
+            const { data } = await _sb.from('staff').select('*').eq('cafe_id', cafeData.id);
+            document.getElementById('staffList').innerHTML = data.map(s => `<div>${s.name} (${s.role}) - PIN ${s.pin} <button onclick="deleteStaff('${s.id}')" class="btn" style="padding:0.2rem 0.5rem;">🗑️</button></div>`).join('');
         }
+        document.getElementById('addStaffBtn').addEventListener('click', async () => {
+            const name = document.getElementById('staffName').value.trim();
+            const role = document.getElementById('staffRole').value;
+            const pin = document.getElementById('staffPin').value.trim();
+            if(!name||!pin) return toast('Fill all fields');
+            await _sb.from('staff').insert({cafe_id:cafeData.id, name, role, pin});
+            loadStaff();
+        });
+        window.deleteStaff = async (id) => { await _sb.from('staff').delete().eq('id',id); loadStaff(); };
 
-        // ---------- IMAGE UPLOAD ----------
-        document.getElementById('itemImageFile').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => { document.getElementById('itemImagePreview').src = e.target.result; document.getElementById('itemImagePreview').style.display = 'block'; };
-                reader.readAsDataURL(file);
-            }
+        document.getElementById('searchLoyaltyBtn').addEventListener('click', async () => {
+            const phone = document.getElementById('loyaltyPhone').value.trim();
+            if(!phone) return;
+            const { data } = await _sb.from('loyalty').select('*').eq('phone',phone).eq('cafe_id',cafeData.id).maybeSingle();
+            document.getElementById('loyaltyInfo').textContent = data ? `Stamps: ${data.stamps}` : 'No record';
         });
 
-        async function uploadImageToImgBB(file) {
-            const formData = new FormData(); formData.append('image', file);
-            const response = await fetch(EDGE_FUNCTION_URL, { method: 'POST', body: formData, headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
-            const result = await response.json();
-            if (!response.ok) throw new Error('Upload failed');
-            return result.url;
-        }
-
-        // ---------- STATS / ORDERS ----------
         async function loadStats() {
-            if (!cafeData.id) return;
-            const [{ count: items }, { count: orders }, { count: views }] = await Promise.all([
-                _supabase.from('menu_items').select('*', { count:'exact', head:true }).eq('cafe_id', cafeData.id),
-                _supabase.from('orders').select('*', { count:'exact', head:true }).eq('cafe_id', cafeData.id),
-                _supabase.from('menu_views_log').select('*', { count:'exact', head:true }).eq('cafe_id', cafeData.id)
+            const [{count:i},{count:o},{count:v}] = await Promise.all([
+                _sb.from('menu_items').select('*',{count:'exact',head:true}).eq('cafe_id',cafeData.id),
+                _sb.from('orders').select('*',{count:'exact',head:true}).eq('cafe_id',cafeData.id),
+                _sb.from('menu_views_log').select('*',{count:'exact',head:true}).eq('cafe_id',cafeData.id)
             ]);
-            document.getElementById('statViews').textContent = views||0;
-            document.getElementById('statItems').textContent = items||0;
-            document.getElementById('statOrders').textContent = orders||0;
+            document.getElementById('statViews').textContent = v||0;
+            document.getElementById('statItems').textContent = i||0;
+            document.getElementById('statOrders').textContent = o||0;
         }
-
         async function loadOrders() {
-            if (!cafeData.id) return;
-            const { data } = await _supabase.from('orders').select('*').eq('cafe_id', cafeData.id).order('created_at', { ascending: false });
-            allOrders = data||[]; renderOrders();
+            const { data } = await _sb.from('orders').select('*').eq('cafe_id',cafeData.id).order('created_at',{ascending:false});
+            allOrders = data||[];
+            renderOrders();
         }
-
         function renderOrders() {
-            const searchTerm = document.getElementById('orderSearch')?.value.toLowerCase() || '';
-            let filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
-            if (searchTerm) filtered = filtered.filter(o => (o.table_number||'').toLowerCase().includes(searchTerm) || (o.customer_name||'').toLowerCase().includes(searchTerm));
+            const search = document.getElementById('orderSearch').value.toLowerCase();
+            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')))
+                .filter(o => !search || (o.table_number||'').toLowerCase().includes(search) || (o.customer_name||'').toLowerCase().includes(search));
             const list = document.getElementById('ordersList');
-            if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted); text-align:center;">No orders found.</p>'; return; }
-            list.innerHTML = filtered.map(o => {
+            list.innerHTML = filtered.length ? filtered.map(o => {
                 const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join(', ') : '';
-                const time = new Date(o.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-                let actions = '';
-                if (o.status==='new') actions = `<button data-action="accept" data-id="${o.id}" class="btn-primary btn-sm">Accept</button>`;
-                if (o.status==='accepted') actions = `<button data-action="deliver" data-id="${o.id}" class="btn-primary btn-sm">Deliver</button>`;
-                if (o.status==='delivered'||o.status==='completed') actions = `<button data-action="print" data-id="${o.id}" class="btn-sm">Print</button>`;
-                return `<div class="order-card"><div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;"><strong style="color:var(--primary);">Table: ${o.table_number||'N/A'}</strong><span style="font-size:0.8rem;">${time} | ${o.customer_name||'Guest'}</span></div><div style="font-size:0.9rem; margin-bottom:0.5rem;">${itemStr}</div><div style="display:flex; justify-content:space-between; align-items:center;"><strong>Total: ₹${parseFloat(o.total).toFixed(2)}</strong><div>${actions}</div></div></div>`;
-            }).join('');
-            document.querySelectorAll('[data-action="accept"]').forEach(b => b.addEventListener('click', async ()=>{ await _supabase.from('orders').update({status:'accepted'}).eq('id',b.dataset.id); loadOrders(); }));
-            document.querySelectorAll('[data-action="deliver"]').forEach(b => b.addEventListener('click', async ()=>{ await _supabase.from('orders').update({status:'delivered'}).eq('id',b.dataset.id); loadOrders(); }));
-            document.querySelectorAll('[data-action="print"]').forEach(b => b.addEventListener('click', () => printSingleOrder(allOrders.find(o=>o.id===b.dataset.id))));
+                return `<div class="card" style="padding:0.8rem; margin-bottom:0.5rem;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>Table ${o.table_number||'?'}</strong>
+                        <small>${o.customer_name||'Guest'} | ${new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</small>
+                    </div>
+                    <div style="font-size:0.8rem; margin:0.3rem 0;">${items.map(i=>i.name+' x'+(i.qty||1)).join(', ')}</div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>₹${o.total}</strong>
+                        <div>${o.status==='new'?`<button class="btn btn-primary" onclick="updateOrder('${o.id}','accepted')">Accept</button>`:''}${o.status==='accepted'?`<button class="btn btn-primary" onclick="updateOrder('${o.id}','delivered')">Deliver</button>`:''}</div>
+                    </div>
+                </div>`;
+            }).join('') : '<p style="color:var(--muted);">No orders</p>';
         }
-
-        function printSingleOrder(order) {
-            const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-            let html = `<html><body style="font-family:sans-serif;padding:20px;"><h2>Cafe Boss Receipt</h2><p>Table: ${order.table_number||'N/A'} | Customer: ${order.customer_name||'Guest'}</p><hr>`;
-            if (Array.isArray(items)) items.forEach(i => { html += `<p>${i.name} x${i.qty||1} - Rs.${(i.price*(i.qty||1)).toFixed(2)}</p>`; });
-            html += `<hr><h3>Total: Rs.${parseFloat(order.total).toFixed(2)}</h3></body></html>`;
-            const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
-        }
-
-        document.getElementById('exportCsvBtn').addEventListener('click', () => {
-            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='accepted'&&o.status==='accepted')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
-            if (!filtered.length) { toast('No orders to export', true); return; }
-            let csv = 'Date,Time,Table,Customer,Items,Total,Status\n';
-            filtered.forEach(o => {
-                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join('; ') : '';
-                csv += `"${new Date(o.created_at).toLocaleDateString('en-IN')}","${new Date(o.created_at).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' })}","${o.table_number||''}","${o.customer_name||''}","${itemStr}","${o.total}","${o.status}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-            toast('CSV exported!');
-        });
-
-        document.getElementById('printTabBtn').addEventListener('click', () => {
-            const filtered = allOrders.filter(o => (activeOrderTab==='new'&&o.status==='new')||(activeOrderTab==='completed'&&(o.status==='delivered'||o.status==='completed')));
-            if (!filtered.length) { toast('No orders to print', true); return; }
-            let html = `<html><body style="font-family:sans-serif;padding:20px;"><h2>${activeOrderTab.charAt(0).toUpperCase()+activeOrderTab.slice(1)} Orders</h2>`;
-            filtered.forEach(o => {
-                const items = typeof o.items === 'string' ? JSON.parse(o.items) : o.items;
-                const itemStr = Array.isArray(items) ? items.map(i => i.name+' x'+(i.qty||1)).join(', ') : '';
-                html += `<div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;"><p>Table: ${o.table_number||'N/A'} | ${o.customer_name||'Guest'}</p><p>${itemStr}</p><p>Total: ₹${parseFloat(o.total).toFixed(2)}</p></div>`;
-            });
-            html += `</body></html>`;
-            const w = window.open('', '_blank'); w.document.write(html); w.document.close(); w.print();
-        });
-
-        document.getElementById('refreshOrdersBtn').addEventListener('click', (e) => { e.stopPropagation(); loadOrders(); toast('Orders refreshed'); });
-        document.getElementById('orderSearch').addEventListener('input', renderOrders);
-        document.querySelectorAll('.order-tabs button').forEach(b => b.addEventListener('click', function(){
-            document.querySelectorAll('.order-tabs button').forEach(x => x.classList.remove('active'));
+        window.updateOrder = async (id, status) => { await _sb.from('orders').update({status}).eq('id',id); loadOrders(); };
+        document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
             this.classList.add('active');
             activeOrderTab = this.dataset.tab;
-            document.getElementById('printTabBtn').style.display = (activeOrderTab==='new'||activeOrderTab==='completed') ? 'inline-flex' : 'none';
             renderOrders();
         }));
+        document.getElementById('orderSearch').addEventListener('input', renderOrders);
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            const csv = 'Date,Table,Customer,Items,Total,Status\n' + allOrders.map(o => `${o.created_at},${o.table_number},${o.customer_name},${(JSON.parse(o.items)||[]).map(i=>i.name).join(';')},${o.total},${o.status}`).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv])); a.download = 'orders.csv'; a.click();
+            toast('CSV exported');
+        });
 
         function setupRealtime() {
-            if (realtimeChannel) _supabase.removeChannel(realtimeChannel);
-            realtimeChannel = _supabase.channel('orders-realtime')
-                .on('postgres_changes', { event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}` }, payload => {
+            if(realtimeChannel) _sb.removeChannel(realtimeChannel);
+            realtimeChannel = _sb.channel('orders-realtime')
+                .on('postgres_changes', {event:'INSERT', schema:'public', table:'orders', filter:`cafe_id=eq.${cafeData.id}`}, payload => {
                     allOrders.unshift(payload.new); renderOrders(); beep(); loadStats();
-                    if (Notification.permission === 'granted') new Notification('New Order!', { body:'A new order has been placed.', icon:'☕' });
-                    else toast('🔔 New order received!', false);
-                }).subscribe(status => {
-                    const ind = document.getElementById('realtimeStatus');
-                    if (status === 'SUBSCRIBED') { ind.textContent = '🟢 Live'; ind.className = 'realtime-indicator connected'; }
-                    else { ind.textContent = '🔴 Offline'; ind.className = 'realtime-indicator disconnected'; }
-                });
+                }).subscribe();
         }
 
-        async function loadAnalytics() {
-            if (!cafeData.id) return;
-            const days = analyticsMode === 'week' ? 7 : 30;
-            const startDate = new Date(Date.now()-days*86400000).toISOString();
-            const { data } = await _supabase.from('orders').select('created_at').eq('cafe_id', cafeData.id).gte('created_at', startDate).order('created_at');
-            const labels = {}; for (let i=days-1; i>=0; i--) { const d = new Date(Date.now()-i*86400000); labels[d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})] = 0; }
-            (data||[]).forEach(o => { const k = new Date(o.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); if (labels[k]!==undefined) labels[k]++; });
-            const ctx = document.getElementById('ordersChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, { type:'line', data:{ labels:Object.keys(labels), datasets:[{ label:'Orders', data:Object.values(labels), borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,0.1)', fill:true, tension:0.3 }] }, options:{ responsive:true } });
-        }
-        document.getElementById('weekBtn').addEventListener('click', ()=>{ analyticsMode='week'; document.getElementById('weekBtn').classList.add('btn-primary'); document.getElementById('monthBtn').classList.remove('btn-primary'); loadAnalytics(); });
-        document.getElementById('monthBtn').addEventListener('click', ()=>{ analyticsMode='month'; document.getElementById('monthBtn').classList.add('btn-primary'); document.getElementById('weekBtn').classList.remove('btn-primary'); loadAnalytics(); });
-
-        // ---------- ITEMS ----------
         async function loadItems() {
-            if (!cafeData.id) return;
-            const { data } = await _supabase.from('menu_items').select('*').eq('cafe_id', cafeData.id).order('category');
-            allItems = data||[]; renderItems();
+            const { data } = await _sb.from('menu_items').select('*').eq('cafe_id',cafeData.id).order('category');
+            allItems = data||[];
+            renderItems();
             const cats = [...new Set(allItems.map(i=>i.category).filter(Boolean))].sort();
-            const select = document.getElementById('itemCategorySelect');
-            select.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('') + '<option value="__new__">+ Add new…</option>';
+            const sel = document.getElementById('itemCategorySelect');
+            sel.innerHTML = '<option value="Uncategorized">Uncategorized</option>' + cats.map(c => `<option>${c}</option>`).join('') + '<option value="__new__">+ New</option>';
         }
-
-        function getTagBadges(item) {
-            let badges = '';
-            const tags = item.tags ? item.tags.split(',') : [];
-            if (item.featured || tags.includes('featured')) badges += '<span class="badge badge-featured">🔥 Chef\'s Special</span> ';
-            if (tags.includes('standard')) badges += '<span class="badge badge-standard">✅ Standard</span> ';
-            if (tags.includes('best')) badges += '<span class="badge badge-best">🏆 Best of Cafe</span> ';
-            if (tags.includes('bestselling')) badges += '<span class="badge badge-selling">📈 Best Selling</span> ';
-            const created = new Date(item.created_at);
-            const now = new Date();
-            if ((now - created) / (1000*60*60*24) < 7) badges += '<span class="badge badge-new">🆕 New</span> ';
-            if (item.discount) badges += `<span class="badge badge-discount">${item.discount}</span> `;
-            return badges;
-        }
-
         function renderItems() {
-            const searchTerm = document.getElementById('menuSearch')?.value.toLowerCase() || '';
-            const filtered = allItems.filter(item => !searchTerm || item.name.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm));
-            const list = document.getElementById('menuItemsList');
-            if (!filtered.length) { list.innerHTML = '<p style="color:var(--muted);">No items match your search.</p>'; return; }
-            list.innerHTML = filtered.map(item => {
-                const badges = getTagBadges(item);
-                return `<div class="item-row">
-                    ${item.image_url ? `<img src="${item.image_url}" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">` : ''}
-                    <div style="flex:1;"><strong>${item.name}</strong> ${badges}<div style="font-size:0.8rem; color:var(--primary);">${item.category} | ₹${item.price}</div></div>
-                    <label class="toggle-switch"><input type="checkbox" ${item.available?'checked':''} data-id="${item.id}" class="toggle-avail"><span class="toggle-slider"></span></label>
-                    <button class="edit-item-btn btn-sm" data-id="${item.id}">✏️</button>
-                    <button class="delete-item-btn btn-sm" data-id="${item.id}" style="color:#f87171;">Del</button>
-                </div>`;
-            }).join('');
-            document.querySelectorAll('.toggle-avail').forEach(cb => cb.addEventListener('change', async function(){ await _supabase.from('menu_items').update({available:this.checked}).eq('id',this.dataset.id); }));
-            document.querySelectorAll('.delete-item-btn').forEach(b => b.addEventListener('click', async ()=>{ if(confirm('Delete?')){ await _supabase.from('menu_items').delete().eq('id',b.dataset.id); loadItems(); loadStats(); } }));
-            document.querySelectorAll('.edit-item-btn').forEach(b => b.addEventListener('click', function(){
-                const id = this.dataset.id;
-                const item = allItems.find(i => i.id === id);
-                if (item) editItem(item);
-            }));
+            const search = document.getElementById('menuSearch').value.toLowerCase();
+            const filtered = allItems.filter(i => !search || i.name.toLowerCase().includes(search) || i.category.toLowerCase().includes(search));
+            document.getElementById('menuItemsList').innerHTML = filtered.map(item => `
+                <div style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem; border-bottom:1px solid var(--glass-border);">
+                    ${item.image_url ? `<img src="${item.image_url}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;">` : ''}
+                    <div style="flex:1;"><strong>${item.name}</strong><br><small>${item.category} | ₹${item.price}</small></div>
+                    <label class="switch"><input type="checkbox" ${item.available?'checked':''} onchange="toggleItem('${item.id}',this.checked)"><span class="slider"></span></label>
+                    <button class="btn" onclick="editItem('${item.id}')">✏️</button>
+                    <button class="btn" onclick="deleteItem('${item.id}')">🗑️</button>
+                </div>`).join('');
         }
-
-        function editItem(item) {
+        window.toggleItem = async (id, checked) => { await _sb.from('menu_items').update({available:checked}).eq('id',id); };
+        window.deleteItem = async (id) => { if(confirm('Delete?')){ await _sb.from('menu_items').delete().eq('id',id); loadItems(); loadStats(); } };
+        window.editItem = (id) => {
+            const item = allItems.find(i => i.id === id);
+            if(!item) return;
             document.getElementById('editItemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
-            const catSelect = document.getElementById('itemCategorySelect');
-            const catInput = document.getElementById('itemCategoryInput');
-            if (catSelect.querySelector(`option[value="${item.category}"]`)) {
-                catSelect.value = item.category;
-                catInput.style.display = 'none';
-            } else {
-                catSelect.value = '__new__';
-                catInput.style.display = 'block';
-                catInput.value = item.category;
-            }
-            document.getElementById('itemDiscount').value = item.discount || '';
-
-            let desc = item.description || '';
-            const varContainer = document.getElementById('variantsContainer');
-            while (varContainer.children.length > 1) varContainer.removeChild(varContainer.lastChild);
-            if (varContainer.children.length === 1) varContainer.appendChild(createVariantRow());
-            if (desc.startsWith('VAR::')) {
-                const varStr = desc.replace('VAR::','');
-                const parts = varStr.split('|');
-                parts.forEach(p => {
-                    const [vname, vprice] = p.split('=');
-                    const row = createVariantRow(vname, vprice);
-                    varContainer.appendChild(row);
-                });
-                desc = '';
-            }
-            document.getElementById('itemDesc').value = desc;
-
-            const tags = item.tags ? item.tags.split(',') : [];
-            document.getElementById('tagFeatured').checked = item.featured || tags.includes('featured');
-            document.getElementById('tagStandard').checked = tags.includes('standard');
-            document.getElementById('tagBest').checked = tags.includes('best');
-            document.getElementById('tagSelling').checked = tags.includes('bestselling');
-
-            const preview = document.getElementById('itemImagePreview');
-            if (item.image_url) {
-                preview.src = item.image_url;
-                preview.style.display = 'block';
-            } else {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
-            document.getElementById('itemImageFile').value = '';
-            document.getElementById('itemImageFile').dataset.autoUrl = '';
-
-            document.getElementById('addItemTitle').textContent = '✏️ Edit Item';
-            document.getElementById('submitItemBtn').textContent = 'Update Item';
-            document.getElementById('cancelEditBtn').style.display = 'inline-block';
-            document.getElementById('addItemCard').classList.add('edit-active');
+            document.getElementById('itemCategorySelect').value = item.category;
+            document.getElementById('itemDiscount').value = item.discount||'';
+            document.getElementById('itemDesc').value = item.description||'';
+            document.getElementById('tagFeatured').checked = item.featured;
             document.getElementById('addItemCard').classList.remove('collapsed');
-            document.getElementById('addItemCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.getElementById('itemName').focus();
+            document.getElementById('addItemCard').scrollIntoView({behavior:'smooth'});
+        };
+
+        // AI Scanner
+        document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
+        document.getElementById('galleryUploadBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').removeAttribute('capture'); document.getElementById('aiMenuImageFile').click(); });
+        document.getElementById('aiMenuImageFile').addEventListener('change', function() {
+            for(const file of this.files) {
+                if(!selectedFiles.find(f => f.name===file.name && f.size===file.size)) selectedFiles.push(file);
+            }
+            updatePreviews();
+            this.value = '';
+        });
+        function updatePreviews() {
+            const container = document.getElementById('aiPreviews');
+            container.innerHTML = '';
+            selectedFiles.forEach((file,i) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const div = document.createElement('div'); div.style.position='relative'; div.innerHTML = `<img src="${e.target.result}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;"><button style="position:absolute;top:-5px;right:-5px;background:#e74c3c;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;" onclick="selectedFiles.splice(${i},1);updatePreviews();">✕</button>`;
+                    container.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+            document.getElementById('scanMenuBtn').style.display = selectedFiles.length ? 'inline-block' : 'none';
         }
+        document.getElementById('scanMenuBtn').addEventListener('click', async () => {
+            const status = document.getElementById('aiScannerStatus');
+            status.textContent = 'Scanning...';
+            let items = [];
+            for(const file of selectedFiles) {
+                const base64 = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result.split(',')[1]); r.readAsDataURL(file); });
+                const res = await fetch(GEMINI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({imageBase64:base64, mimeType:file.type}) });
+                const data = await res.json();
+                if(data.items) items = items.concat(data.items.map(i => ({...i, cafe_id:cafeData.id, available:true})));
+            }
+            if(items.length) {
+                await _sb.from('menu_items').insert(items);
+                status.textContent = `Added ${items.length} items`;
+                loadItems(); loadStats();
+            } else status.textContent = 'No items found';
+            selectedFiles = []; updatePreviews();
+        });
 
-        function createVariantRow(name='', price='') {
-            const row = document.createElement('div');
-            row.className = 'flex-row';
-            row.style.marginBottom = '0.5rem';
-            row.innerHTML = `<input class="var-name" placeholder="Size" style="flex:1;" value="${name}">
-                             <input class="var-price" type="number" step="0.01" placeholder="Price" style="flex:1;" value="${price}">
-                             <button class="remove-var btn-sm" style="color:#f87171;">✕</button>`;
-            row.querySelector('.remove-var').addEventListener('click', () => row.remove());
-            return row;
+        // Auto Image
+        document.getElementById('autoImageBtn').addEventListener('click', async () => {
+            const name = document.getElementById('itemName').value.trim();
+            if(!name) return toast('Enter item name');
+            const res = await fetch(AUTO_IMG_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({query:name}) });
+            const data = await res.json();
+            if(data.imageUrl) {
+                document.getElementById('itemImagePreview').src = data.imageUrl;
+                document.getElementById('itemImagePreview').style.display = 'block';
+                document.getElementById('itemImageFile').dataset.autoUrl = data.imageUrl;
+            }
+        });
+
+        // Save Item
+        document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
+        document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
+        async function saveItem(andClear) {
+            const id = document.getElementById('editItemId').value;
+            const name = document.getElementById('itemName').value.trim();
+            if(!name) return toast('Name required');
+            const category = document.getElementById('itemCategorySelect').value;
+            const price = parseFloat(document.getElementById('itemPrice').value)||0;
+            const discount = document.getElementById('itemDiscount').value;
+            const desc = document.getElementById('itemDesc').value;
+            const featured = document.getElementById('tagFeatured').checked;
+            const tags = [];
+            if(document.getElementById('tagStandard').checked) tags.push('standard');
+            if(document.getElementById('tagBest').checked) tags.push('best');
+            if(document.getElementById('tagSelling').checked) tags.push('bestselling');
+            const allergens = Array.from(document.querySelectorAll('.allergenCheck:checked')).map(c=>c.value);
+            const dietary = Array.from(document.querySelectorAll('.dietaryCheck:checked')).map(c=>c.value);
+            let imageUrl = document.getElementById('itemImageFile').dataset.autoUrl || '';
+            const file = document.getElementById('itemImageFile').files[0];
+            if(file) {
+                const form = new FormData(); form.append('image',file);
+                const res = await fetch(IMG_UPLOAD_URL, { method:'POST', headers:{'Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:form });
+                const data = await res.json();
+                if(data.url) imageUrl = data.url;
+            }
+            const itemData = { name, price, category, discount, description:desc, featured, tags: tags.join(',') || null, allergens, dietary, image_url: imageUrl || null };
+            if(id) await _sb.from('menu_items').update(itemData).eq('id',id);
+            else await _sb.from('menu_items').insert({...itemData, cafe_id:cafeData.id});
+            toast(id ? 'Updated' : 'Added');
+            loadItems(); loadStats();
+            resetForm();
+            if(andClear) { document.getElementById('itemName').value=''; document.getElementById('itemPrice').value=''; }
         }
-
-        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
-
         function resetForm() {
             document.getElementById('editItemId').value = '';
             document.getElementById('itemName').value = '';
             document.getElementById('itemPrice').value = '';
-            document.getElementById('itemCategorySelect').value = 'Uncategorized';
-            document.getElementById('itemCategoryInput').style.display = 'none';
             document.getElementById('itemDiscount').value = '';
             document.getElementById('itemDesc').value = '';
             document.getElementById('tagFeatured').checked = false;
             document.getElementById('tagStandard').checked = false;
             document.getElementById('tagBest').checked = false;
             document.getElementById('tagSelling').checked = false;
+            document.querySelectorAll('.allergenCheck,.dietaryCheck').forEach(c => c.checked = false);
+            document.getElementById('itemImagePreview').style.display = 'none';
             document.getElementById('itemImageFile').value = '';
             document.getElementById('itemImageFile').dataset.autoUrl = '';
-            document.getElementById('itemImagePreview').style.display = 'none';
-            const varContainer = document.getElementById('variantsContainer');
-            while (varContainer.children.length > 1) varContainer.removeChild(varContainer.lastChild);
-            if (varContainer.children.length === 1) varContainer.appendChild(createVariantRow());
-            document.getElementById('addItemTitle').textContent = '➕ Add Item';
-            document.getElementById('submitItemBtn').textContent = 'Save Item';
-            document.getElementById('cancelEditBtn').style.display = 'none';
-            document.getElementById('addItemCard').classList.remove('edit-active');
-            document.getElementById('itemName').focus();
         }
 
-        document.getElementById('menuSearch').addEventListener('input', renderItems);
-        document.getElementById('aiDescBtn').addEventListener('click', ()=> document.getElementById('itemDesc').value = ['Rich and creamy.','A delightful blend.','Freshly prepared.','Our signature recipe.'][Math.floor(Math.random()*4)]);
-        document.getElementById('itemCategorySelect').addEventListener('change', function() { const input = document.getElementById('itemCategoryInput'); if (this.value === '__new__') { input.style.display = 'block'; input.value = ''; } else input.style.display = 'none'; });
-        document.getElementById('addVariantBtn').addEventListener('click', ()=>{
-            const row = createVariantRow();
-            document.getElementById('variantsContainer').appendChild(row);
-        });
-
-        (function initVariants() {
-            const varContainer = document.getElementById('variantsContainer');
-            if (varContainer && varContainer.children.length <= 1) {
-                varContainer.appendChild(createVariantRow());
-            }
-        })();
-
-        // ---------- AUTO IMAGE BUTTON ----------
-        document.getElementById('autoImageBtn').addEventListener('click', async () => {
-            const name = document.getElementById('itemName').value.trim();
-            if (!name) return toast('Enter item name first', true);
-            const btn = document.getElementById('autoImageBtn');
-            btn.disabled = true;
-            btn.textContent = 'Searching...';
-            try {
-                const res = await fetch(AUTO_IMAGE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-                    body: JSON.stringify({ query: name })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed');
-                if (data.imageUrl) {
-                    const preview = document.getElementById('itemImagePreview');
-                    preview.src = data.imageUrl;
-                    preview.style.display = 'block';
-                    document.getElementById('itemImageFile').dataset.autoUrl = data.imageUrl;
-                } else {
-                    toast('No photo found', true);
-                }
-            } catch (e) { toast('Auto image failed: ' + e.message, true); }
-            btn.disabled = false;
-            btn.textContent = '🖼️ Auto Image';
-        });
-
-        // ---------- SAVE ITEM (with auto image support) ----------
-        async function saveItem(andClear = false) {
-            if (!cafeData.id) return toast('Cafe not ready', true);
-            const editId = document.getElementById('editItemId').value;
-            const name = document.getElementById('itemName').value.trim();
-            if (!name) return toast('Name required', true);
-            let category = document.getElementById('itemCategorySelect').value;
-            if (category === '__new__') category = document.getElementById('itemCategoryInput').value.trim() || 'Uncategorized';
-            const price = parseFloat(document.getElementById('itemPrice').value)||0,
-                  discount = document.getElementById('itemDiscount').value.trim();
-
-            const tagList = [];
-            if (document.getElementById('tagFeatured').checked) tagList.push('featured');
-            if (document.getElementById('tagStandard').checked) tagList.push('standard');
-            if (document.getElementById('tagBest').checked) tagList.push('best');
-            if (document.getElementById('tagSelling').checked) tagList.push('bestselling');
-            const tagsStr = tagList.join(',');
-            const featured = document.getElementById('tagFeatured').checked;
-
-            let desc = document.getElementById('itemDesc').value.trim();
-            const varRows = document.querySelectorAll('#variantsContainer > div'); let varParts = [];
-            varRows.forEach(r => { const vn = r.querySelector('.var-name')?.value.trim(), vp = r.querySelector('.var-price')?.value; if (vn && vp) varParts.push(vn+'='+vp); });
-            if (varParts.length > 0) desc = 'VAR::' + varParts.join('|');
-
-            let imageUrl = '';
-            const imageFileInput = document.getElementById('itemImageFile');
-            const file = imageFileInput.files[0];
-            if (file) {
-                try { imageUrl = await uploadImageToImgBB(file); toast('Image uploaded!'); } catch (e) { toast('Image upload failed, saving without image.', true); }
-            } else if (imageFileInput.dataset.autoUrl) {
-                imageUrl = imageFileInput.dataset.autoUrl;
-                delete imageFileInput.dataset.autoUrl;
-            }
-
-            const itemData = {
-                name,
-                description: desc,
-                price,
-                category,
-                discount,
-                featured,
-                tags: tagsStr || null,
-                cafe_id: editId ? undefined : cafeData.id
-            };
-            if (imageUrl) itemData.image_url = imageUrl;
-
-            if (editId) {
-                const { error } = await _supabase.from('menu_items').update(itemData).eq('id', editId);
-                if (error) { toast('Update failed', true); return; }
-                toast('Item updated!');
-                resetForm();
-            } else {
-                const { error } = await _supabase.from('menu_items').insert(itemData);
-                if (error) { toast('Save failed', true); return; }
-                toast('Item added!');
-                if (andClear) {
-                    document.getElementById('itemName').value = '';
-                    document.getElementById('itemPrice').value = '';
-                    document.getElementById('itemName').focus();
-                } else {
-                    resetForm();
-                }
-            }
-            loadItems();
-            loadStats();
-        }
-
-        document.getElementById('submitItemBtn').addEventListener('click', () => saveItem(false));
-        document.getElementById('saveAndNextBtn').addEventListener('click', () => saveItem(true));
-
-        document.getElementById('addItemCard').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON' && e.target.id !== 'itemDesc') {
-                e.preventDefault();
-                saveItem(false);
-            }
-        });
-
-        // ---------- MULTI-IMAGE AI SCANNER ----------
-        const aiFileInput = document.getElementById('aiMenuImageFile');
-        const aiPreviews = document.getElementById('aiPreviews');
-        const scanBtn = document.getElementById('scanMenuBtn');
-        const aiStatus = document.getElementById('aiScannerStatus');
-        let selectedFiles = [];
-
-        function updatePreviews() {
-            aiPreviews.innerHTML = '';
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const div = document.createElement('div');
-                    div.className = 'preview-item';
-                    div.innerHTML = `<img src="${e.target.result}" alt="preview"><button class="remove-preview" data-index="${index}">✕</button>`;
-                    aiPreviews.appendChild(div);
-                    div.querySelector('.remove-preview').addEventListener('click', (ev) => {
-                        ev.stopPropagation();
-                        selectedFiles.splice(index, 1);
-                        updatePreviews();
-                        if (selectedFiles.length === 0) scanBtn.style.display = 'none';
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-            scanBtn.style.display = selectedFiles.length > 0 ? 'inline-block' : 'none';
-        }
-
-        aiFileInput.addEventListener('change', () => {
-            const newFiles = Array.from(aiFileInput.files);
-            newFiles.forEach(file => {
-                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-                    selectedFiles.push(file);
-                }
-            });
-            updatePreviews();
-            aiFileInput.value = '';
-        });
-
-        document.getElementById('takePhotoBtn').addEventListener('click', () => {
-            aiFileInput.setAttribute('capture', 'environment');
-            aiFileInput.click();
-        });
-        document.getElementById('galleryUploadBtn').addEventListener('click', () => {
-            aiFileInput.removeAttribute('capture');
-            aiFileInput.click();
-        });
-
-        async function resizeImage(file, maxWidth = 1024, quality = 0.8) {
-            return new Promise((resolve, reject) => {
-                if (!file || !file.type) return reject(new Error('No file selected.'));
-                if (!file.type.startsWith('image/')) return reject(new Error(`Unsupported type: ${file.type}`));
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height;
-                        if (width === 0 || height === 0) return reject(new Error('Image dimensions are 0x0.'));
-                        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                        const base64 = dataUrl.split(',')[1];
-                        if (!base64 || base64.length < 10) return reject(new Error('Resized image too small.'));
-                        resolve({ base64, mimeType: 'image/jpeg' });
-                    };
-                    img.onerror = () => reject(new Error('Failed to decode image.'));
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => reject(new Error('Failed to read file.'));
-                reader.readAsDataURL(file);
-            });
-        }
-
-        scanBtn.addEventListener('click', async () => {
-            if (!cafeData.id) return toast('Cafe not ready', true);
-            if (selectedFiles.length === 0) return toast('No images selected', true);
-
-            aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning 0/' + selectedFiles.length + ' images...';
-            aiStatus.style.color = 'var(--primary)';
-            scanBtn.disabled = true;
-
-            let allInsertedItems = [];
-            let processedCount = 0;
-
-            for (let i = 0; i < selectedFiles.length; i++) {
-                const file = selectedFiles[i];
-                try {
-                    const { base64, mimeType } = await resizeImage(file);
-                    const response = await fetch(GEMINI_FUNCTION_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-                        body: JSON.stringify({ imageBase64: base64, mimeType })
-                    });
-                    const result = await response.json();
-                    if (!response.ok) throw new Error(result.error || result.message || `HTTP ${response.status}`);
-                    const items = result.items || [];
-                    if (items.length > 0) {
-                        const inserts = items.map(item => {
-                            let desc = item.description || '';
-                            if (item.variants && item.variants.length > 0) {
-                                const varParts = item.variants.map(v => `${v.name}=${v.price}`).join('|');
-                                desc = 'VAR::' + varParts;
-                            }
-                            return {
-                                cafe_id: cafeData.id,
-                                name: item.name,
-                                price: parseFloat(item.price) || 0,
-                                category: item.category || 'Uncategorized',
-                                description: desc,
-                                available: true
-                            };
-                        });
-                        allInsertedItems = allInsertedItems.concat(inserts);
-                    }
-                    processedCount++;
-                    aiStatus.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--primary); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
-                } catch (err) {
-                    console.error('Error on image ' + (i+1), err);
-                    toast(`Image ${i+1} failed: ${err.message}`, true);
-                    processedCount++;
-                }
-            }
-
-            if (allInsertedItems.length > 0) {
-                const { error } = await _supabase.from('menu_items').insert(allInsertedItems);
-                if (error) {
-                    aiStatus.innerHTML = `❌ Failed to save items: ${error.message}`;
-                    aiStatus.style.color = '#c0392b';
-                } else {
-                    aiStatus.innerHTML = `🎉 Success! ${allInsertedItems.length} items added from ${processedCount} image(s).`;
-                    aiStatus.style.color = '#27ae60';
-                }
-            } else {
-                aiStatus.innerHTML = '❌ No items detected in any image.';
-                aiStatus.style.color = '#c0392b';
-            }
-
-            scanBtn.disabled = false;
-            selectedFiles = [];
-            updatePreviews();
-            scanBtn.style.display = 'none';
-            loadItems();
-            loadStats();
-        });
-
-        // ---------- QR ----------
-        document.getElementById('generateQrBtn').addEventListener('click', () => {
-            if (!cafeData.id) return toast('Cafe not ready', true);
-            const url = BASE_URL + cafeData.id;
-            document.getElementById('qrDisplay').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" width="250" height="250">`;
-            document.getElementById('qrUrl').textContent = url;
-            document.getElementById('copyQrLink').style.display = 'inline-block';
-            document.getElementById('qrCard').classList.remove('collapsed');
-        });
-        document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
-
-        // ---------- BOOT ----------
         init();
     </script>
 </body>
