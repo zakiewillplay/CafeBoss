@@ -11,9 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        /* ============================================================
-           DESIGN TOKENS
-        ============================================================ */
+        /* ========== YOUR ORIGINAL MENU STYLES – FULL & UNCHANGED ========== */
         :root {
             --amber:        #e8921a;
             --amber-lt:     #f5b445;
@@ -171,7 +169,7 @@
         }
 
         /* ============================================================
-           MENU WRAPPER — revealed after cloche exits
+           MENU WRAPPER
         ============================================================ */
         .menu-content {
             opacity: 0;
@@ -326,7 +324,6 @@
             opacity: 0;
             cursor: default;
         }
-        /* shimmer sweep on hover */
         .menu-item::before {
             content: '';
             position: absolute; inset: 0; border-radius: var(--radius);
@@ -338,7 +335,6 @@
         .menu-item:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); border-color: rgba(232,146,26,0.38); }
         .menu-item:hover::before { transform: translateX(100%); }
 
-        /* image wrapper */
         .img-wrap {
             width: 106px; height: 106px; border-radius: 12px;
             overflow: hidden; flex-shrink: 0;
@@ -350,7 +346,6 @@
         }
         .menu-item:hover .menu-item-img { transform: scale(1.1); }
 
-        /* item details */
         .item-details { flex: 1; min-width: 0; }
         .item-name {
             font-family: 'Cormorant Garamond', serif;
@@ -576,7 +571,6 @@
             font-size: 0.88rem; color: var(--muted); text-align: center; line-height: 1.6;
             animation: fadeUp 0.5s ease 0.5s both;
         }
-        /* confetti dots */
         .success-overlay.show .confetti-dot {
             animation: confettiFly 1.2s cubic-bezier(0.4,0,0.2,1) forwards;
         }
@@ -708,6 +702,8 @@
             </div>
             <input class="cart-input" id="tableNumber" placeholder="Table Number *">
             <input class="cart-input" id="customerName" placeholder="Your name (optional)">
+            <!-- NEW: phone number for loyalty -->
+            <input class="cart-input" id="customerPhone" placeholder="Your phone (for loyalty)" type="tel">
             <button class="btn-order" id="placeOrderBtn">Place Order →</button>
             <button class="btn-close-cart" id="closeCartBtn">Close</button>
         </div>
@@ -827,7 +823,6 @@
                 return hit && (activeCategory === 'All' || i.category === activeCategory);
             });
 
-            /* category tabs */
             const cats = ['All', ...new Set(menuItems.map(i => i.category).filter(Boolean))].sort();
             document.getElementById('categoryTabs').innerHTML = cats.map(c =>
                 `<button class="cat-btn${c===activeCategory?' active':''}" data-cat="${c}">${c}</button>`
@@ -836,7 +831,6 @@
                 b.addEventListener('click', function() { activeCategory = this.dataset.cat; renderMenu(); })
             );
 
-            /* items html */
             let html = '';
             if (!filtered.length) {
                 html = `<div class="empty-state"><div class="empty-icon">🍽️</div><p>${tl('noItems')}</p></div>`;
@@ -899,7 +893,6 @@
             document.getElementById('menuSections').innerHTML = html;
             attachItemEvents();
 
-            /* entrance animation */
             if (initial || search === '') {
                 gsap.fromTo('.menu-item',
                     { opacity: 0, y: 28, scale: 0.96 },
@@ -912,14 +905,12 @@
             }
         }
 
-        /* search debounce */
         let searchTimer;
         document.getElementById('searchBar').addEventListener('input', () => {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(() => renderMenu(false), 260);
         });
 
-        /* ─────────────────────── ITEM EVENTS ───────────────────────── */
         function attachItemEvents() {
             document.querySelectorAll('.qty-plus').forEach(btn =>
                 btn.addEventListener('click', function() {
@@ -958,7 +949,6 @@
             el.querySelectorAll('.qty-btn').forEach(b => b.classList.toggle('has-qty', qty > 0));
         }
 
-        /* ─────────────────────── CART UI ───────────────────────────── */
         function updateCartUI() {
             localStorage.setItem('cafe_cart', JSON.stringify(cart));
             const totalQty   = cart.reduce((s,c) => s + c.qty,        0);
@@ -984,7 +974,6 @@
                 : '<p style="color:var(--muted);font-size:0.9rem;padding:1rem 0;">No items yet.</p>';
         }
 
-        /* ─────────────────────── CART OPEN/CLOSE ───────────────────── */
         document.getElementById('floatingCart').addEventListener('click', () => {
             if (!cart.length) { showToast(tl('cartEmpty')); return; }
             document.getElementById('cartPanel').classList.add('open');
@@ -993,7 +982,6 @@
             document.getElementById('cartPanel').classList.remove('open')
         );
 
-        /* ─────────────────────── WAITER ────────────────────────────── */
         document.getElementById('waiterBtn').addEventListener('click', function() {
             const table = document.getElementById('tableNumber').value || tableParam;
             if (!table) { showToast(tl('tableReq')); return; }
@@ -1001,7 +989,6 @@
             this.classList.remove('ring'); void this.offsetWidth; this.classList.add('ring');
         });
 
-        /* ─────────────────────── PLACE ORDER ───────────────────────── */
         document.getElementById('placeOrderBtn').addEventListener('click', async () => {
             if (!cart.length) return showToast(tl('cartEmpty'));
             const table = document.getElementById('tableNumber').value.trim() || tableParam || '';
@@ -1009,13 +996,15 @@
 
             const orderItems = cart.map(c => ({ name: c.name, price: c.price, qty: c.qty }));
             const total = cart.reduce((s,c) => s + c.price*c.qty, 0);
+            const phone = document.getElementById('customerPhone').value.trim();
             const { data: order, error } = await _sb.from('orders').insert({
                 cafe_id: cafeId,
                 customer_name: document.getElementById('customerName').value.trim() || 'Guest',
                 table_number: table,
                 items: orderItems,
                 total: total,
-                status: 'new'
+                status: 'new',
+                customer_phone: phone || null
             }).select().maybeSingle();
 
             if (error) { showToast('Order failed'); return; }
@@ -1027,7 +1016,6 @@
             const overlay = document.getElementById('successOverlay');
             overlay.classList.add('show');
 
-            /* confetti burst */
             for (let i = 0; i < 16; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'confetti-dot';
@@ -1044,7 +1032,6 @@
                 overlay.querySelectorAll('.confetti-dot').forEach(d => d.remove());
             }, 3600);
 
-            // UPI payment option
             if (order && cafeData?.upi_id) {
                 setTimeout(() => showUPIOption(order), 1000);
             }
@@ -1151,7 +1138,6 @@
             return outputArray;
         }
 
-        /* ─────────────────────── INIT ──────────────────────────────── */
         loadMenu();
     </script>
 </body>
