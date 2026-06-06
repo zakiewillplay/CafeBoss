@@ -1,0 +1,17 @@
+name: Cafe Boss Daily Report
+
+on:
+  schedule:
+    # Runs every day at 18:25 UTC (which is 23:55 IST)
+    - cron: '25 18 * * *'
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  send-daily-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Daily Report Edge Function
+        run: |
+          curl -X POST https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/daily-report \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json"
