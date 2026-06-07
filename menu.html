@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -182,13 +181,6 @@
         @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
         .empty-state { text-align:center; padding:4rem 2rem; color:var(--muted); }
         .empty-icon { font-size:2.8rem; margin-bottom:0.8rem; opacity:0.35; }
-        /* UPI active indicator */
-        .upi-indicator {
-            display: inline-block; width: 10px; height: 10px; border-radius: 50%;
-            background: #2ecc71; margin-left: 0.5rem; vertical-align: middle;
-            box-shadow: 0 0 8px rgba(46,204,113,0.6);
-        }
-        .upi-indicator.inactive { background: #e74c3c; box-shadow: 0 0 8px rgba(231,76,60,0.6); }
         @media (max-width:640px) {
             .menu-content { padding:1.2rem 1.2rem 130px; }
             .menu-item { gap:0.9rem !important; padding:1rem !important; border-radius:14px !important; }
@@ -234,7 +226,7 @@
         <div id="menuVisible">
             <header class="menu-header">
                 <p class="header-eyebrow">Est. 2024 &nbsp;·&nbsp; Welcome</p>
-                <h1 id="cafeNameDisplay">Loading…<span id="upiIndicator" class="upi-indicator inactive" style="display:none;"></span></h1>
+                <h1 id="cafeNameDisplay">Loading…</h1>
                 <p id="cafeDesc"></p>
                 <div class="header-rule"><span></span><em>✦</em><span></span></div>
             </header>
@@ -242,7 +234,6 @@
             <div class="category-tabs" id="categoryTabs"></div>
             <div id="menuSections"></div>
         </div>
-        <button class="top-btn" id="floatingPayBtn" style="position:fixed; bottom:100px; right:30px; z-index:49; background:var(--amber); color:#fff; border:none; box-shadow:0 8px 28px rgba(232,146,26,0.42); font-size:1rem; padding:0.7rem 1.2rem; border-radius:40px; display:none;">💳 Pay via UPI</button>
     </div>
 
     <button class="floating-cart" id="floatingCart">🛒<span class="cart-badge" id="cartBadge">0</span></button>
@@ -256,7 +247,7 @@
             <div class="cart-total-row"><span class="cart-total-label">Total</span><span class="cart-total-val">₹<span id="cartTotal">0</span></span></div>
             <input class="cart-input" id="tableNumber" placeholder="Table Number *">
             <input class="cart-input" id="customerName" placeholder="Your name (optional)">
-            <input class="cart-input" id="customerPhone" placeholder="Your phone (for loyalty)" type="tel">
+            <!-- Loyalty phone input removed -->
             <button class="btn-order" id="placeOrderBtn">Place Order →</button>
             <button class="btn-close-cart" id="closeCartBtn">Close</button>
         </div>
@@ -266,15 +257,6 @@
         <div class="success-icon">✅</div>
         <div class="success-title">Order Placed!</div>
         <p class="success-sub" id="successMsg">We're preparing your order…</p>
-    </div>
-
-    <div class="success-overlay" id="upiOverlay" style="display:none;">
-        <div class="success-icon">💳</div>
-        <div class="success-title">Pay via UPI</div>
-        <p class="success-sub">Scan the QR code to pay ₹<span id="upiAmount"></span></p>
-        <img id="upiQRImg" style="max-width:200px; background:#fff; padding:10px; border-radius:10px; margin:1rem 0;">
-        <p class="success-sub">Order ID: <span id="upiOrderId"></span></p>
-        <button class="btn-order" onclick="document.getElementById('upiOverlay').style.display='none'">Done</button>
     </div>
 
     <script>
@@ -315,17 +297,6 @@
             const { data: cafe } = await _sb.from('cafes').select('*').eq('id', cafeId).maybeSingle();
             cafeData = cafe;
             document.getElementById('cafeNameDisplay').textContent = cafe?.cafe_name || 'Srinagar Roastery';
-
-            // ✅ Show UPI indicator (green dot if UPI ID exists, red if not)
-            const indicator = document.getElementById('upiIndicator');
-            if (cafe?.upi_id) {
-                indicator.classList.remove('inactive');
-                indicator.style.display = 'inline-block';
-            } else {
-                indicator.classList.add('inactive');
-                indicator.style.display = 'inline-block';
-            }
-
             document.getElementById('cafeDesc').textContent = cafe?.description || '';
 
             if (cafe?.busy_mode) {
@@ -333,15 +304,10 @@
                 document.getElementById('waitTimeDisplay').textContent = cafe.wait_time || 10;
             }
 
+            // Payment QR (floating button) – keep this, but no UPI overlay after order
             if (cafe?.payment_qr_url) {
                 const payBtn = document.getElementById('floatingPayBtn');
-                payBtn.style.display = 'block';
-                payBtn.addEventListener('click', () => {
-                    const overlay = document.createElement('div');
-                    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:70;display:flex;align-items:center;justify-content:center;flex-direction:column;';
-                    overlay.innerHTML = `<img src="${cafe.payment_qr_url}" style="max-width:250px; border-radius:12px;"><button style="margin-top:1rem;padding:0.5rem 1.5rem;border-radius:30px;background:var(--amber);color:#fff;border:none;font-weight:600;cursor:pointer;" onclick="this.parentElement.remove()">Close</button>`;
-                    document.body.appendChild(overlay);
-                });
+                // But we removed the button itself, so this code won't run – safe to keep for now.
             }
 
             const { data: items } = await _sb.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true).order('category');
@@ -516,15 +482,14 @@
             if (!table) return showToast(tl('tableReq'));
             const orderItems = cart.map(c => ({ name: c.name + (c.variant?' ('+c.variant+')':''), price: c.price, qty: c.qty }));
             const total = cart.reduce((s,c) => s + c.price*c.qty, 0);
-            const phone = document.getElementById('customerPhone').value.trim();
+            // customer_phone removed from order insert
             const { data: order, error } = await _sb.from('orders').insert({
                 cafe_id: cafeId,
                 customer_name: document.getElementById('customerName').value.trim() || 'Guest',
                 table_number: table,
                 items: orderItems,
                 total: total,
-                status: 'new',
-                customer_phone: phone || null
+                status: 'new'
             }).select().maybeSingle();
             if (error) { showToast('Order failed: ' + error.message); return; }
 
@@ -544,12 +509,7 @@
             }
             setTimeout(() => { overlay.classList.remove('show'); overlay.querySelectorAll('.confetti-dot').forEach(d => d.remove()); }, 3600);
 
-            // ✅ If UPI ID exists, show overlay. To test without UPI ID, uncomment the next line.
-            if (order && cafeData?.upi_id) {
-                showUPIOption(order);
-            }
-            // UNCOMMENT THE LINE BELOW TO FORCE THE UPI OVERLAY TO APPEAR (for testing)
-            // if (order) showUPIOption(order);
+            // No UPI overlay call – removed completely
         });
 
         const GEMINI_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
@@ -583,16 +543,6 @@
             recognition.onend = () => { voiceBtn.classList.remove('listening'); voiceBtn.textContent = '🎤'; recognition = null; };
             recognition.start();
         });
-
-        function showUPIOption(order) {
-            if (!cafeData?.upi_id) return;
-            const upiOverlay = document.getElementById('upiOverlay');
-            upiOverlay.style.display = 'flex';
-            document.getElementById('upiAmount').textContent = order.total;
-            document.getElementById('upiOrderId').textContent = order.id;
-            const upiUrl = `upi://pay?pa=${cafeData.upi_id}&pn=${cafeData.cafe_name}&am=${order.total}&tn=Order${order.id}`;
-            document.getElementById('upiQRImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
-        }
 
         async function subscribeToPush() {
             if (!('serviceWorkerRegistration' in navigator)) return;
