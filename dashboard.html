@@ -252,7 +252,7 @@
             </div>
         </div>
 
-        <!-- Settings -->
+        <!-- Settings (with corrected save) -->
         <div class="card collapsed">
             <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">⚙️ Settings <span>▼</span></div>
             <div class="card-body">
@@ -299,7 +299,6 @@
         const AUTO_IMG_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/auto-image';
         const IMG_UPLOAD_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
 
-        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast';
@@ -308,7 +307,6 @@
             setTimeout(() => el.remove(), 3000);
         }
 
-        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if(saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme:dark)').matches)) {
@@ -326,7 +324,6 @@
         });
         applyTheme();
 
-        // Sound
         let audioCtx;
         let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
@@ -421,6 +418,8 @@
             document.getElementById('qrFileName').textContent = 'Generated QR';
             toast('QR generated from UPI ID');
         });
+
+        // ✅ CORRECTED SAVE SETTINGS (with error handling)
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             const u = {
                 cafe_name: document.getElementById('setCafeName').value.trim(),
@@ -431,22 +430,29 @@
                 google_place_id: document.getElementById('setGooglePlaceId').value.trim(),
                 upi_id: document.getElementById('setUpiId').value.trim(),
                 busy_mode: document.getElementById('busyModeToggle').checked,
-                wait_time: parseInt(document.getElementById('waitTime').value)||10
+                wait_time: parseInt(document.getElementById('waitTime').value) || 10
             };
+
             if (paymentQrDataUrl && paymentQrDataUrl.startsWith('data:')) {
                 const file = document.getElementById('paymentQrFile').files[0];
                 if (file) {
                     const form = new FormData(); form.append('image', file);
-                    const res = await fetch(IMG_UPLOAD_URL, { method:'POST', headers:{'Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:form });
+                    const res = await fetch(IMG_UPLOAD_URL, { method: 'POST', headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }, body: form });
                     const data = await res.json();
                     if (data.url) u.payment_qr_url = data.url;
                 }
             } else if (paymentQrDataUrl && paymentQrDataUrl.startsWith('http')) {
                 u.payment_qr_url = paymentQrDataUrl;
             }
-            await _sb.from('cafes').update(u).eq('id', cafeData.id);
-            Object.assign(cafeData, u);
-            toast('Settings saved');
+
+            const { error } = await _sb.from('cafes').update(u).eq('id', cafeData.id);
+
+            if (error) {
+                toast('Save failed: ' + error.message, true);
+            } else {
+                Object.assign(cafeData, u);
+                toast('Settings saved');
+            }
         });
 
         // QR Code Generation
@@ -456,10 +462,10 @@
             document.getElementById('qrDisplay').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" width="250" height="250">`;
             document.getElementById('qrUrl').textContent = url;
             document.getElementById('copyQrLink').style.display = 'inline-block';
-            document.getElementById('qrCard')?.classList.remove('collapsed');
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
-        // Table QR
+
+        // Table QR Generation
         document.getElementById('generateTableQrBtn').addEventListener('click', () => {
             const table = document.getElementById('tableNumberSelect').value;
             if (!table) return toast('Select a table number', true);
@@ -470,6 +476,8 @@
             document.getElementById('copyTableQrLink').style.display = 'inline-block';
         });
         document.getElementById('copyTableQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('tableQrUrl').textContent); toast('Table link copied!'); });
+
+        // Download all table QR codes as PDF
         document.getElementById('downloadAllTableQrsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const { jsPDF } = window.jspdf;
@@ -493,7 +501,7 @@
             toast('PDF downloaded!');
         });
 
-        // Staff
+        // Staff functions
         async function loadStaff() {
             const { data } = await _sb.from('staff').select('*').eq('cafe_id', cafeData.id);
             document.getElementById('staffList').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center;">${s.name} (${s.role}) - PIN: ${s.pin} <button onclick="deleteStaff('${s.id}')" class="btn" style="padding:0.2rem 0.5rem;">🗑️</button></div>`).join('');
@@ -511,7 +519,7 @@
         });
         window.deleteStaff = async (id) => { await _sb.from('staff').delete().eq('id',id); loadStaff(); };
 
-        // Stats
+        // Stats / Orders
         async function loadStats() {
             const [{count:i},{count:o},{count:v}] = await Promise.all([
                 _sb.from('menu_items').select('*',{count:'exact',head:true}).eq('cafe_id',cafeData.id),
@@ -673,7 +681,7 @@
         });
         createDefaultVariantRow();
 
-        // AI Scanner
+        // AI Scanner (with error handling)
         const scanBtn = document.getElementById('scanMenuBtn');
         document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
         document.getElementById('galleryUploadBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').removeAttribute('capture'); document.getElementById('aiMenuImageFile').click(); });
@@ -698,7 +706,6 @@
             scanBtn.style.display = selectedFiles.length ? 'inline-block' : 'none';
         }
 
-        // ✅ FIXED AI SCANNER with error handling
         scanBtn.addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             if (selectedFiles.length === 0) return toast('No images selected', true);
