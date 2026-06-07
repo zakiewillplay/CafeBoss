@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,6 +182,13 @@
         @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
         .empty-state { text-align:center; padding:4rem 2rem; color:var(--muted); }
         .empty-icon { font-size:2.8rem; margin-bottom:0.8rem; opacity:0.35; }
+        /* UPI active indicator */
+        .upi-indicator {
+            display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            background: #2ecc71; margin-left: 0.5rem; vertical-align: middle;
+            box-shadow: 0 0 8px rgba(46,204,113,0.6);
+        }
+        .upi-indicator.inactive { background: #e74c3c; box-shadow: 0 0 8px rgba(231,76,60,0.6); }
         @media (max-width:640px) {
             .menu-content { padding:1.2rem 1.2rem 130px; }
             .menu-item { gap:0.9rem !important; padding:1rem !important; border-radius:14px !important; }
@@ -226,7 +234,7 @@
         <div id="menuVisible">
             <header class="menu-header">
                 <p class="header-eyebrow">Est. 2024 &nbsp;·&nbsp; Welcome</p>
-                <h1 id="cafeNameDisplay">Loading…</h1>
+                <h1 id="cafeNameDisplay">Loading…<span id="upiIndicator" class="upi-indicator inactive" style="display:none;"></span></h1>
                 <p id="cafeDesc"></p>
                 <div class="header-rule"><span></span><em>✦</em><span></span></div>
             </header>
@@ -307,10 +315,18 @@
             const { data: cafe } = await _sb.from('cafes').select('*').eq('id', cafeId).maybeSingle();
             cafeData = cafe;
             document.getElementById('cafeNameDisplay').textContent = cafe?.cafe_name || 'Srinagar Roastery';
-            document.getElementById('cafeDesc').textContent = cafe?.description || '';
 
-            console.log('✅ Cafe data loaded:', cafe);
-            console.log('🔑 UPI ID:', cafe?.upi_id || 'NOT SET');
+            // ✅ Show UPI indicator (green dot if UPI ID exists, red if not)
+            const indicator = document.getElementById('upiIndicator');
+            if (cafe?.upi_id) {
+                indicator.classList.remove('inactive');
+                indicator.style.display = 'inline-block';
+            } else {
+                indicator.classList.add('inactive');
+                indicator.style.display = 'inline-block';
+            }
+
+            document.getElementById('cafeDesc').textContent = cafe?.description || '';
 
             if (cafe?.busy_mode) {
                 document.getElementById('busyBanner').style.display = 'block';
@@ -512,9 +528,6 @@
             }).select().maybeSingle();
             if (error) { showToast('Order failed: ' + error.message); return; }
 
-            console.log('📦 Order placed:', order);
-            console.log('🔑 UPI ID at order time:', cafeData?.upi_id);
-
             cart = [];
             updateCartUI();
             document.getElementById('cartPanel').classList.remove('open');
@@ -531,13 +544,12 @@
             }
             setTimeout(() => { overlay.classList.remove('show'); overlay.querySelectorAll('.confetti-dot').forEach(d => d.remove()); }, 3600);
 
-            // Show UPI overlay immediately after successful order
+            // ✅ If UPI ID exists, show overlay. To test without UPI ID, uncomment the next line.
             if (order && cafeData?.upi_id) {
-                console.log('💳 Showing UPI overlay');
                 showUPIOption(order);
-            } else {
-                console.warn('⚠️ UPI skipped – upi_id:', cafeData?.upi_id);
             }
+            // UNCOMMENT THE LINE BELOW TO FORCE THE UPI OVERLAY TO APPEAR (for testing)
+            // if (order) showUPIOption(order);
         });
 
         const GEMINI_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
