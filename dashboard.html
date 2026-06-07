@@ -252,7 +252,7 @@
             </div>
         </div>
 
-        <!-- Settings (with corrected save) -->
+        <!-- Settings (without UPI / Payment QR) -->
         <div class="card collapsed">
             <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">⚙️ Settings <span>▼</span></div>
             <div class="card-body">
@@ -264,16 +264,6 @@
                     <div><input type="color" id="setAccent" value="#2F3E46"> Accent</div>
                 </div>
                 <input id="setGooglePlaceId" placeholder="Google Place ID">
-                <input id="setUpiId" placeholder="UPI ID (e.g. yourcafe@upi)">
-                <!-- Payment QR section -->
-                <label>Payment QR</label>
-                <div style="display:flex; gap:0.8rem; align-items:center; margin-bottom:1rem;">
-                    <label for="paymentQrFile" class="btn">📁 Upload QR Image</label>
-                    <input type="file" id="paymentQrFile" accept="image/*" style="display:none;">
-                    <span id="qrFileName" style="font-size:0.8rem; color:var(--muted);"></span>
-                    <button id="generatePaymentQrBtn" class="btn">🪄 Generate from UPI ID</button>
-                </div>
-                <img id="paymentQrPreview" style="max-width:150px; display:none; margin-bottom:0.8rem; border-radius:8px;">
                 <!-- Cafe ID display -->
                 <label>Cafe ID (share with staff)</label>
                 <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
@@ -356,7 +346,6 @@
 
         let cafeData, allOrders=[], allItems=[], activeOrderTab='new', realtimeChannel;
         let selectedFiles = [];
-        let paymentQrDataUrl = null;
 
         async function init() {
             const { data: { user } } = await _sb.auth.getUser();
@@ -368,7 +357,6 @@
             document.getElementById('setPrimary').value = cafeData.primary_color||'#e8921a';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
             document.getElementById('setGooglePlaceId').value = cafeData.google_place_id||'';
-            document.getElementById('setUpiId').value = cafeData.upi_id||'';
             document.getElementById('busyModeToggle').checked = cafeData.busy_mode||false;
             document.getElementById('waitTime').value = cafeData.wait_time||10;
             document.getElementById('cafeIdDisplay').value = cafeData.id;
@@ -376,10 +364,6 @@
                 navigator.clipboard.writeText(cafeData.id);
                 toast('Cafe ID copied!');
             });
-            if (cafeData.payment_qr_url) {
-                document.getElementById('paymentQrPreview').src = cafeData.payment_qr_url;
-                document.getElementById('paymentQrPreview').style.display = 'block';
-            }
             // Populate table dropdown
             const tableSelect = document.getElementById('tableNumberSelect');
             for (let i = 1; i <= 20; i++) {
@@ -393,33 +377,7 @@
             createDefaultVariantRow();
         }
 
-        // Payment QR upload / generate
-        document.getElementById('paymentQrFile').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                document.getElementById('qrFileName').textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = e => {
-                    paymentQrDataUrl = e.target.result;
-                    document.getElementById('paymentQrPreview').src = e.target.result;
-                    document.getElementById('paymentQrPreview').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        document.getElementById('generatePaymentQrBtn').addEventListener('click', () => {
-            const upiId = document.getElementById('setUpiId').value.trim();
-            if (!upiId) return toast('Enter UPI ID first');
-            const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(document.getElementById('setCafeName').value||'Cafe')}`;
-            const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
-            paymentQrDataUrl = qrImg;
-            document.getElementById('paymentQrPreview').src = qrImg;
-            document.getElementById('paymentQrPreview').style.display = 'block';
-            document.getElementById('qrFileName').textContent = 'Generated QR';
-            toast('QR generated from UPI ID');
-        });
-
-        // ✅ CORRECTED SAVE SETTINGS (with error handling)
+        // Save Settings (no UPI / Payment QR fields)
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             const u = {
                 cafe_name: document.getElementById('setCafeName').value.trim(),
@@ -428,22 +386,9 @@
                 primary_color: document.getElementById('setPrimary').value,
                 accent_color: document.getElementById('setAccent').value,
                 google_place_id: document.getElementById('setGooglePlaceId').value.trim(),
-                upi_id: document.getElementById('setUpiId').value.trim(),
                 busy_mode: document.getElementById('busyModeToggle').checked,
                 wait_time: parseInt(document.getElementById('waitTime').value) || 10
             };
-
-            if (paymentQrDataUrl && paymentQrDataUrl.startsWith('data:')) {
-                const file = document.getElementById('paymentQrFile').files[0];
-                if (file) {
-                    const form = new FormData(); form.append('image', file);
-                    const res = await fetch(IMG_UPLOAD_URL, { method: 'POST', headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }, body: form });
-                    const data = await res.json();
-                    if (data.url) u.payment_qr_url = data.url;
-                }
-            } else if (paymentQrDataUrl && paymentQrDataUrl.startsWith('http')) {
-                u.payment_qr_url = paymentQrDataUrl;
-            }
 
             const { error } = await _sb.from('cafes').update(u).eq('id', cafeData.id);
 
@@ -681,7 +626,7 @@
         });
         createDefaultVariantRow();
 
-        // AI Scanner (with error handling)
+        // AI Scanner
         const scanBtn = document.getElementById('scanMenuBtn');
         document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
         document.getElementById('galleryUploadBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').removeAttribute('capture'); document.getElementById('aiMenuImageFile').click(); });
