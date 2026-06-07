@@ -11,7 +11,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        /* ========== YOUR ORIGINAL STYLES (unchanged) ========== */
         :root {
             --amber:        #e8921a;
             --amber-lt:     #f5b445;
@@ -310,16 +309,12 @@
             document.getElementById('cafeNameDisplay').textContent = cafe?.cafe_name || 'Srinagar Roastery';
             document.getElementById('cafeDesc').textContent = cafe?.description || '';
 
+            console.log('✅ Cafe data loaded:', cafe);
+            console.log('🔑 UPI ID:', cafe?.upi_id || 'NOT SET');
+
             if (cafe?.busy_mode) {
                 document.getElementById('busyBanner').style.display = 'block';
                 document.getElementById('waitTimeDisplay').textContent = cafe.wait_time || 10;
-            }
-
-            // ✅ Debug: if UPI ID is missing, warn the cafe owner
-            if (!cafe?.upi_id) {
-                console.warn('UPI ID not set – payment QR will not appear after ordering.');
-            } else {
-                console.log('UPI ID found:', cafe.upi_id);
             }
 
             if (cafe?.payment_qr_url) {
@@ -383,7 +378,6 @@
                             });
                         }
 
-                        // variants parsing
                         const hasVariants = item.description?.startsWith('VAR::');
                         let variants = [], priceDisplay = item.price;
                         let itemDescText = item.description || '';
@@ -517,6 +511,10 @@
                 customer_phone: phone || null
             }).select().maybeSingle();
             if (error) { showToast('Order failed: ' + error.message); return; }
+
+            console.log('📦 Order placed:', order);
+            console.log('🔑 UPI ID at order time:', cafeData?.upi_id);
+
             cart = [];
             updateCartUI();
             document.getElementById('cartPanel').classList.remove('open');
@@ -533,11 +531,12 @@
             }
             setTimeout(() => { overlay.classList.remove('show'); overlay.querySelectorAll('.confetti-dot').forEach(d => d.remove()); }, 3600);
 
-            // ✅ UPI payment – only if UPI ID exists
+            // Show UPI overlay immediately after successful order
             if (order && cafeData?.upi_id) {
+                console.log('💳 Showing UPI overlay');
                 showUPIOption(order);
             } else {
-                console.warn('Payment QR skipped – UPI ID missing.');
+                console.warn('⚠️ UPI skipped – upi_id:', cafeData?.upi_id);
             }
         });
 
@@ -574,8 +573,9 @@
         });
 
         function showUPIOption(order) {
-            if (!cafeData.upi_id) return;
-            document.getElementById('upiOverlay').style.display = 'flex';
+            if (!cafeData?.upi_id) return;
+            const upiOverlay = document.getElementById('upiOverlay');
+            upiOverlay.style.display = 'flex';
             document.getElementById('upiAmount').textContent = order.total;
             document.getElementById('upiOrderId').textContent = order.id;
             const upiUrl = `upi://pay?pa=${cafeData.upi_id}&pn=${cafeData.cafe_name}&am=${order.total}&tn=Order${order.id}`;
