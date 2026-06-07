@@ -13,7 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* ========== FULL CSS (unchanged) ========== */
         :root {
             --amber:        #e8921a;
             --amber-lt:     #f5b445;
@@ -100,6 +99,7 @@
         .toast-container { position:fixed; top:20px; right:20px; z-index:999; display:flex; flex-direction:column; gap:10px; }
         .toast { background:var(--amber); color:#fff; padding:0.7rem 1.2rem; border-radius:30px; font-weight:600; font-size:0.85rem; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:none;opacity:1} }
+        @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width:600px) {
             .header-row { flex-direction:column; align-items:flex-start; }
             .container { padding:1rem 0.8rem 90px; }
@@ -299,6 +299,7 @@
         const AUTO_IMG_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/auto-image';
         const IMG_UPLOAD_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/image-upload-';
 
+        // Toast
         function toast(msg, err=false) {
             const el = document.createElement('div');
             el.className = 'toast';
@@ -307,6 +308,7 @@
             setTimeout(() => el.remove(), 3000);
         }
 
+        // Theme
         function applyTheme() {
             const saved = localStorage.getItem('theme');
             if(saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme:dark)').matches)) {
@@ -324,6 +326,7 @@
         });
         applyTheme();
 
+        // Sound
         let audioCtx;
         let audioReady = localStorage.getItem('cafeboss_unmuted') === 'true';
         const unmuteBtn = document.getElementById('unmuteBtn');
@@ -380,7 +383,7 @@
                 document.getElementById('paymentQrPreview').src = cafeData.payment_qr_url;
                 document.getElementById('paymentQrPreview').style.display = 'block';
             }
-            // Populate table dropdown (1-20)
+            // Populate table dropdown
             const tableSelect = document.getElementById('tableNumberSelect');
             for (let i = 1; i <= 20; i++) {
                 const opt = document.createElement('option');
@@ -393,6 +396,7 @@
             createDefaultVariantRow();
         }
 
+        // Payment QR upload / generate
         document.getElementById('paymentQrFile').addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -406,7 +410,6 @@
                 reader.readAsDataURL(file);
             }
         });
-
         document.getElementById('generatePaymentQrBtn').addEventListener('click', () => {
             const upiId = document.getElementById('setUpiId').value.trim();
             if (!upiId) return toast('Enter UPI ID first');
@@ -418,7 +421,6 @@
             document.getElementById('qrFileName').textContent = 'Generated QR';
             toast('QR generated from UPI ID');
         });
-
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             const u = {
                 cafe_name: document.getElementById('setCafeName').value.trim(),
@@ -457,8 +459,7 @@
             document.getElementById('qrCard')?.classList.remove('collapsed');
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
-
-        // Table QR Generation
+        // Table QR
         document.getElementById('generateTableQrBtn').addEventListener('click', () => {
             const table = document.getElementById('tableNumberSelect').value;
             if (!table) return toast('Select a table number', true);
@@ -469,17 +470,12 @@
             document.getElementById('copyTableQrLink').style.display = 'inline-block';
         });
         document.getElementById('copyTableQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('tableQrUrl').textContent); toast('Table link copied!'); });
-
-        // Download all table QR codes as PDF
         document.getElementById('downloadAllTableQrsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const tables = [];
-            for (let i = 1; i <= 20; i++) tables.push(i);
-            for (let i = 0; i < tables.length; i++) {
-                const table = tables[i];
-                const url = BASE_URL + cafeData.id + '&table=' + table;
+            for (let i = 1; i <= 20; i++) {
+                const url = BASE_URL + cafeData.id + '&table=' + i;
                 const img = document.createElement('img');
                 img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
                 await new Promise(resolve => { img.onload = resolve; });
@@ -488,15 +484,16 @@
                 canvas.height = img.height;
                 canvas.getContext('2d').drawImage(img, 0, 0);
                 const dataUrl = canvas.toDataURL('image/png');
-                if (i > 0) doc.addPage();
+                if (i > 1) doc.addPage();
                 doc.setFontSize(16);
-                doc.text(`Table ${table}`, 105, 20, { align: 'center' });
+                doc.text(`Table ${i}`, 105, 20, { align: 'center' });
                 doc.addImage(dataUrl, 'PNG', 55, 30, 100, 100);
             }
             doc.save(`table_qr_codes_${cafeData.id.slice(0,8)}.pdf`);
             toast('PDF downloaded!');
         });
 
+        // Staff
         async function loadStaff() {
             const { data } = await _sb.from('staff').select('*').eq('cafe_id', cafeData.id);
             document.getElementById('staffList').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; align-items:center;">${s.name} (${s.role}) - PIN: ${s.pin} <button onclick="deleteStaff('${s.id}')" class="btn" style="padding:0.2rem 0.5rem;">🗑️</button></div>`).join('');
@@ -514,6 +511,7 @@
         });
         window.deleteStaff = async (id) => { await _sb.from('staff').delete().eq('id',id); loadStaff(); };
 
+        // Stats
         async function loadStats() {
             const [{count:i},{count:o},{count:v}] = await Promise.all([
                 _sb.from('menu_items').select('*',{count:'exact',head:true}).eq('cafe_id',cafeData.id),
@@ -571,6 +569,7 @@
                 }).subscribe();
         }
 
+        // Items
         async function loadItems() {
             const { data } = await _sb.from('menu_items').select('*').eq('cafe_id',cafeData.id).order('category');
             allItems = data||[];
@@ -675,6 +674,7 @@
         createDefaultVariantRow();
 
         // AI Scanner
+        const scanBtn = document.getElementById('scanMenuBtn');
         document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
         document.getElementById('galleryUploadBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').removeAttribute('capture'); document.getElementById('aiMenuImageFile').click(); });
         document.getElementById('aiMenuImageFile').addEventListener('change', function() {
@@ -695,24 +695,93 @@
                 };
                 reader.readAsDataURL(file);
             });
-            document.getElementById('scanMenuBtn').style.display = selectedFiles.length ? 'inline-block' : 'none';
+            scanBtn.style.display = selectedFiles.length ? 'inline-block' : 'none';
         }
-        document.getElementById('scanMenuBtn').addEventListener('click', async () => {
-            const status = document.getElementById('aiScannerStatus');
-            status.textContent = 'Scanning...';
-            let items = [];
-            for(const file of selectedFiles) {
-                const base64 = await new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result.split(',')[1]); r.readAsDataURL(file); });
-                const res = await fetch(GEMINI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({imageBase64:base64, mimeType:file.type}) });
-                const data = await res.json();
-                if(data.items) items = items.concat(data.items.map(i => ({...i, cafe_id:cafeData.id, available:true})));
+
+        // ✅ FIXED AI SCANNER with error handling
+        scanBtn.addEventListener('click', async () => {
+            if (!cafeData.id) return toast('Cafe not ready', true);
+            if (selectedFiles.length === 0) return toast('No images selected', true);
+
+            const statusEl = document.getElementById('aiScannerStatus');
+            statusEl.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--amber); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning 0/' + selectedFiles.length + ' images...';
+            statusEl.style.color = 'var(--amber)';
+            scanBtn.disabled = true;
+
+            let allInsertedItems = [];
+            let processedCount = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                try {
+                    const base64 = await new Promise(res => {
+                        const r = new FileReader();
+                        r.onload = e => res(e.target.result.split(',')[1]);
+                        r.readAsDataURL(file);
+                    });
+
+                    const response = await fetch(GEMINI_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                        body: JSON.stringify({ imageBase64: base64, mimeType: file.type })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(result.error || result.message || `HTTP ${response.status}`);
+                    }
+
+                    const items = result.items;
+                    if (items && items.length > 0) {
+                        const inserts = items.map(item => {
+                            let desc = item.description || '';
+                            if (item.variants && item.variants.length > 0) {
+                                const varParts = item.variants.map(v => `${v.name}=${v.price}`).join('|');
+                                desc = 'VAR::' + varParts;
+                            }
+                            return {
+                                cafe_id: cafeData.id,
+                                name: item.name,
+                                price: parseFloat(item.price) || 0,
+                                category: item.category || 'Uncategorized',
+                                description: desc,
+                                available: true
+                            };
+                        });
+                        allInsertedItems = allInsertedItems.concat(inserts);
+                    }
+
+                    processedCount++;
+                    statusEl.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--amber); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
+                } catch (err) {
+                    console.error('Error on image ' + (i + 1), err);
+                    toast(`Image ${i + 1} failed: ${err.message}`, true);
+                    processedCount++;
+                    statusEl.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:var(--amber); animation: spin 1s ease-in-out infinite; margin-right:8px;"></span> Scanning ' + processedCount + '/' + selectedFiles.length + ' images...';
+                }
             }
-            if(items.length) {
-                await _sb.from('menu_items').insert(items);
-                status.textContent = `Added ${items.length} items`;
-                loadItems(); loadStats();
-            } else status.textContent = 'No items found';
-            selectedFiles = []; updatePreviews();
+
+            if (allInsertedItems.length > 0) {
+                const { error } = await _sb.from('menu_items').insert(allInsertedItems);
+                if (error) {
+                    statusEl.innerHTML = `❌ Failed to save items: ${error.message}`;
+                    statusEl.style.color = '#c0392b';
+                } else {
+                    statusEl.innerHTML = `🎉 Success! ${allInsertedItems.length} items added from ${processedCount} image(s).`;
+                    statusEl.style.color = '#27ae60';
+                }
+            } else {
+                statusEl.innerHTML = '❌ No items detected in any image.';
+                statusEl.style.color = '#c0392b';
+            }
+
+            scanBtn.disabled = false;
+            selectedFiles = [];
+            updatePreviews();
+            scanBtn.style.display = 'none';
+            loadItems();
+            loadStats();
         });
 
         // Auto Image
