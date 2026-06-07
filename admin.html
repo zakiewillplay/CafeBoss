@@ -7,121 +7,37 @@
     <title>Cafe Boss – Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
-        :root {
-            --primary: #FF6B35;
-            --primary-glow: #FF8C5A;
-            --bg: #0f0f13;
-            --card-bg: rgba(25, 25, 30, 0.8);
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #f0f0f0;
-            --muted: #a0a0b0;
-            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            --glass: blur(15px);
-        }
-        body.light-mode {
-            --bg: #f8f7f4;
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --border: rgba(0, 0, 0, 0.1);
-            --text: #1a1a1a;
-            --muted: #555;
-            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
-        }
+        :root { --primary: #FF6B35; --bg: #0f0f13; --card: rgba(25,25,30,0.85); --border: rgba(255,255,255,0.08); --text: #f0f0f0; --muted: #a0a0b0; }
+        body.light-mode { --bg: #f8f7f4; --card: rgba(255,255,255,0.9); --border: rgba(0,0,0,0.1); --text: #1a1a1a; --muted: #555; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            transition: background 0.4s, color 0.4s;
-            padding: 2rem 1.5rem;
-            min-height: 100vh;
-        }
-        .container { max-width: 950px; margin: 0 auto; }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
-        }
-        h1 {
-            font-size: 2.5rem; font-weight: 800;
-            background: linear-gradient(135deg, #FF6B35, #FF8C5A);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-        }
-        .theme-toggle {
-            background: var(--card-bg); backdrop-filter: var(--glass);
-            border: 1px solid var(--border); color: var(--text);
-            padding: 0.5rem 1.2rem; border-radius: 50px; cursor: pointer;
-            font-weight: 600; font-size: 0.9rem; transition: all 0.3s;
-        }
-        .theme-toggle:hover { border-color: var(--primary); }
-        .stats {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1.2rem; margin-bottom: 2.5rem;
-        }
-        .stat-card {
-            background: var(--card-bg); backdrop-filter: var(--glass);
-            border: 1px solid var(--border); border-radius: 20px;
-            padding: 2rem 1.5rem; text-align: center;
-            box-shadow: var(--shadow); transition: transform 0.3s;
-        }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-num { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
-        .stat-label { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .card {
-            background: var(--card-bg); backdrop-filter: var(--glass);
-            border: 1px solid var(--border); border-radius: 20px;
-            padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);
-        }
-        .card h2 {
-            font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem;
-            color: var(--primary); display: flex; align-items: center; gap: 0.5rem;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 0.9rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; }
-        th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-        tr:last-child td { border-bottom: none; }
-        input, textarea {
-            width: 100%; padding: 0.9rem 1rem; border-radius: 14px;
-            border: 1px solid var(--border); background: rgba(0,0,0,0.2);
-            color: var(--text); font-size: 0.95rem; font-family: inherit;
-            margin-bottom: 1rem; transition: border 0.3s;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-        .btn {
-            background: linear-gradient(135deg, #FF6B35, #FF8C5A);
-            color: #fff; border: none; padding: 0.9rem 1.5rem; border-radius: 14px;
-            font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s;
-            width: auto; display: inline-flex; align-items: center; gap: 0.4rem;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(255,107,53,0.4); }
-        .btn-outline {
-            background: transparent; border: 1px solid var(--border); color: var(--text);
-            padding: 0.6rem 1rem; border-radius: 10px; cursor: pointer; font-weight: 600;
-            font-size: 0.8rem; transition: all 0.3s;
-        }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .badge {
-            display: inline-block; padding: 0.3rem 0.9rem; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
-        }
-        .badge-paid { background: rgba(39, 174, 96, 0.2); color: #2ecc71; }
-        .badge-unpaid { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-        .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f1c40f; }
-        .badge-rejected { background: rgba(192, 57, 43, 0.2); color: #c0392b; }
-        .toast {
-            position: fixed; top: 20px; right: 20px; background: #27ae60; color: #fff;
-            padding: 1rem 1.8rem; border-radius: 14px; z-index: 999;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4); display: none; font-weight: 600;
-        }
-        .toast.error { background: #c0392b; }
-        .hidden { display: none !important; }
-        #denied { text-align: center; padding: 4rem 2rem; color: #e74c3c; }
-        #denied h2 { font-size: 2rem; margin-bottom: 1rem; }
-        .action-btns { display: flex; gap: 0.5rem; }
-        @media (max-width: 600px) {
-            .header { flex-direction: column; align-items: flex-start; }
-            .stats { grid-template-columns: 1fr; }
-            table { font-size: 0.8rem; }
-        }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); transition:0.4s; padding:2rem 1.5rem; min-height:100vh; }
+        .container { max-width:950px; margin:0 auto; }
+        .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem; flex-wrap:wrap; gap:1rem; }
+        h1 { font-size:2.5rem; font-weight:800; background:linear-gradient(135deg,#FF6B35,#FF8C5A); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-1px; }
+        .theme-toggle { background:var(--card); border:1px solid var(--border); color:var(--text); padding:0.5rem 1.2rem; border-radius:50px; cursor:pointer; font-weight:600; font-size:0.9rem; }
+        .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1.2rem; margin-bottom:2.5rem; }
+        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:2rem 1.5rem; text-align:center; }
+        .stat-num { font-size:3rem; font-weight:800; color:var(--primary); line-height:1; }
+        .stat-label { font-size:0.9rem; color:var(--muted); margin-top:0.3rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:2rem; margin-bottom:2rem; }
+        .card h2 { font-size:1.4rem; font-weight:700; margin-bottom:1.5rem; color:var(--primary); }
+        table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+        th, td { padding:0.9rem 0.6rem; border-bottom:1px solid var(--border); text-align:left; }
+        th { color:var(--muted); font-weight:600; text-transform:uppercase; font-size:0.75rem; letter-spacing:0.5px; }
+        input, textarea { width:100%; padding:0.9rem 1rem; border-radius:14px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:var(--text); font-size:0.95rem; font-family:inherit; margin-bottom:1rem; }
+        input:focus, textarea:focus { outline:none; border-color:var(--primary); }
+        .btn { background:linear-gradient(135deg,#FF6B35,#FF8C5A); color:#fff; border:none; padding:0.9rem 1.5rem; border-radius:14px; font-weight:700; font-size:0.9rem; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; }
+        .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text); padding:0.6rem 1rem; border-radius:10px; cursor:pointer; font-weight:600; font-size:0.8rem; }
+        .badge { display:inline-block; padding:0.3rem 0.9rem; border-radius:20px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+        .badge-paid { background:rgba(39,174,96,0.2); color:#2ecc71; }
+        .badge-unpaid { background:rgba(231,76,60,0.2); color:#e74c3c; }
+        .badge-pending { background:rgba(243,156,18,0.2); color:#f1c40f; }
+        .badge-rejected { background:rgba(192,57,43,0.2); color:#c0392b; }
+        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:1rem 1.8rem; border-radius:14px; z-index:999; display:none; font-weight:600; }
+        .toast.error { background:#c0392b; }
+        .hidden { display:none !important; }
+        #denied { text-align:center; padding:4rem 2rem; color:#e74c3c; }
+        @media (max-width:600px) { .header { flex-direction:column; align-items:flex-start; } .stats { grid-template-columns:1fr; } }
     </style>
 </head>
 <body class="light-mode">
@@ -141,7 +57,6 @@
                 <div class="stat-card"><div class="stat-num" id="totalCafes">-</div><div class="stat-label">Total Cafes</div></div>
                 <div class="stat-card"><div class="stat-num" id="totalOrders">-</div><div class="stat-label">Total Orders</div></div>
             </div>
-
             <div class="card">
                 <h2>⚙️ Subscription Settings</h2>
                 <label>Price (₹/month)</label>
@@ -152,30 +67,26 @@
                 <textarea id="subMsg" rows="2" placeholder="Please pay the subscription to access this menu."></textarea>
                 <button class="btn" id="saveSettings">💾 Save Settings</button>
             </div>
-
             <div class="card">
                 <h2>🏪 Cafe Owners & Payments</h2>
-                <div style="overflow-x: auto;">
+                <div style="overflow-x:auto;">
                     <table>
                         <thead><tr><th>Cafe</th><th>Owner</th><th>WhatsApp</th><th>Transaction ID</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody id="cafesTbody"><tr><td colspan="6">Loading…</td></tr></tbody>
                     </table>
                 </div>
             </div>
-
-            <div style="display: flex; justify-content: flex-end;">
+            <div style="display:flex; justify-content:flex-end;">
                 <button class="btn-outline" id="logoutBtn">↪ Logout</button>
             </div>
         </div>
     </div>
     <div id="toast" class="toast"></div>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/CafeBoss/sw.js').catch(() => {});
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/CafeBoss/sw.js').catch(()=>{}); }
         const SUPABASE_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiYnlieGR4bnZ6aGp0a3BmcGVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjQ0ODksImV4cCI6MjA5NDk0MDQ4OX0.u3VWUTu633pKfZ5Y8jpe2FUX4Gf9NGAKCsBGXqGTtao';
-        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const ADMIN_EMAIL = 'zakiewillplay@gmail.com';
 
         function showToast(msg, err=false) {
@@ -187,7 +98,7 @@
         }
 
         async function checkAccess() {
-            const { data: { user } } = await _supabase.auth.getUser();
+            const { data: { user } } = await _sb.auth.getUser();
             if (!user || user.email !== ADMIN_EMAIL) {
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('denied').classList.remove('hidden');
@@ -199,22 +110,22 @@
         }
 
         async function loadAllData() {
-            loadStats().catch(() => {});
-            loadCafes().catch(() => {});
-            loadSettings().catch(() => {});
+            loadStats().catch(()=>{});
+            loadCafes().catch(()=>{});
+            loadSettings().catch(()=>{});
         }
 
         async function loadStats() {
             const [{ count: cafeCount }, { count: orderCount }] = await Promise.all([
-                _supabase.from('cafes').select('*', { count:'exact', head:true }),
-                _supabase.from('orders').select('*', { count:'exact', head:true })
+                _sb.from('cafes').select('*', { count:'exact', head:true }),
+                _sb.from('orders').select('*', { count:'exact', head:true })
             ]);
             document.getElementById('totalCafes').textContent = cafeCount || 0;
             document.getElementById('totalOrders').textContent = orderCount || 0;
         }
 
         async function loadCafes() {
-            const { data: cafes } = await _supabase.from('cafes').select('*').order('created_at', { ascending: false });
+            const { data: cafes } = await _sb.from('cafes').select('*').order('created_at', { ascending: false });
             const tbody = document.getElementById('cafesTbody');
             if (!cafes || cafes.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No cafes registered yet</td></tr>';
@@ -236,10 +147,7 @@
                     </div>`;
                 } else if (paid) {
                     actions = `<button class="btn-outline" onclick="markUnpaid('${c.id}')">Mark Unpaid</button>`;
-                } else if (status === 'rejected') {
-                    actions = `<span style="font-size:0.8rem; color:var(--muted);">Awaiting resubmission</span>`;
                 }
-
                 return `<tr>
                     <td><strong>${c.cafe_name || 'My Cafe'}</strong></td>
                     <td>${c.owner_id?.slice(0,8) || '—'}…</td>
@@ -252,23 +160,23 @@
         }
 
         window.approvePayment = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({ subscription_paid: true, payment_status: 'approved' }).eq('id', cafeId);
+            const { error } = await _sb.from('cafes').update({ subscription_paid: true, payment_status: 'approved' }).eq('id', cafeId);
             if (error) showToast('Approval failed', true);
             else { showToast('Payment approved!'); loadCafes(); }
         };
         window.rejectPayment = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'rejected' }).eq('id', cafeId);
+            const { error } = await _sb.from('cafes').update({ subscription_paid: false, payment_status: 'rejected' }).eq('id', cafeId);
             if (error) showToast('Rejection failed', true);
             else { showToast('Payment rejected.'); loadCafes(); }
         };
         window.markUnpaid = async (cafeId) => {
-            const { error } = await _supabase.from('cafes').update({ subscription_paid: false, payment_status: 'unpaid' }).eq('id', cafeId);
+            const { error } = await _sb.from('cafes').update({ subscription_paid: false, payment_status: 'unpaid' }).eq('id', cafeId);
             if (error) showToast('Update failed', true);
             else { showToast('Marked as unpaid.'); loadCafes(); }
         };
 
         async function loadSettings() {
-            const { data } = await _supabase.from('app_settings').select('*').maybeSingle();
+            const { data } = await _sb.from('app_settings').select('*').maybeSingle();
             if (data) {
                 document.getElementById('subPrice').value = data.subscription_price || '';
                 document.getElementById('upiId').value = data.upi_id || '';
@@ -280,12 +188,12 @@
             const price = parseFloat(document.getElementById('subPrice').value) || 0;
             const upi = document.getElementById('upiId').value.trim();
             const msg = document.getElementById('subMsg').value.trim();
-            const { error } = await _supabase.from('app_settings').upsert({ id: 1, subscription_price: price, upi_id: upi, subscription_message: msg });
+            const { error } = await _sb.from('app_settings').upsert({ id: 1, subscription_price: price, upi_id: upi, subscription_message: msg });
             if (error) showToast('Save failed', true);
             else showToast('Subscription settings saved!');
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => _supabase.auth.signOut().then(() => window.location.href='auth.html'));
+        document.getElementById('logoutBtn').addEventListener('click', () => _sb.auth.signOut().then(() => window.location.href='auth.html'));
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '🌙 Dark' : '☀️ Light';
