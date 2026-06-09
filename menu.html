@@ -247,7 +247,6 @@
             <div class="cart-total-row"><span class="cart-total-label">Total</span><span class="cart-total-val">₹<span id="cartTotal">0</span></span></div>
             <input class="cart-input" id="tableNumber" placeholder="Table Number *">
             <input class="cart-input" id="customerName" placeholder="Your name (optional)">
-            <!-- Loyalty phone input removed -->
             <button class="btn-order" id="placeOrderBtn">Place Order →</button>
             <button class="btn-close-cart" id="closeCartBtn">Close</button>
         </div>
@@ -298,18 +297,10 @@
             cafeData = cafe;
             document.getElementById('cafeNameDisplay').textContent = cafe?.cafe_name || 'Srinagar Roastery';
             document.getElementById('cafeDesc').textContent = cafe?.description || '';
-
             if (cafe?.busy_mode) {
                 document.getElementById('busyBanner').style.display = 'block';
                 document.getElementById('waitTimeDisplay').textContent = cafe.wait_time || 10;
             }
-
-            // Payment QR (floating button) – keep this, but no UPI overlay after order
-            if (cafe?.payment_qr_url) {
-                const payBtn = document.getElementById('floatingPayBtn');
-                // But we removed the button itself, so this code won't run – safe to keep for now.
-            }
-
             const { data: items } = await _sb.from('menu_items').select('*').eq('cafe_id', cafeId).eq('available', true).order('category');
             menuItems = items?.length ? items : [];
             if (tableParam) {
@@ -469,11 +460,29 @@
 
         document.getElementById('floatingCart').addEventListener('click', () => { if (!cart.length) return showToast(tl('cartEmpty')); document.getElementById('cartPanel').classList.add('open'); });
         document.getElementById('closeCartBtn').addEventListener('click', () => document.getElementById('cartPanel').classList.remove('open'));
-        document.getElementById('waiterBtn').addEventListener('click', function() {
-            const table = document.getElementById('tableNumber').value || tableParam;
-            if (!table) return showToast(tl('tableReq'));
-            showToast(tl('waiterCall'));
-            this.classList.remove('ring'); void this.offsetWidth; this.classList.add('ring');
+
+        // ✅ FIXED WAITER CALL – now sends an order to the dashboard
+        document.getElementById('waiterBtn').addEventListener('click', async function() {
+            let table = document.getElementById('tableNumber').value.trim() || tableParam;
+            if (!table) {
+                table = prompt(tl('tableReq'));
+                if (!table) return;
+            }
+            const name = prompt(tl('name')) || 'Guest';
+            const { error } = await _sb.from('orders').insert({
+                cafe_id: cafeId,
+                customer_name: name,
+                table_number: table,
+                items: [{ name: '🚨 Waiter Call', price: 0, qty: 1 }],
+                total: 0,
+                status: 'new'
+            });
+            if (error) {
+                showToast('Waiter call failed: ' + error.message);
+            } else {
+                showToast(tl('waiterCall'));
+                this.classList.remove('ring'); void this.offsetWidth; this.classList.add('ring');
+            }
         });
 
         document.getElementById('placeOrderBtn').addEventListener('click', async () => {
@@ -482,7 +491,6 @@
             if (!table) return showToast(tl('tableReq'));
             const orderItems = cart.map(c => ({ name: c.name + (c.variant?' ('+c.variant+')':''), price: c.price, qty: c.qty }));
             const total = cart.reduce((s,c) => s + c.price*c.qty, 0);
-            // customer_phone removed from order insert
             const { data: order, error } = await _sb.from('orders').insert({
                 cafe_id: cafeId,
                 customer_name: document.getElementById('customerName').value.trim() || 'Guest',
@@ -509,38 +517,83 @@
             }
             setTimeout(() => { overlay.classList.remove('show'); overlay.querySelectorAll('.confetti-dot').forEach(d => d.remove()); }, 3600);
 
-            // No UPI overlay call – removed completely
+            // 📲 Telegram notification
+            if (cafeData?.telegram_chat_id) {
+                fetch('https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/telegram-notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                    body: JSON.stringify({
+                        chat_id: cafeData.telegram_chat_id,
+                        cafe_name: cafeData.cafe_name,
+                        table: table,
+                        customer: document.getElementById('customerName').value.trim() || 'Guest',
+                        items: orderItems,
+                        total: total
+                    })
+                }).catch(e => console.error('Telegram notify failed', e));
+            }
         });
 
+        // ✅ VOICE ORDER – fixed and working
         const GEMINI_URL = 'https://pbbybxdxnvzhjtkpfpej.supabase.co/functions/v1/gemini';
         let recognition = null;
         const voiceBtn = document.getElementById('voiceOrderBtn');
         voiceBtn.addEventListener('click', () => {
-            if (recognition) { recognition.stop(); recognition = null; voiceBtn.classList.remove('listening'); voiceBtn.textContent = '🎤'; return; }
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                return;
+            }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return showToast('Voice input not supported');
-            recognition = new SpeechRecognition(); recognition.lang = 'hi-IN'; recognition.interimResults = false;
-            recognition.onstart = () => { voiceBtn.classList.add('listening'); voiceBtn.textContent = '🔴'; };
+            if (!SpeechRecognition) {
+                showToast('Voice input not supported on this device');
+                return;
+            }
+            recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN';
+            recognition.interimResults = false;
+            recognition.onstart = () => {
+                voiceBtn.classList.add('listening');
+                voiceBtn.textContent = '🔴';
+            };
             recognition.onresult = async (event) => {
                 const transcript = event.results[0][0].transcript;
                 showToast('Heard: ' + transcript);
                 try {
-                    const res = await fetch(GEMINI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({ promptExtra:`Extract ordered items from this text: "${transcript}". Return JSON array of {name, qty}.` }) });
+                    const res = await fetch(GEMINI_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                        body: JSON.stringify({ promptExtra: `Extract ordered items from this text: "${transcript}". Return JSON array of {name, qty}.` })
+                    });
                     const data = await res.json();
                     const items = JSON.parse(data.result);
                     items.forEach(item => {
                         const menuItem = menuItems.find(i => i.name.toLowerCase().includes(item.name.toLowerCase()));
                         if (menuItem) {
                             const existing = cart.find(c => c.id == menuItem.id);
-                            if (existing) existing.qty += item.qty||1;
-                            else cart.push({ cartKey: menuItem.id, id: menuItem.id, name: menuItem.name, price: menuItem.price, qty: item.qty||1 });
+                            if (existing) existing.qty += item.qty || 1;
+                            else cart.push({ cartKey: menuItem.id, id: menuItem.id, name: menuItem.name, price: menuItem.price, qty: item.qty || 1 });
                         }
                     });
-                    updateCartUI(); renderMenu(false);
-                } catch(e) { showToast('Could not understand'); }
+                    updateCartUI();
+                    renderMenu(false);
+                } catch (e) {
+                    showToast('Could not understand the order. Please try again.');
+                }
             };
-            recognition.onerror = (event) => { showToast('Voice error: ' + event.error); voiceBtn.classList.remove('listening'); voiceBtn.textContent = '🎤'; recognition = null; };
-            recognition.onend = () => { voiceBtn.classList.remove('listening'); voiceBtn.textContent = '🎤'; recognition = null; };
+            recognition.onerror = (event) => {
+                showToast('Voice error: ' + event.error);
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                recognition = null;
+            };
+            recognition.onend = () => {
+                voiceBtn.classList.remove('listening');
+                voiceBtn.textContent = '🎤';
+                recognition = null;
+            };
             recognition.start();
         });
 
