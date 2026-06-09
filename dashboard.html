@@ -252,7 +252,7 @@
             </div>
         </div>
 
-        <!-- Settings (without UPI / Payment QR) -->
+        <!-- Settings (with Telegram Chat ID) -->
         <div class="card collapsed">
             <div class="card-title" onclick="this.parentElement.classList.toggle('collapsed')">⚙️ Settings <span>▼</span></div>
             <div class="card-body">
@@ -264,7 +264,7 @@
                     <div><input type="color" id="setAccent" value="#2F3E46"> Accent</div>
                 </div>
                 <input id="setGooglePlaceId" placeholder="Google Place ID">
-                <!-- Cafe ID display -->
+                <input id="setTelegramChatId" placeholder="Telegram Chat ID (for order alerts)">
                 <label>Cafe ID (share with staff)</label>
                 <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
                     <input id="cafeIdDisplay" readonly value="" style="flex:1; background:var(--glass);">
@@ -357,6 +357,7 @@
             document.getElementById('setPrimary').value = cafeData.primary_color||'#e8921a';
             document.getElementById('setAccent').value = cafeData.accent_color||'#2F3E46';
             document.getElementById('setGooglePlaceId').value = cafeData.google_place_id||'';
+            document.getElementById('setTelegramChatId').value = cafeData.telegram_chat_id||'';
             document.getElementById('busyModeToggle').checked = cafeData.busy_mode||false;
             document.getElementById('waitTime').value = cafeData.wait_time||10;
             document.getElementById('cafeIdDisplay').value = cafeData.id;
@@ -364,7 +365,6 @@
                 navigator.clipboard.writeText(cafeData.id);
                 toast('Cafe ID copied!');
             });
-            // Populate table dropdown
             const tableSelect = document.getElementById('tableNumberSelect');
             for (let i = 1; i <= 20; i++) {
                 const opt = document.createElement('option');
@@ -377,7 +377,6 @@
             createDefaultVariantRow();
         }
 
-        // Save Settings (no UPI / Payment QR fields)
         document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
             const u = {
                 cafe_name: document.getElementById('setCafeName').value.trim(),
@@ -386,12 +385,11 @@
                 primary_color: document.getElementById('setPrimary').value,
                 accent_color: document.getElementById('setAccent').value,
                 google_place_id: document.getElementById('setGooglePlaceId').value.trim(),
+                telegram_chat_id: document.getElementById('setTelegramChatId').value.trim(),
                 busy_mode: document.getElementById('busyModeToggle').checked,
                 wait_time: parseInt(document.getElementById('waitTime').value) || 10
             };
-
             const { error } = await _sb.from('cafes').update(u).eq('id', cafeData.id);
-
             if (error) {
                 toast('Save failed: ' + error.message, true);
             } else {
@@ -409,8 +407,6 @@
             document.getElementById('copyQrLink').style.display = 'inline-block';
         });
         document.getElementById('copyQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('qrUrl').textContent); toast('Link copied!'); });
-
-        // Table QR Generation
         document.getElementById('generateTableQrBtn').addEventListener('click', () => {
             const table = document.getElementById('tableNumberSelect').value;
             if (!table) return toast('Select a table number', true);
@@ -421,8 +417,6 @@
             document.getElementById('copyTableQrLink').style.display = 'inline-block';
         });
         document.getElementById('copyTableQrLink').addEventListener('click', () => { navigator.clipboard.writeText(document.getElementById('tableQrUrl').textContent); toast('Table link copied!'); });
-
-        // Download all table QR codes as PDF
         document.getElementById('downloadAllTableQrsBtn').addEventListener('click', async () => {
             if (!cafeData.id) return toast('Cafe not ready', true);
             const { jsPDF } = window.jspdf;
@@ -626,7 +620,7 @@
         });
         createDefaultVariantRow();
 
-        // AI Scanner
+        // AI Scanner (unchanged)
         const scanBtn = document.getElementById('scanMenuBtn');
         document.getElementById('takePhotoBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').setAttribute('capture','environment'); document.getElementById('aiMenuImageFile').click(); });
         document.getElementById('galleryUploadBtn').addEventListener('click', () => { document.getElementById('aiMenuImageFile').removeAttribute('capture'); document.getElementById('aiMenuImageFile').click(); });
@@ -736,7 +730,7 @@
             loadStats();
         });
 
-        // Auto Image
+        // Auto Image (unchanged)
         document.getElementById('autoImageBtn').addEventListener('click', async () => {
             const name = document.getElementById('itemName').value.trim();
             if(!name) return toast('Enter item name');
@@ -749,7 +743,7 @@
             }
         });
 
-        // Save Item
+        // Save Item (unchanged)
         async function saveItem(andClear) {
             const id = document.getElementById('editItemId').value;
             const name = document.getElementById('itemName').value.trim();
