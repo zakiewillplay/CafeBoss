@@ -50,9 +50,7 @@
         <footer>© 2026 Cafe Boss – 100% Free. Built with ☕</footer>
     </div>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
         const themeToggle = document.getElementById('themeToggle');
         function applyTheme() {
             const saved = localStorage.getItem('theme');
@@ -65,11 +63,7 @@
             }
         }
         applyTheme();
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-            applyTheme();
-        });
+        themeToggle.addEventListener('click', () => { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); applyTheme(); });
     </script>
 </body>
 </html>
